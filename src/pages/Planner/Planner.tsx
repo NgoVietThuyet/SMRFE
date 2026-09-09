@@ -72,10 +72,13 @@ export function Planner({ onNavigate }: PlannerProps) {
   // Same data source + filter semantics as before, extended to search
   // description/room/host and to sort without touching fetch logic.
   const [meetingsData, setMeetingsData] = useState<any[]>([]);
+  const [reloadTicks, setReloadTicks] = useState(0);
+
+  const fetchMeetings = () => setReloadTicks(t => t + 1);
 
   useEffect(() => {
     import('@/utils/apiClient').then(({ apiClient }) => {
-      apiClient('/Meeting/Search', {
+      apiClient('/Meeting/query', {
         data: {
           keyword: search,
           page: 1,
@@ -86,7 +89,7 @@ export function Planner({ onNavigate }: PlannerProps) {
         setMeetingsData(res.items || []);
       }).catch(console.error);
     });
-  }, [search, filter]);
+  }, [search, filter, reloadTicks]);
 
   // Same data source + filter semantics as before, extended to sort without touching fetch logic.
   const filteredMeetings = useMemo(() => {
@@ -231,14 +234,14 @@ export function Planner({ onNavigate }: PlannerProps) {
       {selectedMeeting && (
         <MeetingDetailModal
           meeting={selectedMeeting}
-          onClose={() => setSelectedMeeting(null)}
+          onClose={() => { setSelectedMeeting(null); fetchMeetings(); }}
           onJoin={() => { setSelectedMeeting(null); onNavigate('meeting'); }}
         />
       )}
 
       {/* Create meeting modal */}
       {showCreate && (
-        <CreateMeetingModal onClose={() => setShowCreate(false)} />
+        <CreateMeetingModal onSuccess={() => { fetchMeetings(); setShowCreate(false); }} onClose={() => setShowCreate(false)} />
       )}
 
       {/* Quick meet modal */}
@@ -423,8 +426,8 @@ function CalendarView({ meetings, onSelect }: { meetings: Meeting[]; onSelect: (
                       type="button"
                       onClick={() => onSelect(m)}
                       className={`block w-full text-left px-1.5 py-1 rounded text-[10px] font-medium transition-colors truncate ${m.status === 2 ? 'bg-error-100 text-error-800 hover:bg-error-200' :
-                          m.status === 3 ? 'bg-success-100 text-success-800 hover:bg-success-200' :
-                            'bg-primary-100 text-primary-800 hover:bg-primary-200'
+                        m.status === 3 ? 'bg-success-100 text-success-800 hover:bg-success-200' :
+                          'bg-primary-100 text-primary-800 hover:bg-primary-200'
                         }`}
                     >
                       <span className="tnum">{new Date(m.expectedStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span> {m.name}
@@ -440,14 +443,15 @@ function CalendarView({ meetings, onSelect }: { meetings: Meeting[]; onSelect: (
   );
 }
 
-function CreateMeetingModal({ onClose }: { onClose: () => void }) {
+function CreateMeetingModal({ onClose, onSuccess }: { onClose: () => void; onSuccess?: () => void }) {
   const { t, lang, locale } = useLanguage();
   void lang;
   void locale;
+  const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('2026-08-26');
-  const [startTime, setStartTime] = useState('10:00');
-  const [endTime, setEndTime] = useState('11:00');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('10:00');
   const [room, setRoom] = useState('Conference Room A');
   const [description, setDescription] = useState('');
   const [isSecure, setIsSecure] = useState(true);
@@ -471,6 +475,38 @@ function CreateMeetingModal({ onClose }: { onClose: () => void }) {
     setAgenda(agenda.filter((a) => a.id !== id));
   };
 
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      alert('Vui lòng nhập tên cuộc họp.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { apiClient } = await import('@/utils/apiClient');
+      const payload = {
+        name: title,
+        description,
+        expectedStartTime: new Date(`${date}T${startTime}:00`).toISOString(),
+        expectedEndTime: new Date(`${date}T${endTime}:00`).toISOString(),
+        timeZone: 'Asia/Bangkok',
+        visibility: isSecure ? 0 : 1, // InvitedOnly = 0, Internal = 1
+        settings: {
+          schemaVersion: 1,
+          recordingEnabled,
+          aiMinutesEnabled: aiEnabled,
+          hasPassword // Just an indicator, setting password requires backend hash logic
+        },
+        participantUserNames: selectedContacts, // assuming selectedContacts hold UserNames
+      };
+      await apiClient('/Meeting', { data: payload });
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi tạo cuộc họp');
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal
       open={true}
@@ -480,8 +516,8 @@ function CreateMeetingModal({ onClose }: { onClose: () => void }) {
       size="xl"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>{t('planner.create.cancel')}</Button>
-          <Button variant="primary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} disabled={loading}>{t('planner.create.cancel')}</Button>
+          <Button variant="primary" onClick={handleSubmit} loading={loading}>
             <Calendar size={16} aria-hidden="true" /> {t('planner.create.submit')}
           </Button>
         </>
@@ -490,101 +526,33 @@ function CreateMeetingModal({ onClose }: { onClose: () => void }) {
       <div className="space-y-5">
         <div>
           <label className="field-label" htmlFor="new-meeting-title">{t('planner.create.name')}</label>
-          <input id="new-meeting-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('planner.create.namePh')} className="input-field" />
+          <input id="new-meeting-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('planner.create.namePh')} className="input-field" disabled={loading} />
         </div>
 
         <div>
           <label className="field-label" htmlFor="new-meeting-desc">{t('planner.create.desc')}</label>
-          <textarea id="new-meeting-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder={t('planner.create.descPh')} className="input-field resize-none" />
+          <textarea id="new-meeting-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder={t('planner.create.descPh')} className="input-field resize-none" disabled={loading} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="field-label" htmlFor="new-meeting-date">{t('planner.create.date')}</label>
-            <input id="new-meeting-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input-field" />
+            <input id="new-meeting-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input-field" disabled={loading} />
           </div>
           <div>
             <label className="field-label" htmlFor="new-meeting-start">{t('planner.create.start')}</label>
-            <input id="new-meeting-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="input-field" />
+            <input id="new-meeting-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="input-field" disabled={loading} />
           </div>
           <div>
             <label className="field-label" htmlFor="new-meeting-end">{t('planner.create.end')}</label>
-            <input id="new-meeting-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="input-field" />
+            <input id="new-meeting-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="input-field" disabled={loading} />
           </div>
         </div>
 
         <div>
-          <label className="field-label" htmlFor="new-meeting-room">{t('planner.create.room')}</label>
-          <select id="new-meeting-room" value={room} onChange={(e) => setRoom(e.target.value)} className="input-field">
-            <option>Conference Room A</option>
-            <option>Conference Room B</option>
-            <option>Conference Room C</option>
-            <option>Board Room</option>
-            <option>Huddle Space 1</option>
-          </select>
-        </div>
-
-        <div>
-          <span className="field-label" id="invite-label">{t('planner.create.invite')}</span>
+          <span className="field-label" id="invite-label">{t('planner.create.invite')} (Tính năng chọn người dùng đang phát triển)</span>
           <div role="group" aria-labelledby="invite-label" className="max-h-48 overflow-y-auto border border-ink-200 rounded-lg p-2 space-y-1">
-            {orgContacts.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => toggleContact(c.id)}
-                aria-pressed={selectedContacts.includes(c.id)}
-                className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${selectedContacts.includes(c.id) ? 'bg-primary-50' : 'hover:bg-ink-50'
-                  }`}
-              >
-                <span aria-hidden="true" className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${selectedContacts.includes(c.id) ? 'bg-primary-600 border-primary-600' : 'border-ink-300'
-                  }`}>
-                  {selectedContacts.includes(c.id) && <CheckCircle2 size={14} className="text-white" />}
-                </span>
-                <Avatar name={c.name} color={c.avatarColor} size="sm" />
-                <span className="flex-1 text-left min-w-0">
-                  <span className="block text-sm font-medium text-ink-900 truncate">{c.name}</span>
-                  <span className="block text-xs text-ink-400 truncate">{c.department}</span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="field-label !mb-0">{t('planner.create.agenda')}</span>
-            <button type="button" onClick={addAgendaItem} className="text-sm text-primary-700 hover:text-primary-800 font-medium inline-flex items-center gap-1 min-h-[32px]">
-              <Plus size={14} aria-hidden="true" /> {t('planner.create.addItem')}
-            </button>
-          </div>
-          <div className="space-y-2">
-            {agenda.map((item) => (
-              <div key={item.id} className="flex items-center gap-2">
-                <input
-                  value={item.title}
-                  onChange={(e) => setAgenda(agenda.map((a) => a.id === item.id ? { ...a, title: e.target.value } : a))}
-                  placeholder={t('planner.create.agendaPh')}
-                  aria-label={t('planner.create.agendaPh')}
-                  className="input-field flex-1"
-                />
-                <input
-                  type="number"
-                  value={item.duration}
-                  onChange={(e) => setAgenda(agenda.map((a) => a.id === item.id ? { ...a, duration: Number(e.target.value) } : a))}
-                  aria-label={t('planner.create.agendaDur')}
-                  className="input-field w-20 tnum"
-                />
-                <span className="text-xs text-ink-400 w-8">min</span>
-                <button
-                  type="button"
-                  onClick={() => removeAgendaItem(item.id)}
-                  aria-label={t('planner.create.removeItem')}
-                  className="p-2 text-ink-400 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
-                >
-                  <X size={16} aria-hidden="true" />
-                </button>
-              </div>
-            ))}
+            <p className="text-xs text-ink-500">Người tham gia sẽ được chọn từ danh bạ công ty (API: /User/Search).</p>
           </div>
         </div>
 

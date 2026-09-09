@@ -37,11 +37,13 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useLanguage } from '@/i18n';
 
-const meetingTone: Record<string, BadgeTone> = {
-  live: 'error',
-  scheduled: 'info',
-  completed: 'success',
-  cancelled: 'neutral',
+const meetingTone: Record<number, BadgeTone> = {
+  0: 'neutral',
+  1: 'info',
+  2: 'error',
+  3: 'success',
+  4: 'neutral',
+  5: 'neutral',
 };
 
 const roleTone: Record<string, BadgeTone> = {
@@ -55,7 +57,7 @@ const roleTone: Record<string, BadgeTone> = {
 type DetailTab = 'overview' | 'members' | 'documents';
 
 interface MeetingDetailModalProps {
-  meeting: Meeting;
+  meeting: any;
   onClose: () => void;
   onJoin: () => void;
 }
@@ -86,17 +88,16 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
   const { t, lang, locale } = useLanguage();
   const [tab, setTab] = useState<DetailTab>('overview');
   const [isEditing, setIsEditing] = useState(false);
-  const [editedMeeting, setEditedMeeting] = useState<Meeting>(meeting);
-  const [agenda, setAgenda] = useState<AgendaItem[]>(meeting.agenda);
-  const [docs, setDocs] = useState<MeetingDocument[]>(meetingDocuments.filter((d) => d.meetingId === meeting.id));
-  const [meetingParticipants, setMeetingParticipants] = useState<Participant[]>(
-    meeting.participantIds.map((pid) => participants.find((p) => p.id === pid)).filter(Boolean) as Participant[]
-  );
+  const [editedMeeting, setEditedMeeting] = useState<any>(meeting);
+  const [agenda, setAgenda] = useState<AgendaItem[]>([]);
+  const [docs, setDocs] = useState<MeetingDocument[]>([]);
+  const [meetingParticipants, setMeetingParticipants] = useState<Participant[]>([]);
   const [copied, setCopied] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [loadingAction, setLoadingAction] = useState(false);
 
   const meetingLink = generateMeetingLink(editedMeeting);
-  const isLive = meeting.status === 'live';
+  const isLive = meeting.status === 2;
 
   const handleCopyLink = () => {
     navigator.clipboard?.writeText(meetingLink);
@@ -104,9 +105,38 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSave = () => {
-    setEditedMeeting({ ...editedMeeting, agenda });
-    setIsEditing(false);
+  const handleSave = async () => {
+    setLoadingAction(true);
+    try {
+      const { apiClient } = await import('@/utils/apiClient');
+      await apiClient(`/Meeting/${meeting.id}`, {
+        method: 'PATCH',
+        data: {
+          name: editedMeeting.name,
+          description: editedMeeting.description,
+        },
+      });
+      setIsEditing(false);
+      onClose(); // Optional: reload data
+    } catch (err: any) {
+      alert(err.message || 'Cập nhật thất bại');
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
+  const handleCancelMeeting = async () => {
+    if (!confirm('Bạn có chắc chắn muốn hủy cuộc họp này không?')) return;
+    setLoadingAction(true);
+    try {
+      const { apiClient } = await import('@/utils/apiClient');
+      await apiClient(`/Meeting/${meeting.id}/cancel`, { method: 'POST', data: { reason: "Canceled by Host" } });
+      onClose();
+    } catch (err: any) {
+      alert(err.message || 'Hủy thất bại');
+    } finally {
+      setLoadingAction(false);
+    }
   };
 
   const addAgendaItem = () => {
@@ -161,21 +191,28 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
     <Modal
       open={true}
       onClose={onClose}
-      title={editedMeeting.title}
-      subtitle={editedMeeting.description}
+      title={editedMeeting.name}
+      subtitle={editedMeeting.description || 'Chưa cung cấp mô tả'}
       size="xl"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>{t('mdm.close')}</Button>
+          <Button variant="secondary" onClick={onClose} disabled={loadingAction}>{t('mdm.close')}</Button>
           {isEditing ? (
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} loading={loadingAction}>
               <Save size={16} aria-hidden="true" /> {t('mdm.save')}
             </Button>
           ) : (
             <>
-              <Button variant="secondary" onClick={() => setIsEditing(true)}>
-                <Pencil size={16} aria-hidden="true" /> {t('mdm.edit')}
-              </Button>
+              {meeting.status !== 3 && meeting.status !== 4 && (
+                <Button variant="secondary" onClick={handleCancelMeeting} disabled={loadingAction} className="text-error-600 hover:bg-error-50">
+                  Hủy cuộc họp
+                </Button>
+              )}
+              {meeting.status !== 3 && meeting.status !== 4 && (
+                <Button variant="secondary" onClick={() => setIsEditing(true)} disabled={loadingAction}>
+                  <Pencil size={16} aria-hidden="true" /> {t('mdm.edit')}
+                </Button>
+              )}
               {meeting.status !== 'completed' && (
                 <Button onClick={onJoin}>
                   <Video size={16} aria-hidden="true" /> {isLive ? t('mdm.join') : t('mdm.start')}
@@ -199,9 +236,8 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
             role="tab"
             aria-selected={tab === tabItem.id}
             onClick={() => setTab(tabItem.id)}
-            className={`flex items-center gap-2 px-4 min-h-[40px] rounded-md text-sm font-medium transition-all whitespace-nowrap ${
-              tab === tabItem.id ? 'bg-white text-primary-700 shadow-sm' : 'text-ink-500 hover:text-ink-700'
-            }`}
+            className={`flex items-center gap-2 px-4 min-h-[40px] rounded-md text-sm font-medium transition-all whitespace-nowrap ${tab === tabItem.id ? 'bg-white text-primary-700 shadow-sm' : 'text-ink-500 hover:text-ink-700'
+              }`}
           >
             <tabItem.icon size={16} aria-hidden="true" /> {tabItem.label}
           </button>
@@ -216,46 +252,25 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
             <div className="p-3 rounded-lg bg-ink-50">
               <dt className="text-xs text-ink-500 mb-1">{t('mdm.date')}</dt>
               {isEditing ? (
-                <dd><label htmlFor="mdm-date" className="sr-only">{t('mdm.dateLabel')}</label>
-                <input
-                  id="mdm-date"
-                  type="date"
-                  value={editedMeeting.date}
-                  onChange={(e) => setEditedMeeting({ ...editedMeeting, date: e.target.value })}
-                  className="input-field text-sm py-1.5"
-                /></dd>
+                <dd className="text-sm text-ink-900 tnum"><i>Không thể sửa thời gian ở màn hình này</i></dd>
               ) : (
                 <dd className="text-sm font-medium text-ink-900 flex items-center gap-2 tnum">
-                  <Calendar size={14} aria-hidden="true" className="text-primary-600" /> {formatDateLong(editedMeeting.date, locale)}
+                  <Calendar size={14} aria-hidden="true" className="text-primary-600" /> {formatDateLong(editedMeeting.expectedStartTime, locale)}
                 </dd>
               )}
             </div>
             <div className="p-3 rounded-lg bg-ink-50">
               <dt className="text-xs text-ink-500 mb-1">{t('mdm.time')}</dt>
               {isEditing ? (
-                <dd className="flex items-center gap-2">
-                  <label htmlFor="mdm-start" className="sr-only">{t('mdm.startLabel')}</label>
-                  <input
-                    id="mdm-start"
-                    type="time"
-                    value={editedMeeting.startTime}
-                    onChange={(e) => setEditedMeeting({ ...editedMeeting, startTime: e.target.value })}
-                    className="input-field text-sm py-1.5 flex-1"
-                  />
-                  <span aria-hidden="true" className="text-ink-400">–</span>
-                  <label htmlFor="mdm-end" className="sr-only">{t('mdm.endLabel')}</label>
-                  <input
-                    id="mdm-end"
-                    type="time"
-                    value={editedMeeting.endTime}
-                    onChange={(e) => setEditedMeeting({ ...editedMeeting, endTime: e.target.value })}
-                    className="input-field text-sm py-1.5 flex-1"
-                  />
-                </dd>
+                <dd className="text-sm text-ink-900 tnum"><i>Không thể sửa thời gian ở màn hình này</i></dd>
               ) : (
                 <dd className="text-sm font-medium text-ink-900 flex items-center gap-2 tnum">
-                  <Clock size={14} aria-hidden="true" className="text-primary-600" /> {editedMeeting.startTime} – {editedMeeting.endTime}
-                  <span className="text-xs text-ink-500">({formatDuration(editedMeeting.startTime, editedMeeting.endTime)})</span>
+                  <Clock size={14} aria-hidden="true" className="text-primary-600" />
+                  {new Date(editedMeeting.expectedStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} –
+                  {editedMeeting.expectedEndTime ? new Date(editedMeeting.expectedEndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                  <span className="text-xs text-ink-500">
+                    ({formatDuration(editedMeeting.expectedStartTime, editedMeeting.expectedEndTime || editedMeeting.expectedStartTime)})
+                  </span>
                 </dd>
               )}
             </div>
@@ -263,18 +278,18 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
               <dt className="text-xs text-ink-500 mb-1">{t('mdm.room')}</dt>
               {isEditing ? (
                 <dd><label htmlFor="mdm-room" className="sr-only">{t('mdm.roomLabel')}</label>
-                <select
-                  id="mdm-room"
-                  value={editedMeeting.room}
-                  onChange={(e) => setEditedMeeting({ ...editedMeeting, room: e.target.value })}
-                  className="input-field text-sm py-1.5"
-                >
-                  <option>Conference Room A</option>
-                  <option>Conference Room B</option>
-                  <option>Conference Room C</option>
-                  <option>Board Room</option>
-                  <option>Huddle Space 1</option>
-                </select></dd>
+                  <select
+                    id="mdm-room"
+                    value={editedMeeting.room}
+                    onChange={(e) => setEditedMeeting({ ...editedMeeting, room: e.target.value })}
+                    className="input-field text-sm py-1.5"
+                  >
+                    <option>Conference Room A</option>
+                    <option>Conference Room B</option>
+                    <option>Conference Room C</option>
+                    <option>Board Room</option>
+                    <option>Huddle Space 1</option>
+                  </select></dd>
               ) : (
                 <dd className="text-sm font-medium text-ink-900 flex items-center gap-2">
                   <MapPin size={14} aria-hidden="true" className="text-primary-600" /> {editedMeeting.room}
@@ -429,23 +444,23 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
             <div className="p-3 rounded-lg border border-primary-200 bg-primary-50/30 space-y-1">
               <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">{t('mdm.available')}</p>
               <ul className="space-y-1">
-              {availableContacts.map((c) => (
-                <li key={c.id}>
-                <button
-                  type="button"
-                  onClick={() => addParticipant(c.id)}
-                  aria-label={t('mdm.add', { name: c.name })}
-                  className="w-full flex items-center gap-3 p-2 min-h-[44px] rounded-lg hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40"
-                >
-                  <Avatar name={c.name} color={c.avatarColor} size="sm" />
-                  <span className="flex-1 text-left min-w-0">
-                    <span className="block text-sm font-medium text-ink-900 truncate">{c.name}</span>
-                    <span className="block text-xs text-ink-500 truncate">{c.department}</span>
-                  </span>
-                  <Plus size={16} aria-hidden="true" className="text-primary-600" />
-                </button>
-                </li>
-              ))}
+                {availableContacts.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => addParticipant(c.id)}
+                      aria-label={t('mdm.add', { name: c.name })}
+                      className="w-full flex items-center gap-3 p-2 min-h-[44px] rounded-lg hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40"
+                    >
+                      <Avatar name={c.name} color={c.avatarColor} size="sm" />
+                      <span className="flex-1 text-left min-w-0">
+                        <span className="block text-sm font-medium text-ink-900 truncate">{c.name}</span>
+                        <span className="block text-xs text-ink-500 truncate">{c.department}</span>
+                      </span>
+                      <Plus size={16} aria-hidden="true" className="text-primary-600" />
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
           )}
