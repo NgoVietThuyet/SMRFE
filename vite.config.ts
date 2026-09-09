@@ -13,4 +13,17 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5228',
+        changeOrigin: true,
+      },
+      '/meetinghub': {
+        target: 'http://localhost:5228',
+        ws: true,
+        changeOrigin: true,
+      },
+    },
+  },
 });

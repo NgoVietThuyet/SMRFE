@@ -1,0 +1,9 @@
+/* PostMeeting page — element dat ten theo pattern post, dung lai card btn badge chung. */
+.post-root { }
+.post-tabs { display: flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #e2e8f0; border-radius: 5px; padding: 4px; width: fit-content; max-width: 100%; overflow-x: auto; }
+.post-task { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; border-radius: 5px; border: 1px solid #f1f5f9; }
+.post-task:hover { border-color: #bfdbfe; }
+.post-minute { display: block; width: 100%; text-align: left; border-radius: 5px; }
+.post-minute:focus-visible { outline: 3px solid rgba(2,132,199,.4); outline-offset: 1px; }
+.post-minicon { width: 2.5rem; height: 2.5rem; background: #1e3a8a; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.post-avatar { width: 2.5rem; height: 2.5rem; background: #f1f5f9; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: #475569; flex-shrink: 0; }

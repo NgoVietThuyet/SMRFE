@@ -1,0 +1,87 @@
+/* Dashboard page — element dat ten theo pattern dash, dung lai card btn badge chung. */
+.dash-root { }
+.dash-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #1e3a8a;
+  padding: 1.5rem;
+  color: #fff;
+}
+.dash-banner__glow { position: absolute; border-radius: 9999px; pointer-events: none; }
+.dash-banner__glow--top { top: -4rem; right: -4rem; width: 16rem; height: 16rem; background: rgba(255,255,255,0.1); filter: blur(48px); }
+.dash-banner__glow--bottom { bottom: -5rem; left: -2.5rem; width: 12rem; height: 12rem; background: rgba(255,255,255,0.08); filter: blur(48px); }
+.dash-banner__inner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; }
+.dash-banner__hello { color: rgba(255,255,255,0.7); font-size: 14px; }
+.dash-banner__name { font-size: 1.5rem; font-weight: 700; margin-top: 0.25rem; }
+.dash-banner__summary { color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 0.5rem; }
+.dash-banner__actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.dash-banner__btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0 1rem; min-height: 44px; border-radius: 5px;
+  font-size: 14px; font-weight: 500; transition: background-color .2s;
+}
+.dash-banner__btn:focus-visible { outline: 3px solid rgba(255,255,255,.6); outline-offset: 1px; }
+.dash-banner__btn--join { background: rgba(255,255,255,.15); color: #fff; }
+.dash-banner__btn--join:hover { background: #1e40af; }
+.dash-banner__btn--schedule { background: #fff; color: #1e3a8a; }
+.dash-banner__btn--schedule:hover { background: #eff6ff; }
+
+.dash-stats { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+@media (min-width: 640px) { .dash-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .dash-stats { grid-template-columns: repeat(4, 1fr); } }
+.dash-stat__top { display: flex; align-items: flex-start; justify-content: space-between; }
+.dash-stat__icon { width: 2.5rem; height: 2.5rem; border-radius: 5px; display: flex; align-items: center; justify-content: center; }
+.dash-stat__change { font-size: 12px; font-weight: 500; color: #15803d; display: flex; align-items: center; gap: 2px; }
+.dash-stat__value { font-size: 1.5rem; font-weight: 700; color: #000; margin-top: 0.75rem; }
+.dash-stat__label { font-size: 14px; color: #64748b; margin-top: 2px; }
+
+.dash-main { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 1024px) { .dash-main { grid-template-columns: repeat(3, 1fr); } }
+.dash-main__left { display: flex; flex-direction: column; gap: 1.5rem; }
+@media (min-width: 1024px) { .dash-main__left { grid-column: span 2 / span 2; } }
+.dash-main__right { display: flex; flex-direction: column; gap: 1.5rem; }
+.dash-card__head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.dash-card__title { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; color: #000; }
+.dash-row {
+  display: flex; align-items: center; gap: 1rem; padding: 0.75rem;
+  border-radius: 5px; border: 1px solid #f1f5f9; transition: all .2s; cursor: pointer;
+}
+.dash-row:hover { border-color: #bfdbfe; background: rgba(239,246,255,.3); }
+.dash-row__time { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 3.5rem; flex-shrink: 0; }
+.dash-row__divider { width: 1px; height: 2.5rem; background: #e2e8f0; }
+.dash-row__body { flex: 1; min-width: 0; }
+.dash-row__title { font-weight: 500; color: #000; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-row__meta { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem; flex-wrap: wrap; font-size: 12px; color: #64748b; }
+.dash-chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 0.75rem; height: 10rem; padding: 0 0.5rem; }
+.dash-chart__col { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; flex: 1; }
+.dash-chart__track { width: 100%; flex: 1; display: flex; align-items: flex-end; }
+.dash-chart__bar { width: 100%; border-radius: 5px 5px 0 0; background: #1e3a8a; position: relative; transition: background-color .3s; height: 8%; }
+.dash-chart__bar:hover { background: #1e40af; }
+.dash-chart__bar--l0 { height: 4%; opacity: .35; }
+.dash-chart__bar--l1 { height: 10%; }
+.dash-chart__bar--l2 { height: 20%; }
+.dash-chart__bar--l3 { height: 30%; }
+.dash-chart__bar--l4 { height: 40%; }
+.dash-chart__bar--l5 { height: 50%; }
+.dash-chart__bar--l6 { height: 60%; }
+.dash-chart__bar--l7 { height: 70%; }
+.dash-chart__bar--l8 { height: 80%; }
+.dash-chart__bar--l9 { height: 90%; }
+.dash-chart__bar--l10 { height: 100%; }
+.dash-chart__tip { position: absolute; top: -1.5rem; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; color: #334155; opacity: 0; transition: opacity .2s; }
+.dash-chart__bar:hover .dash-chart__tip { opacity: 1; }
+.dash-task__dot--high { background: #ef4444; }
+.dash-task__dot--mid { background: #f59e0b; }
+.dash-task__dot--low { background: #22c55e; }
+.dash-chart__day { font-size: 12px; color: #64748b; font-weight: 500; }
+.dash-task { display: flex; align-items: flex-start; gap: 0.75rem; }
+.dash-task__dot { margin-top: 6px; width: 8px; height: 8px; border-radius: 9999px; flex-shrink: 0; }
+.dash-task__body { flex: 1; min-width: 0; }
+.dash-task__title { font-size: 14px; font-weight: 500; color: #000; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-upcoming { display: block; width: 100%; text-align: left; padding: 0.75rem; border-radius: 5px; background: #f8fafc; transition: background-color .2s; }
+.dash-upcoming:hover { background: rgba(239,246,255,.4); }
+.dash-upcoming:focus-visible { outline: 3px solid rgba(2,132,199,.4); outline-offset: 1px; }
+.dash-dl { display: flex; flex-direction: column; gap: 10px; }
+.dash-dl__row { display: flex; align-items: center; justify-content: space-between; }
+.dash-empty { font-size: 14px; color: #64748b; text-align: center; padding: 2rem 0; }

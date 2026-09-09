@@ -18,11 +18,14 @@ const sizeMap = {
 export function Avatar({ name, color, size = 'md', ring = false }: AvatarProps) {
   return (
     <div
-      className={`${sizeMap[size]} ${color} rounded-full flex items-center justify-center text-white font-semibold shrink-0 ${
+      role="img"
+      aria-label={name}
+      title={name}
+      className={`${sizeMap[size]} ${color} rounded-full flex items-center justify-center text-white font-semibold shrink-0 select-none ${
         ring ? 'ring-2 ring-white shadow-sm' : ''
       }`}
     >
-      {getInitials(name)}
+      <span aria-hidden="true">{getInitials(name)}</span>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Mic,
   MicOff,
@@ -19,9 +19,11 @@ import {
   X,
   Captions,
   UserPlus,
-  ArrowLeft,
+  ChevronLeft,
 } from 'lucide-react';
 import type { Page, Participant, SidePanel, ChatMessage } from '@/types';
+import { useLanguage } from '@/i18n';
+import './MeetingRoom.css';
 import {
   participants as initialParticipants,
   lobbyParticipants,
@@ -42,6 +44,7 @@ interface MeetingRoomProps {
 }
 
 export function MeetingRoom({ onBack, canGoBack }: MeetingRoomProps) {
+  const { t, locale } = useLanguage();
   const [participants, setParticipants] = useState<Participant[]>(initialParticipants);
   const [lobby, setLobby] = useState<Participant[]>(lobbyParticipants);
   const [panel, setPanel] = useState<SidePanel>('participants');
@@ -118,7 +121,7 @@ export function MeetingRoom({ onBack, canGoBack }: MeetingRoomProps) {
         senderName: currentUser.name,
         senderAvatarColor: currentUser.avatarColor,
         content: chatInput,
-        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        timestamp: new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false }),
         isDirect: false,
       },
     ]);
@@ -133,6 +136,8 @@ export function MeetingRoom({ onBack, canGoBack }: MeetingRoomProps) {
 
   const pinnedParticipant = pinnedId ? participants.find((p) => p.id === pinnedId) : null;
   const others = pinnedId ? participants.filter((p) => p.id !== pinnedId) : participants;
+  // Grid level đặt tên sẵn để CSS quyết số cột (không style inline gridTemplate).
+  const meetGridLevel = others.length === 0 ? 0 : others.length <= 2 ? 1 : others.length <= 4 ? 2 : 3;
   const reactions = [
     { emoji: '👍', icon: ThumbsUp, color: 'text-success-600' },
     { emoji: '❤️', icon: Smile, color: 'text-error-600' },
@@ -143,68 +148,86 @@ export function MeetingRoom({ onBack, canGoBack }: MeetingRoomProps) {
   ];
 
   return (
-    <div className="flex h-screen bg-ink-900 animate-fade-in overflow-hidden">
+    <div className="meet-shell animate-fade-in overflow-hidden">
       {/* Main video area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="meet-main">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-5 py-3 bg-ink-900 shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="meet-topbar">
+          <div className="meet-topbar__left min-w-0">
             {canGoBack && (
               <button
+                type="button"
                 onClick={onBack}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-all active:scale-[0.98]"
+                aria-label={t('meet.leaveBack')}
+                title={t('meet.back')}
+                className="back-btn back-btn-dark"
               >
-                <ArrowLeft size={16} />
-                Back
+                <ChevronLeft size={18} aria-hidden="true" />
               </button>
             )}
-            <div className="h-4 w-px bg-white/20" />
+            <div aria-hidden="true" className="h-4 w-px bg-white/20" />
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-error-500 rounded-full animate-pulse" />
-              <span className="text-white font-semibold text-sm">REC</span>
+              <span aria-hidden="true" className="w-2.5 h-2.5 bg-error-500 rounded-full animate-pulse" />
+              <span className="text-white font-semibold text-sm">{t('meet.rec')}</span>
+              <span className="sr-only">{t('meet.rec.sub')}</span>
             </div>
-            <div className="h-4 w-px bg-white/20" />
+            <div aria-hidden="true" className="h-4 w-px bg-white/20" />
             <div className="flex items-center gap-2 text-white/80 text-sm">
-              <Clock size={14} />
-              <span className="font-mono">{formatTime(elapsed)}</span>
+              <Clock size={14} aria-hidden="true" />
+              <time className="font-mono tnum">{formatTime(elapsed)}</time>
             </div>
-            <div className="h-4 w-px bg-white/20" />
-            <span className="text-white text-sm font-medium">Q3 Financial Review Meeting</span>
-            <div className="flex items-center gap-1.5 text-white/60 text-xs">
-              <Lock size={12} /> Secure
+            <div aria-hidden="true" className="h-4 w-px bg-white/20" />
+            <span className="text-white text-sm font-medium truncate">Q3 Financial Review Meeting</span>
+            <div className="flex items-center gap-1.5 text-white/70 text-xs">
+              <Lock size={12} aria-hidden="true" /> {t('meet.secure')}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
+              type="button"
               onClick={() => setShowCaptions(!showCaptions)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                showCaptions ? 'bg-white/15 text-white' : 'bg-white/5 text-white/50 hover:text-white/80'
+              aria-pressed={showCaptions}
+              className={`px-3 min-h-[36px] rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
+                showCaptions ? 'bg-white/15 text-white' : 'bg-white/5 text-white/70 hover:text-white'
               }`}
             >
-              <Captions size={14} /> Captions
+              <Captions size={14} aria-hidden="true" /> {t('meet.captions')}
             </button>
-            <button className="p-2 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-colors">
-              <Settings size={18} />
+            <button
+              type="button"
+              aria-label={t('meet.settings')}
+              className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center p-2 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60"
+            >
+              <Settings size={18} aria-hidden="true" />
             </button>
           </div>
         </div>
 
         {/* Lobby banner */}
         {showLobbyBanner && lobby.length > 0 && (
-          <div className="flex items-center justify-between px-5 py-2.5 bg-warning-500/15 border-b border-warning-500/20">
-            <div className="flex items-center gap-2 text-warning-200 text-sm">
-              <UserPlus size={16} />
-              <span>
-                {lobby.length} guest{lobby.length !== 1 ? 's' : ''} waiting in the lobby
+          <div role="status" className="flex items-center justify-between gap-3 px-5 py-2.5 bg-warning-500/15 border-b border-warning-500/20">
+            <div className="flex items-center gap-2 text-warning-200 text-sm min-w-0">
+              <UserPlus size={16} aria-hidden="true" className="shrink-0" />
+              <span className="tnum">
+                {t('meet.lobby', { n: lobby.length, plural: lobby.length !== 1 ? 's' : '' })}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setPanel('participants')} className="text-xs font-medium text-white hover:underline">
-                Review
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setPanel('participants')}
+                className="text-xs font-medium text-white hover:underline min-h-[36px] px-2 rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60"
+              >
+                {t('meet.review')}
               </button>
-              <button onClick={() => setShowLobbyBanner(false)} className="p-1 text-white/60 hover:text-white">
-                <X size={14} />
+              <button
+                type="button"
+                onClick={() => setShowLobbyBanner(false)}
+                aria-label={t('meet.dismissLobby')}
+                className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center p-1 text-white/70 hover:text-white rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60"
+              >
+                <X size={14} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -227,13 +250,7 @@ export function MeetingRoom({ onBack, canGoBack }: MeetingRoomProps) {
               </div>
             </>
           ) : (
-            <div
-              className="grid gap-3 flex-1 min-h-0"
-              style={{
-                gridTemplateColumns: `repeat(${Math.min(Math.ceil(others.length / Math.ceil(others.length / 2)), 3)}, 1fr)`,
-                gridTemplateRows: `repeat(${Math.min(Math.ceil(others.length / 2), 3)}, 1fr)`,
-              }}
-            >
+            <div className={`meet-grid meet-grid--l${meetGridLevel} flex-1 min-h-0`}>
               {others.map((p) => (
                 <VideoTile key={p.id} participant={p} isPinned={false} onPin={() => setPinnedId(p.id)} />
               ))}
@@ -243,13 +260,13 @@ export function MeetingRoom({ onBack, canGoBack }: MeetingRoomProps) {
 
         {/* Live captions */}
         {showCaptions && (
-          <div className="px-5 py-2.5 bg-ink-900/80 backdrop-blur border-t border-white/5">
+          <div aria-live="polite" className="px-5 py-2.5 bg-ink-900/80 backdrop-blur border-t border-white/5">
             <div className="flex items-start gap-3 max-w-4xl mx-auto">
-              <span className="badge bg-accent-500/20 text-accent-300 shrink-0 mt-0.5">
-                <Captions size={12} /> Live
+              <span className="badge bg-accent-500/20 !text-accent-200 shrink-0 mt-0.5">
+                <Captions size={12} aria-hidden="true" /> {t('meet.live')}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-white/50 font-medium">{transcriptSegments[activeCaption]?.speakerName}</p>
+                <p className="text-xs text-white/70 font-medium">{transcriptSegments[activeCaption]?.speakerName}</p>
                 <p className="text-sm text-white mt-0.5">{transcriptSegments[activeCaption]?.text}</p>
               </div>
             </div>
@@ -257,131 +274,152 @@ export function MeetingRoom({ onBack, canGoBack }: MeetingRoomProps) {
         )}
 
         {/* Control bar */}
-        <div className="flex items-center justify-center gap-2 px-5 py-4 bg-ink-900 shrink-0 relative">
+        <div role="toolbar" aria-label="Meeting controls" className="flex items-center justify-center gap-2 px-5 py-4 bg-ink-900 shrink-0 relative overflow-x-auto">
           {showReactions && (
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 flex gap-1.5 bg-ink-800 rounded-full px-3 py-2 shadow-float border border-white/10 animate-scale-in">
+            <div role="group" aria-label={t('meet.reactions')} className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 flex gap-1.5 bg-ink-800 rounded-full px-3 py-2 shadow-float border border-white/10 animate-scale-in">
               {reactions.map((r, i) => (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => setShowReactions(false)}
-                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-lg"
+                  aria-label={t('meet.sendReaction', { emoji: r.emoji })}
+                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-lg focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60"
                 >
-                  {r.emoji}
+                  <span aria-hidden="true">{r.emoji}</span>
                 </button>
               ))}
             </div>
           )}
 
           <button
+            type="button"
             onClick={toggleMute}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            aria-pressed={isMuted}
+            aria-label={isMuted ? t('meet.unmute') : t('meet.mute')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
               isMuted ? 'bg-error-600 hover:bg-error-700' : 'bg-white/10 hover:bg-white/20'
             } text-white`}
-            title={isMuted ? 'Unmute' : 'Mute'}
           >
-            {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+            {isMuted ? <MicOff size={20} aria-hidden="true" /> : <Mic size={20} aria-hidden="true" />}
           </button>
 
           <button
+            type="button"
             onClick={toggleCamera}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            aria-pressed={!isCameraOn}
+            aria-label={isCameraOn ? t('meet.camOff') : t('meet.camOn')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
               !isCameraOn ? 'bg-error-600 hover:bg-error-700' : 'bg-white/10 hover:bg-white/20'
             } text-white`}
-            title={isCameraOn ? 'Turn off camera' : 'Turn on camera'}
           >
-            {isCameraOn ? <VideoIcon size={20} /> : <VideoOff size={20} />}
+            {isCameraOn ? <VideoIcon size={20} aria-hidden="true" /> : <VideoOff size={20} aria-hidden="true" />}
           </button>
 
           <button
+            type="button"
             onClick={() => setShowReactions(!showReactions)}
-            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
-            title="Reactions"
+            aria-expanded={showReactions}
+            aria-label={t('meet.reactions')}
+            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60"
           >
-            <Smile size={20} />
+            <Smile size={20} aria-hidden="true" />
           </button>
 
           <button
+            type="button"
             onClick={toggleHand}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            aria-pressed={isHandRaised}
+            aria-label={isHandRaised ? t('meet.lowerHand') : t('meet.raiseHand')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
               isHandRaised ? 'bg-warning-500 hover:bg-warning-600' : 'bg-white/10 hover:bg-white/20'
             } text-white`}
-            title="Raise hand"
           >
-            <Hand size={20} />
+            <Hand size={20} aria-hidden="true" />
           </button>
 
           <button
+            type="button"
             onClick={() => setIsScreenSharing(!isScreenSharing)}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            aria-pressed={isScreenSharing}
+            aria-label={isScreenSharing ? t('meet.stopShare') : t('meet.share')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
               isScreenSharing ? 'bg-primary-600 hover:bg-primary-700' : 'bg-white/10 hover:bg-white/20'
             } text-white`}
-            title="Share screen"
           >
-            <MonitorUp size={20} />
+            <MonitorUp size={20} aria-hidden="true" />
           </button>
 
-          <div className="w-px h-8 bg-white/20 mx-1" />
+          <div aria-hidden="true" className="w-px h-8 bg-white/20 mx-1 shrink-0" />
 
           <button
+            type="button"
             onClick={() => togglePanel('participants')}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all relative ${
+            aria-pressed={panel === 'participants'}
+            aria-label={lobby.length > 0 ? t('meet.participants.lobby', { n: lobby.length }) : t('meet.participants')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all relative focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
               panel === 'participants' ? 'bg-primary-600' : 'bg-white/10 hover:bg-white/20'
             } text-white`}
-            title="Participants"
           >
-            <Users size={20} />
+            <Users size={20} aria-hidden="true" />
             {lobby.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-warning-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-0.5 bg-warning-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center tnum">
                 {lobby.length}
               </span>
             )}
           </button>
 
           <button
+            type="button"
             onClick={() => togglePanel('chat')}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            aria-pressed={panel === 'chat'}
+            aria-label={t('meet.chat')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
               panel === 'chat' ? 'bg-primary-600' : 'bg-white/10 hover:bg-white/20'
             } text-white`}
-            title="Chat"
           >
-            <MessageSquare size={20} />
+            <MessageSquare size={20} aria-hidden="true" />
           </button>
 
           <button
+            type="button"
             onClick={() => togglePanel('ai')}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            aria-pressed={panel === 'ai'}
+            aria-label={t('meet.ai')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
               panel === 'ai' ? 'bg-accent-600' : 'bg-white/10 hover:bg-white/20'
             } text-white`}
-            title="AI Assistant"
           >
-            <Sparkles size={20} />
+            <Sparkles size={20} aria-hidden="true" />
           </button>
 
           <button
+            type="button"
             onClick={() => togglePanel('whiteboard')}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            aria-pressed={panel === 'whiteboard'}
+            aria-label={t('meet.whiteboard')}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 ${
               panel === 'whiteboard' ? 'bg-primary-600' : 'bg-white/10 hover:bg-white/20'
             } text-white`}
-            title="Whiteboard"
           >
-            <PenTool size={20} />
+            <PenTool size={20} aria-hidden="true" />
           </button>
 
-          <div className="w-px h-8 bg-white/20 mx-1" />
+          <div aria-hidden="true" className="w-px h-8 bg-white/20 mx-1 shrink-0" />
 
           <button
+            type="button"
             onClick={onBack}
-            className="px-5 h-12 rounded-full bg-error-600 hover:bg-error-700 flex items-center gap-2 text-white font-medium text-sm transition-all"
-            title="Leave meeting"
+            aria-label={t('meet.leave')}
+            className="px-5 h-12 rounded-full bg-error-600 hover:bg-error-700 flex items-center gap-2 text-white font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/60 shrink-0"
           >
-            <PhoneOff size={20} /> Leave
+            <PhoneOff size={20} aria-hidden="true" /> {t('meet.leave')}
           </button>
         </div>
       </div>
 
       {/* Side panel */}
       {panel && (
-        <div className="w-80 shrink-0 bg-white border-l border-ink-200 flex flex-col animate-slide-in-right">
+        <aside aria-label="Meeting side panel" className="meet-side animate-slide-in-right">
           {panel === 'participants' && (
             <ParticipantsPanel
               participants={participants}
@@ -405,7 +443,7 @@ export function MeetingRoom({ onBack, canGoBack }: MeetingRoomProps) {
           )}
           {panel === 'ai' && <AIPanel onClose={() => setPanel(null)} />}
           {panel === 'whiteboard' && <WhiteboardPanel onClose={() => setPanel(null)} />}
-        </div>
+        </aside>
       )}
     </div>
   );

@@ -8,111 +8,241 @@ import {
   Video as VideoIcon,
   Search,
   Bell,
-  ChevronDown,
-  ArrowLeft,
+  ChevronLeft,
   Menu,
   X,
 } from 'lucide-react';
 import type { Page } from '@/types';
 import { currentUser, notifications } from '@/data';
 import { Avatar } from '@/components/Avatar';
+import { useLanguage } from '@/i18n';
+import './Sidebar.css';
 
 interface SidebarProps {
   current: Page;
   onNavigate: (page: Page) => void;
+  onSignOut: () => void;
 }
 
-const navItems: { id: Page; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'planner', label: 'Meeting Planner', icon: CalendarPlus },
-  { id: 'meeting', label: 'Meeting Room', icon: Video },
-  { id: 'post-meeting', label: 'Post-Meeting', icon: ClipboardList },
-  { id: 'admin', label: 'Admin Settings', icon: Settings },
-];
+function FlagIcon({ code }: { code: 'en' | 'vi' }) {
+  if (code === 'vi') {
+    return (
+      <span className="side-flag" aria-hidden="true">
+        <svg viewBox="0 0 20 14">
+          <rect width="20" height="14" fill="#DA251D" />
+          <polygon points="10,3 11.18,6.62 15,6.62 11.91,8.85 13.09,12.48 10,10.24 6.91,12.48 8.09,8.85 5,6.62 8.82,6.62" fill="#FFDE00" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span className="side-flag" aria-hidden="true">
+      <svg viewBox="0 0 20 14">
+        <rect width="20" height="14" fill="#012169" />
+        <path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" strokeWidth="2.5" />
+        <path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" strokeWidth="1.2" />
+        <path d="M10,0 V14 M0,7 H20" stroke="#fff" strokeWidth="4" />
+        <path d="M10,0 V14 M0,7 H20" stroke="#C8102E" strokeWidth="2.2" />
+      </svg>
+    </span>
+  );
+}
 
-function SidebarContent({ current, onNavigate }: SidebarProps) {
+function SidebarFooter({ onSignOut, collapsed, onToggleCollapse }: { onSignOut: () => void; collapsed: boolean; onToggleCollapse: () => void }) {
+  const { t, lang, setLang } = useLanguage();
+  const [showNotif, setShowNotif] = useState(false);
+  const [menuPinned, setMenuPinned] = useState(false);
+  const unread = notifications.filter((n) => !n.read).length;
+
+  return (
+    <div className={`side-footer${collapsed ? ' side-footer--collapsed' : ''}`}>
+      {showNotif && <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />}
+      {showNotif && (
+        <div role="dialog" aria-label={t('topbar.notif')} className="side-pop">
+          <div className="side-pop__head">
+            <span className="side-pop__title">{t('topbar.notif')}</span>
+            <button type="button" className="text-xs text-cta-700 font-medium hover:underline">{t('topbar.markRead')}</button>
+          </div>
+          <div className="side-pop__list">
+            {notifications.map((n) => (
+              <div key={n.id} className="side-notif">
+                <span aria-hidden="true" className={`side-notif__dot ${n.type === 'warning' ? 'bg-warning-500' : n.type === 'success' ? 'bg-success-500' : n.type === 'error' ? 'bg-error-500' : 'bg-primary-500'}`} />
+                <span className="min-w-0">
+                  <span className="side-notif__title">{n.title}</span>
+                  <span className="side-notif__msg">{n.message}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="side-account">
+        <div className="side-account__user-wrap">
+          <button
+            type="button"
+            onClick={() => setMenuPinned((v) => !v)}
+            aria-expanded={menuPinned}
+            aria-label={t('topbar.account', { name: currentUser.name })}
+            title={currentUser.name}
+            className="side-account__user"
+          >
+            <Avatar name={currentUser.name} color={currentUser.avatarColor} size="sm" />
+            {!collapsed && (
+              <span className="side-account__info">
+                <span className="side-account__name">{currentUser.name}</span>
+                <span className="side-account__sub">{currentUser.department}</span>
+              </span>
+            )}
+          </button>
+          <div role="menu" aria-label="Account menu" className={`side-pop side-pop--menu${menuPinned ? ' side-pop--pinned' : ''}`}>
+            <div className="side-pop__head">
+              <span className="side-pop__title">{currentUser.name}</span>
+            </div>
+            <div className="side-pop__list">
+              <button type="button" role="menuitem" className="side-pop__item">{t('topbar.profile')}</button>
+              <button type="button" role="menuitem" className="side-pop__item">{t('topbar.history')}</button>
+              <button type="button" role="menuitem" className="side-pop__item">{t('topbar.prefs')}</button>
+              <button type="button" role="menuitem" onClick={onSignOut} className="side-pop__item side-pop__item--danger">{t('topbar.signOut')}</button>
+            </div>
+          </div>
+        </div>
+        <div className={`side-account__actions${collapsed ? ' side-account__actions--col' : ''}`}>
+          <button
+            type="button"
+            onClick={() => setLang(lang === 'en' ? 'vi' : 'en')}
+            className="side-iconbtn"
+            aria-label={t('lang.label')}
+            title={t('lang.switchTo')}
+          >
+            <FlagIcon code={lang === 'en' ? 'en' : 'vi'} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowNotif((v) => !v)}
+            aria-expanded={showNotif}
+            aria-label={unread > 0 ? t('topbar.notif.unread', { count: unread }) : t('topbar.notif')}
+            title={t('topbar.notif')}
+            className="side-iconbtn"
+          >
+            <Bell size={22} aria-hidden="true" />
+            {unread > 0 && <span aria-hidden="true" className="side-badge">{unread}</span>}
+          </button>
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-expanded={collapsed}
+            aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
+            title={collapsed ? t('nav.expand') : t('nav.collapse')}
+            className="side-iconbtn"
+          >
+            <Menu size={22} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface SidebarContentProps extends SidebarProps {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}
+
+function SidebarContent({ current, onNavigate, onSignOut, collapsed, onToggleCollapse }: SidebarContentProps) {
+  const { t } = useLanguage();
+  const navItems: { id: Page; label: string; icon: typeof LayoutDashboard }[] = [
+    { id: 'dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { id: 'planner', label: t('nav.planner'), icon: CalendarPlus },
+    { id: 'meeting', label: t('nav.meeting'), icon: Video },
+    { id: 'post-meeting', label: t('nav.postMeeting'), icon: ClipboardList },
+    { id: 'admin', label: t('nav.admin'), icon: Settings },
+  ];
   return (
     <>
-      <div className="px-5 py-5 border-b border-ink-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
-            <VideoIcon size={20} />
+      <div className={`border-b border-ink-100 shrink-0 ${collapsed ? 'px-2 py-4 flex justify-center' : 'px-5 py-4'}`}>
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+          <div aria-hidden="true" className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
+            <VideoIcon size={22} />
           </div>
-          <div className="min-w-0">
-            <p className="font-bold text-ink-900 text-sm leading-tight">Smart Meeting</p>
-            <p className="text-xs text-ink-400 leading-tight">Room System</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="font-heading font-bold text-ink-900 text-[17px] leading-tight">Smart Meeting</p>
+              <p className="text-[13px] text-ink-500 leading-tight mt-0.5">Room System</p>
+            </div>
+          )}
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="px-3 pb-2 text-xs font-semibold text-ink-400 uppercase tracking-wider">Main</p>
+      <nav aria-label="Main navigation" className={`side-nav flex-1 py-3 space-y-1 ${collapsed ? 'side-nav--collapsed px-2' : 'px-4'}`}>
         {navItems.map((item) => (
           <button
             key={item.id}
+            type="button"
             onClick={() => onNavigate(item.id)}
-            className={`nav-item w-full ${current === item.id ? 'nav-item-active' : ''}`}
+            aria-current={current === item.id ? 'page' : undefined}
+            title={collapsed ? item.label : undefined}
+            className={`nav-item w-full !text-[15px] !px-3.5 !py-3 !gap-3 ${collapsed ? '!justify-center !px-0' : ''} ${current === item.id ? 'nav-item-active' : ''}`}
           >
-            <item.icon size={18} className="shrink-0" />
-            <span className="truncate">{item.label}</span>
-            {item.id === 'meeting' && (
-              <span className="ml-auto w-2 h-2 bg-error-500 rounded-full animate-pulse-soft shrink-0" />
+            <item.icon size={22} aria-hidden="true" className="shrink-0" />
+            {!collapsed && <span className="truncate">{item.label}</span>}
+            {!collapsed && item.id === 'meeting' && (
+              <span className="ml-auto flex items-center gap-1.5 shrink-0">
+                <span aria-hidden="true" className="w-2 h-2 bg-error-500 rounded-full animate-pulse-soft" />
+                <span className="sr-only">{t('nav.meeting.live')}</span>
+              </span>
             )}
           </button>
         ))}
       </nav>
-
-      <div className="px-3 py-4 border-t border-ink-100">
-        <div className="rounded-xl bg-gradient-to-br from-primary-50 to-accent-50 p-4 border border-primary-100">
-          <p className="text-sm font-semibold text-ink-900">AI Credits</p>
-          <p className="text-xs text-ink-500 mt-0.5">Transcription & summaries</p>
-          <div className="mt-2.5 h-1.5 bg-white rounded-full overflow-hidden">
-            <div className="h-full w-[72%] bg-gradient-to-r from-primary-500 to-accent-500 rounded-full" />
-          </div>
-          <p className="text-xs text-ink-600 mt-1.5">7,200 / 10,000 min</p>
-        </div>
-      </div>
+      <SidebarFooter onSignOut={onSignOut} collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
     </>
   );
 }
 
-export function Sidebar({ current, onNavigate }: SidebarProps) {
+export function Sidebar({ current, onNavigate, onSignOut }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const { t } = useLanguage();
 
   const handleNavigate = (page: Page) => {
     onNavigate(page);
     setMobileOpen(false);
   };
+  const toggleCollapse = () => setCollapsed((v) => !v);
 
   return (
     <>
-      {/* Desktop sidebar — 1:6 ratio */}
-      <aside className="hidden md:flex flex-col bg-white border-r border-ink-200 h-screen sticky top-0 md:w-[14.28%] lg:w-[14.28%] min-w-[180px] max-w-[260px]">
-        <SidebarContent current={current} onNavigate={onNavigate} />
+      {/* Desktop sidebar — 1:4 ratio (20% sidebar / 80% body), thu gon chi icon. */}
+      <aside className={`hidden md:flex flex-col bg-white border-r border-ink-200 h-screen h-[100dvh] max-h-[100dvh] overflow-hidden sticky top-0 transition-all duration-200 ${collapsed ? 'w-20 min-w-[80px] max-w-[80px]' : 'md:w-[20%] lg:w-[20%] min-w-[200px] max-w-[320px]'}`}>
+        <SidebarContent current={current} onNavigate={onNavigate} onSignOut={onSignOut} collapsed={collapsed} onToggleCollapse={toggleCollapse} />
       </aside>
 
       {/* Mobile hamburger button */}
       <button
+        type="button"
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-3 left-3 z-40 w-10 h-10 rounded-lg bg-white border border-ink-200 shadow-sm flex items-center justify-center text-ink-700"
-        aria-label="Open menu"
+        aria-expanded={mobileOpen}
+        aria-controls="mobile-sidebar"
+        className="md:hidden fixed top-3 left-3 z-40 w-11 h-11 rounded-lg bg-white border border-ink-200 shadow-sm flex items-center justify-center text-ink-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40"
+        aria-label={t('nav.openMenu')}
       >
-        <Menu size={20} />
+        <Menu size={20} aria-hidden="true" />
       </button>
 
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
+        <div className="md:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Main menu">
           <div className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm animate-drawer-overlay" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-64 bg-white shadow-float animate-sidebar-slide flex flex-col h-full">
+          <aside id="mobile-sidebar" className="relative w-64 bg-white shadow-float animate-sidebar-slide flex flex-col h-full">
             <button
+              type="button"
               onClick={() => setMobileOpen(false)}
-              className="absolute top-3 right-3 p-1.5 rounded-lg text-ink-400 hover:bg-ink-100 hover:text-ink-700 transition-colors z-10"
-              aria-label="Close menu"
+              className="absolute top-3 right-3 min-w-[36px] min-h-[36px] p-1.5 rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink-700 transition-colors z-10 inline-flex items-center justify-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40"
+              aria-label={t('nav.closeMenu')}
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </button>
-            <SidebarContent current={current} onNavigate={handleNavigate} />
+            <SidebarContent current={current} onNavigate={handleNavigate} onSignOut={onSignOut} collapsed={false} onToggleCollapse={() => setMobileOpen(false)} />
           </aside>
         </div>
       )}
@@ -123,120 +253,44 @@ export function Sidebar({ current, onNavigate }: SidebarProps) {
 interface TopBarProps {
   title: string;
   subtitle?: string;
-  onNavigate: (page: Page) => void;
   onBack: () => void;
   canGoBack: boolean;
-  onSignOut: () => void;
 }
 
-export function TopBar({ title, subtitle, onBack, canGoBack, onSignOut }: TopBarProps) {
-  const [showNotif, setShowNotif] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const unread = notifications.filter((n) => !n.read).length;
+export function TopBar({ title, subtitle, onBack, canGoBack }: TopBarProps) {
+  const { t } = useLanguage();
 
   return (
-    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-ink-200 px-4 md:px-8 py-3.5">
+    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-ink-200 px-5 md:px-8 py-4 md:py-5">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0 md:ml-0 ml-12">
+        <div className="flex items-center gap-3.5 min-w-0 md:ml-0 ml-12">
           {canGoBack && (
             <button
+              type="button"
               onClick={onBack}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-ink-600 hover:bg-ink-100 hover:text-ink-900 transition-all active:scale-[0.98] shrink-0"
+              aria-label={t('topbar.goBack')}
+              title={t('topbar.back')}
+              className="back-btn back-btn-light"
             >
-              <ArrowLeft size={16} />
-              <span className="hidden sm:inline">Back</span>
+              <ChevronLeft size={22} aria-hidden="true" />
             </button>
           )}
           <div className="min-w-0">
-            <h1 className="text-base md:text-xl font-bold text-ink-900 truncate">{title}</h1>
-            {subtitle && <p className="text-xs md:text-sm text-ink-500 truncate">{subtitle}</p>}
+            <h1 className="text-lg md:text-2xl font-bold text-ink-900 truncate">{title}</h1>
+            {subtitle && <p className="text-[13px] md:text-[15px] text-ink-500 truncate mt-0.5">{subtitle}</p>}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="relative hidden lg:block">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="relative hidden lg:block" role="search">
+            <label htmlFor="topbar-search" className="sr-only">{t('topbar.search.label')}</label>
+            <Search size={18} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" />
             <input
-              type="text"
-              placeholder="Search meetings, tasks, transcripts..."
-              className="w-64 pl-9 pr-3 py-2 text-sm rounded-lg bg-ink-100 border border-transparent focus:bg-white focus:border-primary-300 focus:ring-2 focus:ring-primary-500/10 transition-all"
+              id="topbar-search"
+              type="search"
+              placeholder={t('topbar.search.placeholder')}
+              className="input-field w-72 pl-10 pr-4 py-2.5 !text-[15px] !min-h-[44px] !bg-ink-100 !border-transparent focus:!bg-white focus:!border-primary-300"
             />
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => { setShowNotif(!showNotif); setShowProfile(false); }}
-              className="relative p-2 rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink-700 transition-colors"
-            >
-              <Bell size={20} />
-              {unread > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-error-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {unread}
-                </span>
-              )}
-            </button>
-            {showNotif && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowNotif(false)} />
-                <div className="absolute right-0 mt-2 w-72 md:w-80 bg-white rounded-xl shadow-float border border-ink-200 z-20 animate-scale-in overflow-hidden">
-                  <div className="px-4 py-3 border-b border-ink-100 flex items-center justify-between">
-                    <span className="font-semibold text-ink-900 text-sm">Notifications</span>
-                    <span className="text-xs text-primary-600 font-medium cursor-pointer">Mark all read</span>
-                  </div>
-                  <div className="max-h-80 overflow-y-auto">
-                    {notifications.map((n) => (
-                      <div key={n.id} className={`px-4 py-3 border-b border-ink-50 hover:bg-ink-50 transition-colors cursor-pointer ${!n.read ? 'bg-primary-50/40' : ''}`}>
-                        <div className="flex items-start gap-2.5">
-                          <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${n.type === 'warning' ? 'bg-warning-500' : n.type === 'success' ? 'bg-success-500' : n.type === 'error' ? 'bg-error-500' : 'bg-primary-500'}`} />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-ink-900">{n.title}</p>
-                            <p className="text-xs text-ink-500 mt-0.5">{n.message}</p>
-                            <p className="text-xs text-ink-400 mt-1">{n.timestamp}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => { setShowProfile(!showProfile); setShowNotif(false); }}
-              className="flex items-center gap-2 p-1 pr-2 rounded-lg hover:bg-ink-100 transition-colors"
-            >
-              <Avatar name={currentUser.name} color={currentUser.avatarColor} size="sm" />
-              <div className="hidden lg:block text-left">
-                <p className="text-sm font-medium text-ink-900 leading-tight">{currentUser.name}</p>
-                <p className="text-xs text-ink-400 leading-tight">{currentUser.department}</p>
-              </div>
-              <ChevronDown size={16} className="text-ink-400 hidden lg:block" />
-            </button>
-            {showProfile && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowProfile(false)} />
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-float border border-ink-200 z-20 animate-scale-in overflow-hidden">
-                  <div className="px-4 py-3 border-b border-ink-100">
-                    <p className="text-sm font-semibold text-ink-900">{currentUser.name}</p>
-                    <p className="text-xs text-ink-400">{currentUser.email}</p>
-                  </div>
-                  <div className="py-1.5">
-                    <button className="w-full text-left px-4 py-2 text-sm text-ink-600 hover:bg-ink-50 transition-colors">My Profile</button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-ink-600 hover:bg-ink-50 transition-colors">Meeting History</button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-ink-600 hover:bg-ink-50 transition-colors">Preferences</button>
-                    <div className="border-t border-ink-100 my-1.5" />
-                    <button
-                      onClick={onSignOut}
-                      className="w-full text-left px-4 py-2 text-sm text-error-600 hover:bg-error-50 transition-colors"
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>

@@ -21,7 +21,14 @@ export function statusColor(status: MeetingStatus): string {
   }
 }
 
-export function statusLabel(status: MeetingStatus): string {
+export function statusLabel(status: MeetingStatus, lang: 'en' | 'vi' = 'en'): string {
+  const vi: Record<MeetingStatus, string> = {
+    live: 'Đang diễn ra',
+    scheduled: 'Đã lên lịch',
+    completed: 'Đã xong',
+    cancelled: 'Đã hủy',
+  };
+  if (lang === 'vi') return vi[status];
   switch (status) {
     case 'live':
       return 'Live Now';
@@ -47,7 +54,14 @@ export function taskStatusColor(status: Task['status']): string {
   }
 }
 
-export function taskStatusLabel(status: Task['status']): string {
+export function taskStatusLabel(status: Task['status'], lang: 'en' | 'vi' = 'en'): string {
+  const vi: Record<Task['status'], string> = {
+    pending: 'Đang chờ',
+    'in-progress': 'Đang làm',
+    completed: 'Hoàn thành',
+    overdue: 'Quá hạn',
+  };
+  if (lang === 'vi') return vi[status];
   switch (status) {
     case 'pending':
       return 'Pending';
@@ -71,7 +85,14 @@ export function priorityColor(priority: Task['priority']): string {
   }
 }
 
-export function roleLabel(role: ParticipantRole): string {
+export function roleLabel(role: ParticipantRole, lang: 'en' | 'vi' = 'en'): string {
+  const vi: Record<ParticipantRole, string> = {
+    host: 'Chủ phòng',
+    secretary: 'Thư ký',
+    member: 'Thành viên',
+    guest: 'Khách',
+  };
+  if (lang === 'vi') return vi[role];
   switch (role) {
     case 'host':
       return 'Host';
@@ -97,14 +118,14 @@ export function roleBadgeColor(role: ParticipantRole): string {
   }
 }
 
-export function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string, locale = 'en-US'): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-export function formatDateLong(dateStr: string): string {
+export function formatDateLong(dateStr: string, locale = 'en-US'): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  return date.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 export function isToday(dateStr: string): boolean {

@@ -1,26 +1,27 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
-import { useLanguage } from '@/i18n';
 
-interface ModalProps {
+export interface DrawerProps {
   open: boolean;
   onClose: () => void;
   title: string;
   subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  side?: 'right' | 'left';
+  widthClass?: string;
 }
 
-const sizeMap: Record<NonNullable<ModalProps['size']>, string> = {
-  sm: 'max-w-[480px]',
-  md: 'max-w-[640px]',
-  lg: 'max-w-[880px]',
-  xl: 'max-w-[1200px]',
-};
-
-export function Modal({ open, onClose, title, subtitle, children, footer, size = 'lg' }: ModalProps) {
-  const { t } = useLanguage();
+export function Drawer({
+  open,
+  onClose,
+  title,
+  subtitle,
+  children,
+  footer,
+  side = 'right',
+  widthClass = 'w-[min(480px,92vw)]',
+}: DrawerProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const prevFocus = useRef<HTMLElement | null>(null);
@@ -60,7 +61,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 animate-drawer-overlay" role="presentation">
+    <div className="fixed inset-0 z-50 flex animate-drawer-overlay" role="presentation">
       <div className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
@@ -68,17 +69,23 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative w-full ${sizeMap[size]} max-h-[90dvh] bg-white rounded-2xl shadow-float animate-dialog-scale flex flex-col outline-none`}
+        className={[
+          'relative bg-white shadow-float flex flex-col h-full outline-none',
+          side === 'right' ? 'ml-auto animate-drawer-slide' : 'mr-auto',
+          widthClass,
+        ].join(' ')}
       >
         <div className="flex items-start justify-between px-6 py-4 border-b border-ink-100 shrink-0">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-lg font-heading font-semibold text-ink-900 truncate">{title}</h2>
+            <h2 id={titleId} className="text-lg font-heading font-semibold text-ink-900 truncate">
+              {title}
+            </h2>
             {subtitle && <p className="text-sm text-ink-500 mt-0.5 truncate">{subtitle}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label={t('common.closeDialog')}
+            aria-label="Close panel"
             className="p-2 rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink-900 transition-colors shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center"
           >
             <X size={20} aria-hidden="true" />
@@ -86,7 +93,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
         </div>
         <div className="px-6 py-4 overflow-y-auto flex-1">{children}</div>
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-ink-100 bg-ink-50/50 shrink-0 flex-wrap rounded-b-2xl">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-ink-100 bg-ink-50/50 shrink-0 flex-wrap">
             {footer}
           </div>
         )}

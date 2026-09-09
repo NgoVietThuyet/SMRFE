@@ -1,25 +1,27 @@
 import { useState, useCallback } from 'react';
 import type { Page } from '@/types';
+import { useLanguage } from '@/i18n';
 import { Login } from '@/components/Login';
 import { Sidebar, TopBar } from '@/components/Sidebar';
-import { Dashboard } from '@/pages/Dashboard';
-import { Planner } from '@/pages/Planner';
-import { MeetingRoom } from '@/pages/MeetingRoom';
-import { PostMeeting } from '@/pages/PostMeeting';
-import { Admin } from '@/pages/Admin';
-
-const pageInfo: Record<Page, { title: string; subtitle: string }> = {
-  dashboard: { title: 'Dashboard', subtitle: 'Your meetings, tasks, and insights at a glance' },
-  planner: { title: 'Meeting Planner', subtitle: 'Schedule, manage, and join meetings' },
-  meeting: { title: 'Meeting Room', subtitle: 'Live conference with AI assistance' },
-  'post-meeting': { title: 'Post-Meeting', subtitle: 'Tasks, minutes, and reports' },
-  admin: { title: 'Admin Settings', subtitle: 'System configuration and management' },
-};
+import { Dashboard } from '@/pages/Dashboard/index';
+import { Planner } from '@/pages/Planner/index';
+import { MeetingRoom } from '@/pages/MeetingRoom/index';
+import { PostMeeting } from '@/pages/PostMeeting/index';
+import { Admin } from '@/pages/Admin/index';
 
 export default function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { t } = useLanguage();
+  const [loggedIn, setLoggedIn] = useState(() => !!localStorage.getItem('token'));
   const [page, setPage] = useState<Page>('dashboard');
   const [history, setHistory] = useState<Page[]>([]);
+
+  const pageInfo: Record<Page, { title: string; subtitle: string }> = {
+    dashboard: { title: t('page.dashboard.title'), subtitle: t('page.dashboard.sub') },
+    planner: { title: t('page.planner.title'), subtitle: t('page.planner.sub') },
+    meeting: { title: t('page.meeting.title'), subtitle: t('page.meeting.sub') },
+    'post-meeting': { title: t('page.postMeeting.title'), subtitle: t('page.postMeeting.sub') },
+    admin: { title: t('page.admin.title'), subtitle: t('page.admin.sub') },
+  };
 
   const navigate = useCallback((next: Page) => {
     setHistory((prev) => [...prev, page]);
@@ -48,17 +50,20 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen bg-ink-50">
-      <Sidebar current={page} onNavigate={navigate} />
+      <Sidebar current={page} onNavigate={navigate} onSignOut={() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('fullName');
+        setLoggedIn(false);
+      }} />
       <div className="flex-1 min-w-0 flex flex-col">
         <TopBar
           title={pageInfo[page].title}
           subtitle={pageInfo[page].subtitle}
-          onNavigate={navigate}
           onBack={goBack}
           canGoBack={canGoBack}
-          onSignOut={() => setLoggedIn(false)}
         />
-        <main className="flex-1">
+        <main id="main-content" className="flex-1">
           {page === 'dashboard' && <Dashboard onNavigate={navigate} />}
           {page === 'planner' && <Planner onNavigate={navigate} onBack={goBack} canGoBack={canGoBack} />}
           {page === 'post-meeting' && <PostMeeting onNavigate={navigate} onBack={goBack} canGoBack={canGoBack} />}

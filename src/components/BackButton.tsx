@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 
 interface BackButtonProps {
   onClick: () => void;
@@ -9,15 +9,13 @@ interface BackButtonProps {
 export function BackButton({ onClick, label = 'Back', variant = 'light' }: BackButtonProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98] ${
-        variant === 'light'
-          ? 'text-ink-600 hover:bg-ink-100 hover:text-ink-900'
-          : 'text-white/70 hover:bg-white/10 hover:text-white'
-      }`}
+      aria-label={label}
+      title={label}
+      className={`back-btn ${variant === 'light' ? 'back-btn-light' : 'back-btn-dark'}`}
     >
-      <ArrowLeft size={16} />
-      {label}
+      <ChevronLeft size={18} aria-hidden="true" />
     </button>
   );
 }

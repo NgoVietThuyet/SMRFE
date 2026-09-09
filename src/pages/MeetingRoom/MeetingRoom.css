@@ -1,0 +1,14 @@
+/* MeetingRoom page — element dat ten theo pattern meet, dung lai back-btn chung. */
+.meet-shell { display: flex; height: 100vh; background: #0f172a; }
+.meet-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.meet-topbar { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.25rem; background: #0f172a; flex-shrink: 0; }
+.meet-topbar__left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.meet-sep { height: 1rem; width: 1px; background: rgba(255,255,255,.2); }
+.meet-stage { flex: 1; min-height: 0; position: relative; border-radius: 5px; overflow: hidden; background: #1e293b; }
+.meet-grid { display: grid; gap: 0.75rem; flex: 1; min-height: 0; }
+.meet-grid--l0 { grid-template-columns: 1fr; }
+.meet-grid--l1 { grid-template-columns: 1fr; }
+.meet-grid--l2 { grid-template-columns: repeat(2, 1fr); }
+.meet-grid--l3 { grid-template-columns: repeat(3, 1fr); }
+.meet-film { flex-shrink: 0; display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 4px; }
+.meet-side { width: 20rem; flex-shrink: 0; background: #fff; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; }

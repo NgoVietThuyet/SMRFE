@@ -29,9 +29,28 @@ import {
 } from 'lucide-react';
 import type { Meeting, AgendaItem, Participant, MeetingDocument } from '@/types';
 import { participants, orgContacts, meetingDocuments } from '@/data';
-import { statusColor, statusLabel, formatDateLong, formatDuration, roleLabel, roleBadgeColor } from '@/utils';
+import { statusLabel, formatDateLong, formatDuration, roleLabel } from '@/utils';
 import { Avatar } from '@/components/Avatar';
 import { Modal } from '@/components/Modal';
+import { Button } from '@/components/ui/Button';
+import { Badge, type BadgeTone } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { useLanguage } from '@/i18n';
+
+const meetingTone: Record<string, BadgeTone> = {
+  live: 'error',
+  scheduled: 'info',
+  completed: 'success',
+  cancelled: 'neutral',
+};
+
+const roleTone: Record<string, BadgeTone> = {
+  host: 'warning',
+  'co-host': 'info',
+  secretary: 'accent',
+  member: 'neutral',
+  guest: 'neutral',
+};
 
 type DetailTab = 'overview' | 'members' | 'documents';
 
@@ -64,6 +83,7 @@ function generateMeetingLink(meeting: Meeting): string {
 }
 
 export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailModalProps) {
+  const { t, lang, locale } = useLanguage();
   const [tab, setTab] = useState<DetailTab>('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [editedMeeting, setEditedMeeting] = useState<Meeting>(meeting);
@@ -146,20 +166,20 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
       size="xl"
       footer={
         <>
-          <button onClick={onClose} className="btn-secondary">Close</button>
+          <Button variant="secondary" onClick={onClose}>{t('mdm.close')}</Button>
           {isEditing ? (
-            <button onClick={handleSave} className="btn-primary">
-              <Save size={16} /> Save Changes
-            </button>
+            <Button onClick={handleSave}>
+              <Save size={16} aria-hidden="true" /> {t('mdm.save')}
+            </Button>
           ) : (
             <>
-              <button onClick={() => setIsEditing(true)} className="btn-secondary">
-                <Pencil size={16} /> Edit
-              </button>
+              <Button variant="secondary" onClick={() => setIsEditing(true)}>
+                <Pencil size={16} aria-hidden="true" /> {t('mdm.edit')}
+              </Button>
               {meeting.status !== 'completed' && (
-                <button onClick={onJoin} className="btn-primary">
-                  <Video size={16} /> {isLive ? 'Join Now' : 'Start Meeting'}
-                </button>
+                <Button onClick={onJoin}>
+                  <Video size={16} aria-hidden="true" /> {isLive ? t('mdm.join') : t('mdm.start')}
+                </Button>
               )}
             </>
           )}
@@ -167,20 +187,23 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
       }
     >
       {/* Tab bar */}
-      <div className="flex items-center gap-1 bg-ink-50 rounded-lg p-1 w-fit mb-5">
+      <div role="tablist" aria-label={t('mdm.details')} className="flex items-center gap-1 bg-ink-50 rounded-lg p-1 w-fit max-w-full overflow-x-auto mb-5">
         {([
-          { id: 'overview' as const, label: 'Tổng quan', icon: FileText },
-          { id: 'members' as const, label: 'Thành viên', icon: Users },
-          { id: 'documents' as const, label: 'Tài liệu', icon: FileSpreadsheet },
-        ]).map((t) => (
+          { id: 'overview' as const, label: t('mdm.overview'), icon: FileText },
+          { id: 'members' as const, label: t('mdm.members'), icon: Users },
+          { id: 'documents' as const, label: t('mdm.documents'), icon: FileSpreadsheet },
+        ]).map((tabItem) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              tab === t.id ? 'bg-white text-primary-700 shadow-sm' : 'text-ink-500 hover:text-ink-700'
+            key={tabItem.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === tabItem.id}
+            onClick={() => setTab(tabItem.id)}
+            className={`flex items-center gap-2 px-4 min-h-[40px] rounded-md text-sm font-medium transition-all whitespace-nowrap ${
+              tab === tabItem.id ? 'bg-white text-primary-700 shadow-sm' : 'text-ink-500 hover:text-ink-700'
             }`}
           >
-            <t.icon size={16} /> {t.label}
+            <tabItem.icon size={16} aria-hidden="true" /> {tabItem.label}
           </button>
         ))}
       </div>
@@ -189,51 +212,59 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
       {tab === 'overview' && (
         <div className="space-y-5">
           {/* Basic info grid */}
-          <div className="grid grid-cols-2 gap-4">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-3 rounded-lg bg-ink-50">
-              <p className="text-xs text-ink-400 mb-1">Date</p>
+              <dt className="text-xs text-ink-500 mb-1">{t('mdm.date')}</dt>
               {isEditing ? (
+                <dd><label htmlFor="mdm-date" className="sr-only">{t('mdm.dateLabel')}</label>
                 <input
+                  id="mdm-date"
                   type="date"
                   value={editedMeeting.date}
                   onChange={(e) => setEditedMeeting({ ...editedMeeting, date: e.target.value })}
                   className="input-field text-sm py-1.5"
-                />
+                /></dd>
               ) : (
-                <p className="text-sm font-medium text-ink-900 flex items-center gap-2">
-                  <Calendar size={14} className="text-primary-600" /> {formatDateLong(editedMeeting.date)}
-                </p>
+                <dd className="text-sm font-medium text-ink-900 flex items-center gap-2 tnum">
+                  <Calendar size={14} aria-hidden="true" className="text-primary-600" /> {formatDateLong(editedMeeting.date, locale)}
+                </dd>
               )}
             </div>
             <div className="p-3 rounded-lg bg-ink-50">
-              <p className="text-xs text-ink-400 mb-1">Time</p>
+              <dt className="text-xs text-ink-500 mb-1">{t('mdm.time')}</dt>
               {isEditing ? (
-                <div className="flex items-center gap-2">
+                <dd className="flex items-center gap-2">
+                  <label htmlFor="mdm-start" className="sr-only">{t('mdm.startLabel')}</label>
                   <input
+                    id="mdm-start"
                     type="time"
                     value={editedMeeting.startTime}
                     onChange={(e) => setEditedMeeting({ ...editedMeeting, startTime: e.target.value })}
                     className="input-field text-sm py-1.5 flex-1"
                   />
-                  <span className="text-ink-400">–</span>
+                  <span aria-hidden="true" className="text-ink-400">–</span>
+                  <label htmlFor="mdm-end" className="sr-only">{t('mdm.endLabel')}</label>
                   <input
+                    id="mdm-end"
                     type="time"
                     value={editedMeeting.endTime}
                     onChange={(e) => setEditedMeeting({ ...editedMeeting, endTime: e.target.value })}
                     className="input-field text-sm py-1.5 flex-1"
                   />
-                </div>
+                </dd>
               ) : (
-                <p className="text-sm font-medium text-ink-900 flex items-center gap-2">
-                  <Clock size={14} className="text-primary-600" /> {editedMeeting.startTime} – {editedMeeting.endTime}
-                  <span className="text-xs text-ink-400">({formatDuration(editedMeeting.startTime, editedMeeting.endTime)})</span>
-                </p>
+                <dd className="text-sm font-medium text-ink-900 flex items-center gap-2 tnum">
+                  <Clock size={14} aria-hidden="true" className="text-primary-600" /> {editedMeeting.startTime} – {editedMeeting.endTime}
+                  <span className="text-xs text-ink-500">({formatDuration(editedMeeting.startTime, editedMeeting.endTime)})</span>
+                </dd>
               )}
             </div>
             <div className="p-3 rounded-lg bg-ink-50">
-              <p className="text-xs text-ink-400 mb-1">Room</p>
+              <dt className="text-xs text-ink-500 mb-1">{t('mdm.room')}</dt>
               {isEditing ? (
+                <dd><label htmlFor="mdm-room" className="sr-only">{t('mdm.roomLabel')}</label>
                 <select
+                  id="mdm-room"
                   value={editedMeeting.room}
                   onChange={(e) => setEditedMeeting({ ...editedMeeting, room: e.target.value })}
                   className="input-field text-sm py-1.5"
@@ -243,48 +274,50 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
                   <option>Conference Room C</option>
                   <option>Board Room</option>
                   <option>Huddle Space 1</option>
-                </select>
+                </select></dd>
               ) : (
-                <p className="text-sm font-medium text-ink-900 flex items-center gap-2">
-                  <MapPin size={14} className="text-primary-600" /> {editedMeeting.room}
-                </p>
+                <dd className="text-sm font-medium text-ink-900 flex items-center gap-2">
+                  <MapPin size={14} aria-hidden="true" className="text-primary-600" /> {editedMeeting.room}
+                </dd>
               )}
             </div>
             <div className="p-3 rounded-lg bg-ink-50">
-              <p className="text-xs text-ink-400 mb-1">Status</p>
-              <p className="flex items-center gap-2">
-                <span className={`badge ${statusColor(editedMeeting.status)}`}>{statusLabel(editedMeeting.status)}</span>
-              </p>
+              <dt className="text-xs text-ink-500 mb-1">{t('mdm.status')}</dt>
+              <dd className="flex items-center gap-2">
+                <Badge tone={meetingTone[editedMeeting.status] ?? 'neutral'}>{statusLabel(editedMeeting.status, lang)}</Badge>
+              </dd>
             </div>
-          </div>
+          </dl>
 
           {/* Meeting link + QR */}
-          <div className="flex items-start gap-4 p-4 rounded-xl border border-ink-100 bg-gradient-to-br from-primary-50/50 to-accent-50/30">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-ink-900 mb-2">Meeting Link</p>
+          <div className="flex flex-col sm:flex-row items-start gap-4 p-4 rounded-xl border border-ink-100 bg-gradient-to-br from-primary-50/50 to-accent-50/30">
+            <div className="flex-1 min-w-0 w-full">
+              <p className="text-sm font-semibold text-ink-900 mb-2">{t('mdm.link')}</p>
               <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-ink-200">
-                  <Link2 size={14} className="text-ink-400 shrink-0" />
-                  <span className="text-sm text-ink-700 font-mono truncate">{meetingLink}</span>
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 min-h-[40px] rounded-lg bg-white border border-ink-200 min-w-0">
+                  <Link2 size={14} aria-hidden="true" className="text-ink-400 shrink-0" />
+                  <span className="text-sm text-ink-700 font-mono truncate overflow-wrap-anywhere">{meetingLink}</span>
                 </div>
-                <button
+                <Button
+                  variant="secondary"
                   onClick={handleCopyLink}
-                  className={`btn-secondary px-3 py-2 shrink-0 ${copied ? 'text-success-600' : ''}`}
+                  aria-label={copied ? t('mdm.copied') : t('mdm.copyLink')}
+                  className={`px-3 py-2 shrink-0 ${copied ? '!text-success-700' : ''}`}
                 >
-                  {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
-                </button>
+                  {copied ? <CheckCircle2 size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+                </Button>
               </div>
-              <div className="flex items-center gap-3 mt-3">
-                <span className="flex items-center gap-1.5 text-sm text-ink-600">
-                  <Lock size={14} /> {editedMeeting.isSecure ? 'Secure meeting' : 'Open meeting'}
-                </span>
-                <span className="flex items-center gap-1.5 text-sm text-ink-600">
-                  <Mic size={14} /> {editedMeeting.aiEnabled ? 'AI enabled' : 'AI disabled'}
-                </span>
-                <span className="flex items-center gap-1.5 text-sm text-ink-600">
-                  <Video size={14} /> {editedMeeting.recordingEnabled ? 'Recording on' : 'No recording'}
-                </span>
-              </div>
+              <ul className="flex items-center gap-3 mt-3 flex-wrap">
+                <li className="flex items-center gap-1.5 text-sm text-ink-600">
+                  <Lock size={14} aria-hidden="true" /> {editedMeeting.isSecure ? t('mdm.secure') : t('mdm.open')}
+                </li>
+                <li className="flex items-center gap-1.5 text-sm text-ink-600">
+                  <Mic size={14} aria-hidden="true" /> {editedMeeting.aiEnabled ? t('mdm.aiOn') : t('mdm.aiOff')}
+                </li>
+                <li className="flex items-center gap-1.5 text-sm text-ink-600">
+                  <Video size={14} aria-hidden="true" /> {editedMeeting.recordingEnabled ? t('mdm.recOn') : t('mdm.recOff')}
+                </li>
+              </ul>
             </div>
             {/* QR code visual */}
             <div className="shrink-0">
@@ -304,71 +337,78 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
                 </div>
               </div>
               <p className="text-center text-xs text-ink-400 mt-1 flex items-center justify-center gap-1">
-                <QrCode size={10} /> QR Code
+                <QrCode size={10} /> {t('mdm.qr')}
               </p>
             </div>
           </div>
 
           {/* Agenda */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-ink-900">Agenda ({agenda.length} items)</p>
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+              <p aria-live="polite" className="text-sm font-semibold text-ink-900 tnum">{t('mdm.agenda', { n: agenda.length })}</p>
               {isEditing && (
-                <button onClick={addAgendaItem} className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
-                  <Plus size={14} /> Add item
-                </button>
+                <Button variant="ghost" size="sm" onClick={addAgendaItem}>
+                  <Plus size={14} aria-hidden="true" /> {t('mdm.addItem')}
+                </Button>
               )}
             </div>
-            <div className="space-y-2">
+            <ol className="space-y-2">
               {agenda.map((item, idx) => (
-                <div key={item.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-ink-100">
+                <li key={item.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-ink-100">
                   {isEditing ? (
                     <>
+                      <label htmlFor={`agenda-title-${item.id}`} className="sr-only">{t('mdm.agendaTitle', { n: idx + 1 })}</label>
                       <input
+                        id={`agenda-title-${item.id}`}
                         value={item.title}
                         onChange={(e) => setAgenda(agenda.map((a) => a.id === item.id ? { ...a, title: e.target.value } : a))}
-                        placeholder="Agenda item title"
+                        placeholder={t('mdm.agendaTitle', { n: idx + 1 })}
                         className="input-field flex-1 text-sm py-1.5"
                       />
+                      <label htmlFor={`agenda-dur-${item.id}`} className="sr-only">{t('planner.create.agendaDur')}</label>
                       <input
+                        id={`agenda-dur-${item.id}`}
                         type="number"
+                        min={1}
                         value={item.duration}
                         onChange={(e) => setAgenda(agenda.map((a) => a.id === item.id ? { ...a, duration: Number(e.target.value) } : a))}
-                        className="input-field w-16 text-sm py-1.5"
+                        className="input-field w-16 text-sm py-1.5 tnum"
                       />
-                      <span className="text-xs text-ink-400">min</span>
+                      <span aria-hidden="true" className="text-xs text-ink-500">min</span>
+                      <label htmlFor={`agenda-presenter-${item.id}`} className="sr-only">Presenter</label>
                       <input
+                        id={`agenda-presenter-${item.id}`}
                         value={item.presenter}
                         onChange={(e) => setAgenda(agenda.map((a) => a.id === item.id ? { ...a, presenter: e.target.value } : a))}
                         placeholder="Presenter"
                         className="input-field w-32 text-sm py-1.5"
                       />
-                      <button onClick={() => removeAgendaItem(item.id)} className="p-1.5 text-ink-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-colors">
-                        <X size={16} />
+                      <button type="button" onClick={() => removeAgendaItem(item.id)} aria-label={t('mdm.removeItem', { n: idx + 1 })} className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center p-1.5 text-ink-500 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40">
+                        <X size={16} aria-hidden="true" />
                       </button>
                     </>
                   ) : (
                     <>
                       {item.completed ? (
-                        <CheckCircle2 size={18} className="text-success-600 shrink-0" />
+                        <CheckCircle2 size={18} aria-hidden="true" className="text-success-600 shrink-0" />
                       ) : (
-                        <Circle size={18} className="text-ink-300 shrink-0" />
+                        <Circle size={18} aria-hidden="true" className="text-ink-300 shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium ${item.completed ? 'text-ink-400 line-through' : 'text-ink-900'}`}>
+                        <p className={`text-sm font-medium ${item.completed ? 'text-ink-500 line-through' : 'text-ink-900'}`}>
                           {item.title}
                         </p>
-                        <p className="text-xs text-ink-400">{item.presenter} · {item.duration} min</p>
+                        <p className="text-xs text-ink-500 tnum">{item.presenter} · {item.duration} min</p>
                       </div>
-                      <span className="text-xs text-ink-400 font-mono">#{idx + 1}</span>
+                      <span aria-hidden="true" className="text-xs text-ink-500 font-mono tnum">#{idx + 1}</span>
                     </>
                   )}
-                </div>
+                </li>
               ))}
               {agenda.length === 0 && (
-                <p className="text-sm text-ink-400 text-center py-4">No agenda items yet</p>
+                <li><EmptyState title={t('mdm.noAgenda')} description={isEditing ? t('mdm.noAgendaEdit') : t('mdm.noAgendaView')} /></li>
               )}
-            </div>
+            </ol>
           </div>
         </div>
       )}
@@ -376,122 +416,119 @@ export function MeetingDetailModal({ meeting, onClose, onJoin }: MeetingDetailMo
       {/* Members Tab */}
       {tab === 'members' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-ink-500">{meetingParticipants.length} participants</p>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p aria-live="polite" className="text-sm text-ink-500 tnum">{t('mdm.participants', { n: meetingParticipants.length })}</p>
             {isEditing && (
-              <button onClick={() => setShowAddMember(!showAddMember)} className="btn-secondary text-sm py-1.5">
-                <UserPlus size={14} /> Add Member
-              </button>
+              <Button variant="secondary" size="sm" onClick={() => setShowAddMember(!showAddMember)} aria-expanded={showAddMember}>
+                <UserPlus size={14} aria-hidden="true" /> {t('mdm.addMember')}
+              </Button>
             )}
           </div>
 
           {showAddMember && availableContacts.length > 0 && (
             <div className="p-3 rounded-lg border border-primary-200 bg-primary-50/30 space-y-1">
-              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">Available Contacts</p>
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">{t('mdm.available')}</p>
+              <ul className="space-y-1">
               {availableContacts.map((c) => (
+                <li key={c.id}>
                 <button
-                  key={c.id}
+                  type="button"
                   onClick={() => addParticipant(c.id)}
-                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white transition-colors"
+                  aria-label={t('mdm.add', { name: c.name })}
+                  className="w-full flex items-center gap-3 p-2 min-h-[44px] rounded-lg hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40"
                 >
                   <Avatar name={c.name} color={c.avatarColor} size="sm" />
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium text-ink-900 truncate">{c.name}</p>
-                    <p className="text-xs text-ink-400 truncate">{c.department}</p>
-                  </div>
-                  <Plus size={16} className="text-primary-600" />
+                  <span className="flex-1 text-left min-w-0">
+                    <span className="block text-sm font-medium text-ink-900 truncate">{c.name}</span>
+                    <span className="block text-xs text-ink-500 truncate">{c.department}</span>
+                  </span>
+                  <Plus size={16} aria-hidden="true" className="text-primary-600" />
                 </button>
+                </li>
               ))}
+              </ul>
             </div>
           )}
 
-          <div className="space-y-2">
+          <ul className="space-y-2">
             {meetingParticipants.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-ink-100 hover:border-primary-200 transition-colors group">
+              <li key={p.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-ink-100 hover:border-primary-200 transition-colors group">
                 <Avatar name={p.name} color={p.avatarColor} size="sm" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-ink-900 truncate">{p.name}</p>
-                  <p className="text-xs text-ink-400 truncate">{p.email}</p>
+                  <p className="text-xs text-ink-500 truncate overflow-wrap-anywhere">{p.email}</p>
                 </div>
-                <span className={`badge ${roleBadgeColor(p.role)}`}>{roleLabel(p.role)}</span>
-                <span className="text-xs text-ink-400 hidden sm:block">{p.department}</span>
+                <Badge tone={roleTone[p.role] ?? 'neutral'}>{roleLabel(p.role, lang)}</Badge>
+                <span className="text-xs text-ink-500 hidden sm:block">{p.department}</span>
                 {isEditing && (
                   <button
+                    type="button"
                     onClick={() => removeParticipant(p.id)}
-                    className="p-1.5 text-ink-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                    title="Remove"
+                    aria-label={t('mdm.remove', { name: p.name })}
+                    className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center p-1.5 text-ink-500 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40"
                   >
-                    <UserMinus size={16} />
+                    <UserMinus size={16} aria-hidden="true" />
                   </button>
                 )}
-              </div>
+              </li>
             ))}
             {meetingParticipants.length === 0 && (
-              <p className="text-sm text-ink-400 text-center py-4">No participants yet</p>
+              <li><EmptyState title={t('mdm.noMembers')} description={t('mdm.noMembersDesc')} /></li>
             )}
-          </div>
+          </ul>
         </div>
       )}
 
       {/* Documents Tab */}
       {tab === 'documents' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-ink-500">{docs.length} documents</p>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p aria-live="polite" className="text-sm text-ink-500 tnum">{t('mdm.docs', { n: docs.length })}</p>
             {isEditing && (
-              <button className="btn-secondary text-sm py-1.5">
-                <Upload size={14} /> Upload
-              </button>
+              <Button variant="secondary" size="sm">
+                <Upload size={14} aria-hidden="true" /> {t('mdm.upload')}
+              </Button>
             )}
           </div>
 
           {docs.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-14 h-14 mx-auto bg-ink-100 rounded-full flex items-center justify-center text-ink-400">
-                <FileSpreadsheet size={28} />
-              </div>
-              <p className="mt-3 text-ink-500 font-medium">No documents uploaded</p>
-              <p className="text-sm text-ink-400 mt-1">
-                {isEditing ? 'Click Upload to add documents' : 'Documents will appear here once uploaded'}
-              </p>
-            </div>
+            <EmptyState
+              icon={<FileSpreadsheet size={28} aria-hidden="true" />}
+              title={t('mdm.noDocs')}
+              description={isEditing ? t('mdm.noDocsEdit') : t('mdm.noDocsView')}
+            />
           ) : (
-            <div className="space-y-2">
+            <ul className="space-y-2">
               {docs.map((doc) => {
                 const Icon = docIcons[doc.type];
                 return (
-                  <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border border-ink-100 hover:border-primary-200 hover:shadow-soft transition-all group">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${docColors[doc.type]}`}>
+                  <li key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border border-ink-100 hover:border-primary-200 hover:shadow-soft transition-all group">
+                    <div aria-hidden="true" className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${docColors[doc.type]}`}>
                       <Icon size={20} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-ink-900 truncate">{doc.name}</p>
-                      <div className="flex items-center gap-3 mt-0.5 text-xs text-ink-400">
-                        <span>{doc.size}</span>
-                        <span>·</span>
-                        <span>{doc.uploadedBy}</span>
-                        <span>·</span>
-                        <span>{doc.uploadedAt}</span>
-                      </div>
+                      <p className="mt-0.5 text-xs text-ink-500 tnum">{doc.size} · {doc.uploadedBy} · {doc.uploadedAt}</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button className="p-2 text-ink-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Download">
-                        <Download size={16} />
+                      <button type="button" aria-label={t('mdm.download', { name: doc.name })} className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center p-2 text-ink-500 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40">
+                        <Download size={16} aria-hidden="true" />
                       </button>
                       {isEditing && (
                         <button
+                          type="button"
                           onClick={() => removeDoc(doc.id)}
-                          className="p-2 text-ink-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-colors"
-                          title="Delete"
+                          aria-label={t('mdm.delete', { name: doc.name })}
+                          className="min-w-[36px] min-h-[36px] inline-flex items-center justify-center p-2 text-ink-500 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={16} aria-hidden="true" />
                         </button>
                       )}
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
         </div>
       )}

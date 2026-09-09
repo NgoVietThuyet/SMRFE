@@ -1,12 +1,15 @@
 import { useRef, useEffect, useState } from 'react';
-import { PenTool, Circle, FileText } from 'lucide-react';
+import { PenTool, FileText, Eraser } from 'lucide-react';
 import { PanelHeader } from '@/components/meeting/PanelHeader';
+import { Button } from '@/components/ui/Button';
+import { useLanguage } from '@/i18n';
 
 interface WhiteboardPanelProps {
   onClose: () => void;
 }
 
 export function WhiteboardPanel({ onClose }: WhiteboardPanelProps) {
+  const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState('#3b82f6');
@@ -61,25 +64,42 @@ export function WhiteboardPanel({ onClose }: WhiteboardPanelProps) {
 
   return (
     <>
-      <PanelHeader title="Whiteboard" icon={PenTool} onClose={onClose} />
-      <div className="px-4 py-2.5 border-b border-ink-100 flex items-center gap-2">
-        <button onClick={() => setTool('pen')} className={`p-1.5 rounded ${tool === 'pen' ? 'bg-primary-100 text-primary-700' : 'text-ink-400 hover:bg-ink-100'}`}>
-          <PenTool size={16} />
+      <PanelHeader title={t('panel.wb.title')} icon={PenTool} onClose={onClose} />
+      <div role="toolbar" aria-label={t('panel.wb.tools')} className="px-4 py-2.5 border-b border-ink-100 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setTool('pen')}
+          aria-pressed={tool === 'pen'}
+          aria-label={t('panel.wb.pen')}
+          className={`min-w-[36px] min-h-[36px] inline-flex items-center justify-center p-1.5 rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40 ${tool === 'pen' ? 'bg-primary-100 text-primary-700' : 'text-ink-500 hover:bg-ink-100'}`}
+        >
+          <PenTool size={16} aria-hidden="true" />
         </button>
-        <button onClick={() => setTool('eraser')} className={`p-1.5 rounded ${tool === 'eraser' ? 'bg-primary-100 text-primary-700' : 'text-ink-400 hover:bg-ink-100'}`}>
-          <Circle size={16} />
+        <button
+          type="button"
+          onClick={() => setTool('eraser')}
+          aria-pressed={tool === 'eraser'}
+          aria-label={t('panel.wb.eraser')}
+          className={`min-w-[36px] min-h-[36px] inline-flex items-center justify-center p-1.5 rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40 ${tool === 'eraser' ? 'bg-primary-100 text-primary-700' : 'text-ink-500 hover:bg-ink-100'}`}
+        >
+          <Eraser size={16} aria-hidden="true" />
         </button>
-        <div className="w-px h-5 bg-ink-200" />
+        <div aria-hidden="true" className="w-px h-5 bg-ink-200" />
+        <div role="group" aria-label={t('panel.wb.colors')} className="flex items-center gap-1.5">
         {colors.map((c) => (
           <button
             key={c}
+            type="button"
             onClick={() => { setColor(c); setTool('pen'); }}
-            className={`w-5 h-5 rounded-full border-2 transition-all ${color === c ? 'border-ink-900 scale-110' : 'border-white'}`}
+            aria-label={t('panel.wb.penColor', { c })}
+            aria-pressed={color === c && tool === 'pen'}
+            className={`w-6 h-6 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40 ${color === c ? 'border-ink-900 scale-110' : 'border-white shadow-sm'}`}
             style={{ backgroundColor: c }}
           />
         ))}
+        </div>
         <div className="flex-1" />
-        <button onClick={clearCanvas} className="text-xs text-ink-400 hover:text-error-600 font-medium">Clear</button>
+        <button type="button" onClick={clearCanvas} className="text-xs text-ink-500 hover:text-error-700 font-medium min-h-[36px] px-2 rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-cta-500/40">{t('panel.wb.clear')}</button>
       </div>
       <div className="flex-1 p-2 bg-ink-100">
         <canvas
@@ -90,13 +110,15 @@ export function WhiteboardPanel({ onClose }: WhiteboardPanelProps) {
           onMouseMove={draw}
           onMouseUp={stopDraw}
           onMouseLeave={stopDraw}
+          role="img"
+          aria-label={t('panel.wb.canvas')}
           className="w-full h-full rounded-lg bg-white shadow-sm cursor-crosshair"
         />
       </div>
       <div className="px-4 py-2.5 border-t border-ink-100">
-        <button className="btn-secondary w-full text-xs py-2">
-          <FileText size={14} /> Save Snapshot
-        </button>
+        <Button variant="secondary" size="sm" className="w-full">
+          <FileText size={14} aria-hidden="true" /> {t('panel.wb.save')}
+        </Button>
       </div>
     </>
   );
