@@ -1,0 +1,658 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+// Tasks — list-page-tabs (chips as tabs) kế thừa styles.scss
+.list-page-tabs {
+    // :host đảm nhiệm height
+}
+.tasks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+// ── Header context ──────────────────────────────
+.tasks__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+
+    i,
+    span[nz-icon] {
+        font-size: var(--font-size-base);
+        color: var(--text-muted);
+    }
+
+    &:hover {
+        color: var(--primary-600);
+    }
+}
+
+.tasks__context-error {
+    margin-top: var(--space-1);
+    font-size: var(--font-size-sm);
+    color: var(--warning);
+}
+
+.tasks__toolbar {
+    padding: 0;
+}
+
+.tasks__filter {
+    width: 225px;
+    flex-shrink: 0;
+}
+
+// ── Summary chips ───────────────────────────────
+.tasks__chips {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.tasks__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: var(--control-height);
+    padding: 0 var(--space-4);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: #fff;
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+
+    &:hover {
+        border-color: var(--primary-600);
+        color: var(--primary-600);
+    }
+}
+
+.tasks__chip--active {
+    border-color: var(--primary-600);
+    color: var(--primary-600);
+    font-weight: 600;
+}
+
+.tasks__chip-count {
+    min-width: 25px;
+    padding: 0 8px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary, #f1f5f9);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    line-height: 22px;
+    text-align: center;
+}
+
+// ── Group header (theo cuộc họp) ───────────────
+.tasks__group-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-2);
+    cursor: pointer;
+    user-select: none;
+    border-radius: var(--radius-md);
+
+    &:hover {
+        background: rgba(37, 99, 235, 0.04);
+    }
+}
+
+.tasks__group-toggle {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-muted);
+    transition: transform 0.15s ease;
+
+    &--collapsed {
+        transform: rotate(-90deg);
+    }
+}
+
+.tasks__group-name {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tasks__group-time {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.tasks__group-count {
+    margin-left: auto;
+    padding: 0 10px;
+    border-radius: var(--radius-sm);
+    background: rgba(148, 163, 184, 0.15);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+// ── Hàng công việc ──────────────────────────────
+.tasks__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+}
+
+.tasks__row {
+    display: grid;
+    grid-template-columns: 35px minmax(275px, 1fr) 212px 188px 162px 32px 105px 40px;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: #fff;
+    transition: border-color 0.15s ease;
+
+    &:hover {
+        border-color: var(--primary-600);
+    }
+}
+
+.tasks__row--done .tasks__title {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+// Checkbox hoàn thành — custom, 22px
+.tasks__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &--hidden {
+        visibility: hidden;
+    }
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    input:disabled+.tasks__checkmark {
+        opacity: 0.45;
+    }
+
+    input:checked+.tasks__checkmark {
+        border-color: var(--success);
+        background: var(--success);
+    }
+
+    input:checked+.tasks__checkmark::after {
+        content: '';
+        display: block;
+        width: 5px;
+        height: 11px;
+        margin: 1px auto;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+}
+
+.tasks__checkmark {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border-strong);
+    border-radius: 4px;
+    background: #fff;
+}
+
+.tasks__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.tasks__title {
+    padding: 0;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover {
+        color: var(--primary-600);
+    }
+}
+
+.tasks__desc {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tasks__meeting-ref {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    color: var(--primary-600);
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+// ── Người phụ trách ─────────────────────────────
+.tasks__assignee {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.tasks__avatar {
+    background-color: var(--primary-600);
+    flex-shrink: 0;
+}
+
+.tasks__assignee-name {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tasks__unassigned {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+// ── Thời hạn: chỉ tô màu chữ + icon (không tô cả dòng) ──
+.tasks__due {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+
+    i,
+    span[nz-icon] {
+        font-size: var(--font-size-sm);
+    }
+}
+
+.tasks__due.is-due-soon {
+    color: var(--warning);
+
+    i,
+    span[nz-icon] {
+        color: var(--warning);
+    }
+}
+
+.tasks__due.is-overdue {
+    color: var(--danger);
+    font-weight: 600;
+
+    i,
+    span[nz-icon] {
+        color: var(--danger);
+    }
+}
+
+// ── Quick-change trạng thái ─────────────────────
+.tasks__status-quick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+
+    &:hover {
+        color: var(--primary-600);
+        background: rgba(37, 99, 235, 0.08);
+    }
+}
+
+// ── Ưu tiên: tag nhỏ, chữ màu, không nền đậm ──
+.tasks__priority {
+    display: inline-block;
+    padding: 1px 10px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    text-align: center;
+}
+
+.tasks__priority--low {
+    color: var(--text-muted);
+    background: rgba(148, 163, 184, 0.12);
+}
+
+.tasks__priority--medium {
+    color: var(--primary-600);
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.tasks__priority--high {
+    color: var(--danger);
+    background: rgba(220, 38, 38, 0.08);
+}
+
+.tasks__pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-4);
+}
+
+// ── Responsive (spec 2.4) ───────────────────────
+// 768–1023: gọn — ẩn mô tả + ưu tiên
+@media (max-width: 1023px) {
+    .tasks__row {
+        grid-template-columns: 35px minmax(200px, 1fr) 188px 162px 32px 40px;
+
+        .tasks__assignee {
+            display: none;
+        }
+
+        .tasks__priority {
+            display: none;
+        }
+    }
+}
+
+// <768: mỗi task thành khối stacked, search full-width
+@media (max-width: 767px) {
+    .tasks__filter {
+        width: 100%;
+    }
+
+    .tasks__toolbar {
+        flex-wrap: wrap;
+    }
+
+    .tasks__row {
+        grid-template-columns: 35px 1fr 40px;
+        grid-template-areas:
+            'check main more'
+            '. meta more';
+        row-gap: var(--space-2);
+        align-items: start;
+
+        .tasks__check {
+            grid-area: check;
+        }
+
+        .tasks__main {
+            grid-area: main;
+        }
+
+        .tasks__assignee {
+            grid-area: meta;
+            display: flex;
+        }
+
+        .tasks__due {
+            grid-area: meta;
+            margin-left: auto;
+            width: fit-content;
+        }
+
+        .tasks__status-quick,
+        .smr-status,
+        .tasks__priority {
+            display: none;
+        }
+
+        .smr-icon-btn {
+            grid-area: more;
+        }
+    }
+
+    .tasks__chips {
+        gap: var(--space-1);
+    }
+
+    .tasks__chip {
+        padding: 0 var(--space-3);
+        font-size: var(--font-size-sm);
+    }
+}
+
+// ── Kanban Board Styles ─────────────────────────
+.tasks__board-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.tasks__board {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-4);
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+    flex: 1;
+    min-height: 0;
+}
+
+.kanban-column {
+    background-color: var(--bg-subtle, #F1F5F9);
+    border-radius: var(--radius-md);
+    width: 320px;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 260px);
+
+    &__header {
+        padding: var(--space-3) var(--space-4);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-default);
+    }
+
+    &__title {
+        font-weight: 600;
+        font-size: var(--font-size-base);
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    &__count {
+        background-color: var(--border-default);
+        color: var(--text-secondary);
+        border-radius: var(--radius-sm);
+        padding: 2px 8px;
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+    }
+
+    &__body {
+        padding: var(--space-2);
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        min-height: 80px;
+    }
+
+    &__footer {
+        padding: var(--space-2) var(--space-4);
+        border-top: 1px solid var(--border-default);
+    }
+
+    &__add-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-weight: 500;
+        font-size: var(--font-size-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        width: 100%;
+        text-align: left;
+        padding: var(--space-2) 0;
+        border-radius: var(--radius-md);
+
+        &:hover {
+            color: var(--primary-600);
+        }
+    }
+}
+
+.kanban-card {
+    background-color: var(--bg-surface, #FFFFFF);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+        border-color: var(--border-strong, #CBD5E1);
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+
+    &__labels {
+        display: flex;
+        gap: var(--space-1);
+        flex-wrap: wrap;
+    }
+
+    &__title {
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: var(--font-size-sm);
+        display: -webkit-box;
+        line-clamp: 3;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+    }
+
+    &__meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: var(--space-1);
+    }
+
+    &__icons {
+        display: flex;
+        gap: var(--space-2);
+        align-items: center;
+    }
+
+    &__assignee {
+        display: flex;
+        justify-content: flex-end;
+    }
+}
+
+// CDK drag-drop visual feedback (global, not scoped)
+.cdk-drag-preview.kanban-card {
+    box-sizing: border-box;
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    transform: rotate(2deg);
+}
+
+.cdk-drag-placeholder {
+    opacity: 0;
+}
+
+.cdk-drop-list-dragging .kanban-card:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.kanban-label {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+
+    &--high {
+        background-color: rgba(220, 38, 38, 0.1);
+        color: var(--danger);
+    }
+
+    &--low {
+        background-color: rgba(148, 163, 184, 0.12);
+        color: var(--text-secondary);
+    }
+
+    &--ai {
+        background-color: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+        padding: 2px 4px;
+        border-radius: 20px;
+    }
+}
+
+.kanban-icon {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    &.is-due-soon {
+        color: var(--warning);
+    }
+
+    &.is-overdue {
+        color: var(--danger);
+        font-weight: 600;
+    }
+
+    &--meeting {
+        color: var(--primary-600);
+    }
+}

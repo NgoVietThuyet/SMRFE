@@ -1,0 +1,88 @@
+<!-- =====================================================
+     TopHeader — SmartMeeting
+     Toggle | Back? | Breadcrumb | Search? | bell + VI/EN + help? + avatar
+===================================================== -->
+
+<header class="smr-top-header">
+
+    <!-- ── Left: toggle + back + breadcrumb ─────────── -->
+    <div class="smr-top-header__left">
+        <button class="smr-icon-btn" (click)="toggleSidebar()"
+            aria-label="Mở hoặc đóng menu điều hướng" title="Menu điều hướng">
+            <span nz-icon [nzType]="collapsed() ? 'menu-unfold' : 'menu-fold'" nzTheme="outline"></span>
+        </button>
+
+        @if (showBack()) {
+        <button class="smr-icon-btn" (click)="goBack()" title="Quay lại" aria-label="Quay lại">
+            <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+        </button>
+        }
+
+        @if (breadcrumb().length > 0) {
+        <nav class="smr-top-header__breadcrumb" aria-label="Breadcrumb">
+            @for (item of breadcrumb(); track item.label; let last = $last) {
+            @if (!last && item.route) {
+            <a class="smr-top-header__crumb-link" [routerLink]="item.route">{{ item.label }}</a>
+            } @else {
+            <span class="smr-top-header__crumb-current" [attr.aria-current]="last ? 'page' : null">
+                {{ item.label }}
+            </span>
+            }
+            @if (!last) {
+            <span class="smr-top-header__crumb-sep" aria-hidden="true">/</span>
+            }
+            }
+        </nav>
+        }
+    </div>
+
+    <!-- ── Right: search + global actions ───────────── -->
+    <div class="smr-top-header__right">
+
+        @if (showSearch()) {
+        <nz-input-wrapper class="smr-top-header__search">
+            <input nz-input type="search" autocomplete="off" [placeholder]="searchPlaceholder()"
+                aria-label="Tìm kiếm toàn cục" (input)="onSearch($any($event.target).value)" />
+            <span nzInputPrefix><span nz-icon nzType="search" nzTheme="outline"></span></span>
+        </nz-input-wrapper>
+        }
+
+        <button class="smr-icon-btn smr-top-header__bell" title="Thông báo" aria-label="Thông báo"
+            [class.smr-top-header__bell--unread]="hasUnread()">
+            <span nz-icon nzType="bell" nzTheme="outline"></span>
+        </button>
+
+        <div class="smr-top-header__locale" role="group" aria-label="Ngôn ngữ">
+            <button type="button" [class.smr-top-header__locale--active]="locale() === 'vi'"
+                (click)="setLocale('vi')">VI</button>
+            <button type="button" [class.smr-top-header__locale--active]="locale() === 'en'"
+                (click)="setLocale('en')">EN</button>
+        </div>
+
+        @if (showHelp()) {
+        <button class="smr-icon-btn" title="Trợ giúp" aria-label="Trợ giúp">
+            <span nz-icon nzType="question-circle" nzTheme="outline"></span>
+        </button>
+        }
+
+        <button class="smr-top-header__avatar" nz-dropdown [nzDropdownMenu]="userMenu" nzTrigger="click"
+            nzPlacement="bottomRight" aria-label="Tài khoản">
+            <span class="smr-avatar smr-avatar--sm">{{ initials() }}</span>
+        </button>
+        <nz-dropdown-menu #userMenu="nzDropdownMenu">
+            <ul nz-menu>
+                <li class="smr-top-header__user" aria-hidden="true">
+                    <span class="smr-top-header__user-name">{{ user()?.fullName }}</span>
+                    <span class="smr-top-header__user-email">{{ user()?.email }}</span>
+                </li>
+                <li nz-menu-divider></li>
+                <li nz-menu-item nzDanger (click)="logout()">
+                    <span nz-icon nzType="logout" nzTheme="outline"></span>
+                    <span>Đăng xuất</span>
+                </li>
+            </ul>
+        </nz-dropdown-menu>
+
+    </div>
+
+</header>

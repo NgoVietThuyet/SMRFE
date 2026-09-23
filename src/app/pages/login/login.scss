@@ -1,0 +1,201 @@
+// Login-specific styles
+// Khung + card riêng màn Login; input/button kế thừa global styles.scss.
+// #64748b là slate theo spec Login (chưa có token — cân nhắc thêm --text-tertiary).
+$login-muted: #64748b;
+
+.login {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-page);
+    padding: var(--space-4);
+
+    &__inner {
+        width: 550px;
+        max-width: calc(100vw - 40px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    // ── Brand Area ──────────────────────────────────
+    &__brand {
+        text-align: center;
+        margin-bottom: var(--space-6);
+    }
+
+    &__brand-name {
+        margin: 0;
+        font-size: var(--font-size-xl);
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    &__brand-desc {
+        margin: var(--space-1) 0 0;
+        font-size: var(--font-size-base);
+        color: $login-muted;
+    }
+
+    // ── Form card ───────────────────────────────────
+    &__card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-lg);
+        box-shadow: none;
+        padding: var(--space-8);
+    }
+
+    &__header {
+        margin-bottom: var(--space-6);
+    }
+
+    &__title {
+        margin: 0;
+        font-size: var(--font-size-xl);
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    &__subtitle {
+        margin: var(--space-1) 0 0;
+        font-size: var(--font-size-base);
+        color: $login-muted;
+    }
+
+    // Lỗi xác thực chung (1.15 / 1.16)
+    &__auth-error {
+        background-color: var(--danger-bg);
+        border: 1px solid var(--danger-border);
+        color: var(--danger);
+        border-radius: var(--radius-md);
+        padding: 12px var(--space-3);
+        font-size: var(--font-size-sm);
+        margin-bottom: var(--space-4);
+    }
+
+    &__support-message {
+        margin-bottom: var(--space-4);
+        padding: 12px var(--space-3);
+        border: 1px solid #bbf7d0;
+        border-radius: var(--radius-md);
+        background: #f0fdf4;
+        color: #166534;
+        font-size: var(--font-size-sm);
+    }
+
+    // ── Fields ──────────────────────────────────────
+    &__form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__field + &__field {
+        margin-top: var(--space-4);
+    }
+
+    &__label {
+        display: block;
+        font-size: var(--font-size-base);
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: var(--space-2);
+    }
+
+    // Input Login cao 50px (global mặc định 45px)
+    &__control.ant-input,
+    &__control-group.ant-input-affix-wrapper {
+        min-height: var(--control-height-lg);
+    }
+
+    &__field-error {
+        font-size: var(--font-size-xs);
+        color: var(--danger);
+        margin-top: var(--space-1);
+    }
+
+    // Icon eye built-in của nz-input-password (16–22px, hover #0F172A)
+    &__control-group.ant-input-affix-wrapper .ant-input-password-icon {
+        font-size: 20px;
+        color: $login-muted;
+        transition: color 0.15s;
+
+        &:hover {
+            color: var(--text-primary);
+        }
+    }
+
+    &__support {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: var(--space-2);
+    }
+
+    // Button Login cao 50px (global .ant-btn mặc định 45px)
+    &__btn.ant-btn {
+        height: var(--control-height-lg);
+        margin-top: var(--space-4);
+    }
+
+    &__btn--google {
+        margin-top: 0;
+    }
+
+    &__google-icon {
+        flex-shrink: 0;
+    }
+
+    // ── Divider ─────────────────────────────────────
+    &__divider {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin: var(--space-5) 0;
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
+
+        &::before,
+        &::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-default);
+        }
+    }
+
+    // ── Account notice ──────────────────────────────
+    &__notice {
+        margin: var(--space-5) 0 0;
+        font-size: var(--font-size-sm);
+        line-height: 1.5;
+        text-align: center;
+        color: $login-muted;
+    }
+}
+
+// Tablet 768–1279px
+@media (max-width: 1023px) {
+    .login__inner {
+        width: 525px;
+        max-width: calc(100vw - 60px);
+    }
+}
+
+// Mobile < 960px
+@media (max-width: 767px) {
+    .login {
+        padding: var(--space-4);
+        align-items: flex-start;
+    }
+
+    .login__inner {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+    }
+
+    .login__card {
+        padding: var(--space-6);
+    }
+}

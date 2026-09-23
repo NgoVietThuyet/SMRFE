@@ -1,0 +1,343 @@
+// TaskDetailDrawer — layout bên trong drawer 600px.
+// Khung drawer (header/body) kế thừa .ant-drawer-* trong styles.scss.
+.tdd {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.tdd__title-text {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+// ── Mode xem ────────────────────────────────────
+.tdd__view {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.tdd__view-row {
+    display: grid;
+    grid-template-columns: 162px 1fr;
+    gap: var(--space-3);
+    align-items: baseline;
+
+    dt {
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
+    }
+
+    dd {
+        margin: 0;
+        font-size: var(--font-size-base);
+        color: var(--text-primary);
+    }
+}
+
+.tdd__desc {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.tdd__assignee {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.tdd__avatar {
+    background-color: var(--primary-600);
+    flex-shrink: 0;
+}
+
+.tdd__muted {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+// Thời hạn quá hạn / sắp đến hạn — chỉ màu chữ
+.tdd__view-row dd.is-due-soon {
+    color: var(--warning);
+    font-weight: 500;
+}
+
+.tdd__view-row dd.is-overdue {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.tdd__meeting-link {
+    color: var(--primary-600);
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.tdd__actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+// ── Mode sửa (form) ─────────────────────────────
+.tdd__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.tdd__field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tdd__label {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.tdd__required {
+    color: var(--danger);
+}
+
+.tdd__field-error {
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+    margin-top: var(--space-1);
+}
+
+.tdd__row {
+    display: flex;
+    gap: var(--space-3);
+
+    .tdd__field {
+        flex: 1;
+    }
+}
+
+.tdd__full {
+    width: 100%;
+}
+
+.tdd__error {
+    background-color: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    border-radius: var(--radius-md);
+    padding: 12px var(--space-3);
+    font-size: var(--font-size-sm);
+}
+
+// ── Chia sẻ & Quyền ─────────────────────────────
+.tdd__share {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-default);
+}
+
+.tdd__share-title {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.tdd__share-public {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+}
+
+.tdd__share-label {
+    display: block;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+}
+
+.tdd__share-hint {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.tdd__share-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.tdd__share-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+}
+
+.tdd__share-name {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tdd__share-perm {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--primary-600);
+    padding: 1px 10px;
+    border-radius: var(--radius-sm);
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.tdd__share-empty {
+    margin: 0;
+}
+
+.tdd__share-add {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+}
+
+.tdd__share-user {
+    flex: 1;
+    min-width: 0;
+}
+
+.tdd__share-perm-select {
+    width: 112px;
+    flex-shrink: 0;
+}
+
+:host ::ng-deep .ant-drawer-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tdd__hierarchy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-default);
+}
+
+.tdd__hierarchy-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.tdd__hierarchy-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tdd__hierarchy-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 16px;
+    padding: 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: #fff;
+}
+
+.tdd__hierarchy-main,
+.tdd__hierarchy-meta {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 8px;
+}
+
+.tdd__hierarchy-title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-primary);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tdd__hierarchy-meta {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+// ── Drawer fullscreen khi hẹp (spec 2.4) ─────────
+@media (max-width: 767px) {
+    .tdd__row {
+        flex-direction: column;
+    }
+
+    .tdd__view-row {
+        grid-template-columns: 1fr;
+        gap: var(--space-1);
+    }
+
+    .tdd__share-add {
+        flex-wrap: wrap;
+
+        .tdd__share-user {
+            width: 100%;
+            flex-basis: 100%;
+        }
+    }
+
+    .tdd__hierarchy-head,
+    .tdd__hierarchy-item {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tdd__hierarchy-meta {
+        justify-content: flex-start;
+    }
+
+    .tdd__hierarchy-main {
+        flex-wrap: wrap;
+    }
+
+    .tdd__hierarchy-title {
+        flex: 1 1 180px;
+    }
+
+    .tdd__share-item {
+        flex-wrap: wrap;
+    }
+}

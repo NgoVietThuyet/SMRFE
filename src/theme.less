@@ -1,0 +1,214 @@
+// ============================================================
+// SmartMeeting — NG-ZORRO Theme Override
+// Đồng bộ với legacy design tokens (cyan-deep #075985)
+// Bỏ scale x1.25 — giá trị vật lý chuẩn theo spec cũ
+// ============================================================
+@import '../node_modules/ng-zorro-antd/ng-zorro-antd.less';
+
+// ------------------------------------------------------------
+// 1. Primary Color — legacy #075985 (cyan-deep)
+// ------------------------------------------------------------
+@primary-color: #075985;
+@primary-color-hover: #0369a1;
+@primary-color-active: #08385c;
+@primary-color-outline: rgba(7, 89, 133, 0.15);
+
+// ------------------------------------------------------------
+// 2. Background
+// ------------------------------------------------------------
+@body-background: #f5fafd;
+@component-background: #ffffff;
+@background-color-light: #f4f8fb; // drawer grey, zebra even
+@background-color-base: #f1f5f9; // hover subtle
+
+// ------------------------------------------------------------
+// 3. Border
+// ------------------------------------------------------------
+@border-color-base: #C9D9EA;
+@border-color-split: #C9D9EA;
+@border-color-inverse: #ffffff;
+@border-width-base: 1px;
+
+// ------------------------------------------------------------
+// 4. Typography — legacy 16px base
+// ------------------------------------------------------------
+@font-family: 'SVN-Gilroy', 'Segoe UI', Arial, sans-serif;
+@font-size-base: 16px;
+@font-size-sm: 16px;
+@font-size-lg: 20px;
+@line-height-base: 1.5;
+@text-color: #0f172a;
+@text-color-secondary: #475569;
+@text-color-warning: #d97706;
+@text-color-danger: #dc2626;
+@disabled-color: #94a3b8;
+@icon-color: #475569;
+@icon-color-hover: #075985;
+@heading-color: #0f172a;
+
+// ------------------------------------------------------------
+// 5. Border Radius — legacy duy nhất 5/6/9999/50%
+// ------------------------------------------------------------
+@border-radius-base: 5px;
+@border-radius-sm: 5px;
+@border-radius-lg: 6px;
+
+// ------------------------------------------------------------
+// 6. Shadow — chỉ floating
+// ------------------------------------------------------------
+@shadow-1-up: 0 4px 12px rgba(15, 23, 42, 0.08);
+@shadow-1-down: 0 4px 12px rgba(15, 23, 42, 0.08);
+@shadow-1-left: 0 4px 12px rgba(15, 23, 42, 0.08);
+@shadow-1-right: 0 4px 12px rgba(15, 23, 42, 0.08);
+@shadow-2: 0 5px 20px rgba(15, 23, 42, 0.1);
+@box-shadow-base: 0 4px 12px rgba(15, 23, 42, 0.08);
+
+// ------------------------------------------------------------
+// 7. Control — legacy 48px chuẩn
+// ------------------------------------------------------------
+@height-base: 48px;
+@height-lg: 48px;
+@height-sm: 35px;
+@control-padding-horizontal: 11px;
+@control-padding-horizontal-sm: 10px;
+
+// ------------------------------------------------------------
+// 8. Button
+// ------------------------------------------------------------
+@btn-height-base: 48px;
+@btn-height-lg: 48px;
+@btn-height-sm: 35px;
+@btn-font-size-base: 16px;
+@btn-font-size-lg: 16px;
+@btn-padding-horizontal-base: 20px;
+@btn-border-radius-base: 5px;
+@btn-border-radius-sm: 5px;
+
+@btn-primary-bg: #075985;
+@btn-default-bg: #ffffff;
+@btn-default-border: #C9D9EA;
+@btn-default-color: #475569;
+@btn-danger-bg: #dc2626;
+@btn-danger-border: #dc2626;
+@btn-danger-color: #ffffff;
+@btn-link-color: #005993;
+
+@btn-disable-bg: #f8fafc;
+@btn-disable-color: #94a3b8;
+@btn-disable-border: #C9D9EA;
+
+// ------------------------------------------------------------
+// 9. Input / Select — legacy 48px radius 0
+// ------------------------------------------------------------
+@input-height-base: 48px;
+@input-height-sm: 32px;
+@input-height-lg: 48px;
+@input-padding-horizontal: 11px;
+@input-padding-horizontal-sm: 10px;
+@input-border-color: #C9D9EA;
+@input-hover-border-color: #075985;
+@input-placeholder-color: #94a3b8;
+@input-color: #0f172a;
+@input-bg: #ffffff;
+@input-border-radius: 0;
+@input-addon-bg: #f8fafc;
+@input-disabled-bg: #f8fafc;
+@input-disabled-color: #94a3b8;
+
+@select-border-color: #C9D9EA;
+@select-item-selected-bg: #eff6ff;
+@select-item-selected-color: #075985;
+@select-item-active-bg: #f1f5f9;
+
+// ------------------------------------------------------------
+// 10. Table — legacy trắng zebra #f4f8fb
+// ------------------------------------------------------------
+@table-bg: #ffffff;
+@table-header-bg: #ffffff;
+@table-header-color: #475569;
+@table-font-size: 16px;
+@table-row-hover-bg: #f4f8fb;
+@table-padding-vertical: 12px;
+@table-padding-horizontal: 16px;
+@table-border-color: #C9D9EA;
+@table-border-radius-base: 5px;
+
+// ------------------------------------------------------------
+// 11. Tabs — legacy ink #075985 (detail #dc2626)
+// ------------------------------------------------------------
+@tabs-active-color: #075985;
+@tabs-hover-color: #075985;
+@tabs-ink-bar-color: #075985;
+@tabs-bar-margin: 0;
+@tabs-horizontal-padding: 0 0 15px;
+@tabs-vertical-padding: 10px 30px;
+@tabs-card-head-background: #f8fafc;
+@tabs-title-font-size: 16px;
+
+// ------------------------------------------------------------
+// 12. Modal
+// ------------------------------------------------------------
+@modal-header-bg: #ffffff;
+@modal-body-padding: 22px 24px 18px;
+@modal-header-padding: 22px 24px 0 24px;
+@modal-footer-padding-vertical: 15px;
+@modal-footer-padding-horizontal: 24px;
+@modal-border-radius: 5px;
+
+// ------------------------------------------------------------
+// 13. Dropdown / Menu
+// ------------------------------------------------------------
+@dropdown-menu-bg: #ffffff;
+@dropdown-menu-submenu-disabled-bg: #ffffff;
+@menu-highlight-color: #075985;
+@menu-item-active-bg: #e3f0fb;
+@menu-item-active-border-width: 0;
+@menu-item-height: 59px;
+@menu-item-font-size: 18px;
+@menu-inline-submenu-bg: #f8fafc;
+@menu-popup-bg: #ffffff;
+@menu-item-color: #475569;
+@menu-dark-color: #475569;
+@menu-collapsed-width: 64px;
+
+@menu-indent-size: 20px;
+
+// Layout menu (sider)
+@layout-sider-background: #ffffff;
+@layout-sider-background-light: #ffffff;
+@layout-body-background: #f5fafd;
+@layout-header-background: #ffffff;
+@layout-header-height: 70px;
+
+// ------------------------------------------------------------
+// 14. Notification / Tag / Badge
+// ------------------------------------------------------------
+@tag-border-radius: 5px;
+@tag-font-size: 15px;
+@badge-font-size: 12px;
+
+// ------------------------------------------------------------
+// 15. DatePicker
+// ------------------------------------------------------------
+@picker-border-color: #C9D9EA;
+@picker-bg: #ffffff;
+
+// ------------------------------------------------------------
+// 16. Tooltip / Popover
+// ------------------------------------------------------------
+@tooltip-max-width: 400px;
+@tooltip-bg: #0f172a;
+@tooltip-arrow-width: 8px;
+
+// ------------------------------------------------------------
+// 17. Scrollbar — handled via global SCSS
+// ------------------------------------------------------------
+
+// ------------------------------------------------------------
+// 18. Miscellaneous
+// ------------------------------------------------------------
+@transition-time: 0.15s;
+@transition-timing-fn: cubic-bezier(0.4, 0, 0.2, 1);
+@ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+@ease-out: cubic-bezier(0, 0, 0.2, 1);
+@ease-in: cubic-bezier(0.4, 0, 1, 1);

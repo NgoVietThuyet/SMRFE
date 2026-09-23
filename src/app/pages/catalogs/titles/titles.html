@@ -1,0 +1,196 @@
+<!-- =====================================================
+     Titles — Danh mục Chức danh (list-page)
+     Kế thừa .list-page chuẩn, filter-bar + table + paging
+===================================================== -->
+<div class="list-page">
+    <div class="list-page-header">
+        <div class="list-page-header-title">
+            <h1 class="list-page-header-heading">Chức danh</h1>
+            <span class="list-page-header-subtitle">Quản lý danh sách chức danh — mã, tên, thứ tự, trạng thái</span>
+        </div>
+        <div class="list-page-header-actions">
+            <button nz-button class="list-page-header-btn-primary" (click)="openCreate()" id="btn-create-title">
+                <app-custom-icon name="Add2" [size]="16" customClass="icon-color-inherit"></app-custom-icon>
+                Thêm chức danh
+            </button>
+        </div>
+    </div>
+
+    <div class="list-page-card">
+        <div class="list-page-card-inner">
+            <!-- FilterBar -->
+            <div class="list-page-filter-bar">
+                <div class="list-page-filter-bar-row">
+                    <div class="list-page-filter-bar-search">
+                        <input nz-input type="search" autocomplete="off" placeholder="Tìm theo mã, tên chức danh..." aria-label="Tìm kiếm chức danh" [ngModel]="keyword()" (ngModelChange)="onKeywordInput($event)" />
+                        <button type="button" class="list-page-filter-bar-search-reset-btn" aria-label="Làm mới" (click)="reload()">
+                            <app-custom-icon name="Reset" [size]="16" customClass="icon-color-inherit"></app-custom-icon>
+                        </button>
+                    </div>
+
+                    <nz-select class="list-page-header-select" [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" nzPlaceHolder="Trạng thái" aria-label="Trạng thái">
+                        <nz-option nzValue="all" nzLabel="Mọi trạng thái"></nz-option>
+                        <nz-option nzValue="active" nzLabel="Hoạt động"></nz-option>
+                        <nz-option nzValue="inactive" nzLabel="Ngưng hoạt động"></nz-option>
+                    </nz-select>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="list-page-body">
+                @if (loadError()) {
+                    <div style="padding:24px;"><nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="listError" [nzNotFoundFooter]="listErrorFooter" />
+                        <ng-template #listError><p>Không thể tải</p><p>{{ loadError() }}</p></ng-template>
+                        <ng-template #listErrorFooter><button nz-button nzType="default" (click)="load()">Thử lại</button></ng-template>
+                    </div>
+                } @else {
+                    <div class="responsive-cards" aria-label="Danh sách chức danh">
+                        @if (loading()) {
+                            <div class="smr-loading"><nz-spin></nz-spin></div>
+                        } @else {
+                            @for (t of paged(); track t.code) {
+                                <article class="responsive-card" (click)="openTitleDetail(t)" tabindex="0"
+                                    (keydown.enter)="openTitleDetail(t)">
+                                    <div class="responsive-card__head">
+                                        <div class="responsive-card__title-wrap">
+                                            <p class="responsive-card__eyebrow">{{ t.code }}</p>
+                                            <h3 class="responsive-card__title">{{ t.name }}</h3>
+                                            @if (t.notes) { <p class="responsive-card__subtitle">{{ t.notes }}</p> }
+                                        </div>
+                                        <span class="smr-status" [ngClass]="t.isActive ? 'smr-status--ongoing' : 'smr-status--ended'">
+                                            <span class="smr-status__dot"></span>{{ statusLabel(t.isActive) }}
+                                        </span>
+                                    </div>
+                                    <dl class="responsive-card__meta responsive-card__meta--inline">
+                                        <div><dt>Thứ tự</dt><dd>{{ t.orderNumber }}</dd></div>
+                                        <div><dt>Nhân sự</dt><dd>{{ t.employeeCount }}</dd></div>
+                                    </dl>
+                                </article>
+                            } @empty {
+                                <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Không có chức danh" />
+                            }
+                        }
+                    </div>
+                    <nz-table [nzData]="paged()" [nzFrontPagination]="false" [nzLoading]="loading()" [nzTotal]="total()" [nzPageIndex]="page()" [nzPageSize]="pageSize()" [nzShowPagination]="false" [nzNoResult]="noData" [nzScroll]="{ y: 'calc(100vh - var(--lp-scroll-basic))' }" nzSize="small" class="bid-list-table responsive-table">
+                        <ng-template #noData><nz-empty nzNotFoundImage="simple" nzNotFoundContent="Không có chức danh" /></ng-template>
+                        <thead>
+                            <tr>
+                                <th nzWidth="160px">MÃ</th>
+                                <th nzWidth="260px">TÊN CHỨC DANH</th>
+                                <th nzWidth="100px">THỨ TỰ</th>
+                                <th nzWidth="160px">TRẠNG THÁI</th>
+                                <th nzWidth="100px">SỐ NV</th>
+                                <th nzWidth="180px" nzAlign="center">THAO TÁC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (t of paged(); track t.code) {
+                                <tr>
+                                    <td><span style="font-weight:600; color:#0f172a;">{{ t.code }}</span></td>
+                                    <td>
+                                        <span style="font-weight:500; color:#0f172a;">{{ t.name }}</span>
+                                        @if (t.notes) { <span style="display:block; font-size:13px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;">{{ t.notes }}</span> }
+                                    </td>
+                                    <td><span style="color:#64748b;">{{ t.orderNumber }}</span></td>
+                                    <td>
+                                        <span class="smr-status" [ngClass]="t.isActive ? 'smr-status--ongoing' : 'smr-status--ended'">
+                                            <span class="smr-status__dot"></span> {{ statusLabel(t.isActive) }}
+                                        </span>
+                                    </td>
+                                    <td><span style="color:#334155;">{{ t.employeeCount }}</span></td>
+                                    <td nzAlign="center">
+                                        <button nz-button nzType="link" (click)="openTitleDetail(t)">Xem</button>
+                                        <button nz-button nzType="link" (click)="openEdit(t)">Sửa</button>
+                                        <button nz-button nzType="link" nzDanger (click)="confirmDelete(t)" [disabled]="t.employeeCount>0" nz-tooltip [nzTooltipTitle]="t.employeeCount>0 ? 'Đang có nhân sự sử dụng' : null">Xóa</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </nz-table>
+                }
+            </div>
+
+            <div class="list-page-paging">
+                <span>Tổng {{ total() }} chức danh</span>
+                <nz-pagination [nzPageIndex]="page()" [nzPageSize]="pageSize()" [nzTotal]="total()" [nzPageSizeOptions]="[10,20,50]" [nzShowSizeChanger]="true" (nzPageIndexChange)="onPageChange($event)" (nzPageSizeChange)="onPageSizeChange($event)" nzSize="small"></nz-pagination>
+            </div>
+        </div>
+    </div>
+
+    @if (detailTitle()) {
+    <nz-drawer [nzVisible]="true" nzTitle="Chi tiết chức danh" [nzWidth]="560"
+        nzWrapClassName="smr-entity-drawer" (nzOnClose)="closeTitleDetail()">
+        <ng-container *nzDrawerContent>
+            @if (detailTitle(); as t) {
+                <div class="entity-summary">
+                    <div>
+                        <span class="entity-summary__code">{{ t.code }}</span>
+                        <h2>{{ t.name }}</h2>
+                    </div>
+                    <span class="smr-status" [ngClass]="t.isActive ? 'smr-status--ongoing' : 'smr-status--ended'">
+                        <span class="smr-status__dot"></span>{{ statusLabel(t.isActive) }}
+                    </span>
+                </div>
+                <dl class="entity-detail-list">
+                    <div><dt>Mã chức danh</dt><dd>{{ t.code }}</dd></div>
+                    <div><dt>Tên chức danh</dt><dd>{{ t.name }}</dd></div>
+                    <div><dt>Thứ tự sắp xếp</dt><dd>{{ t.orderNumber }}</dd></div>
+                    <div><dt>Số nhân sự</dt><dd>{{ t.employeeCount }}</dd></div>
+                    <div><dt>Ghi chú</dt><dd>{{ t.notes || '—' }}</dd></div>
+                </dl>
+                <div class="entity-drawer-actions">
+                    <button nz-button nzType="default" (click)="closeTitleDetail()">Đóng</button>
+                    <button nz-button nzType="primary" (click)="openEdit(t)">Sửa chức danh</button>
+                </div>
+            }
+        </ng-container>
+    </nz-drawer>
+    }
+
+    <!-- Drawer form tạo/sửa -->
+    @if (showForm()) {
+    <nz-drawer [nzVisible]="true" nzTitle="{{ editingCode() ? 'Sửa chức danh' : 'Thêm chức danh' }}" [nzWidth]="560" nzWrapClassName="smr-entity-drawer" [nzClosable]="true" (nzOnClose)="closeForm()" [nzFooter]="drawerFooter">
+        <ng-container *nzDrawerContent>
+            <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submitForm()">
+                <nz-form-item>
+                    <nz-form-label nzRequired>Mã chức danh</nz-form-label>
+                    <nz-form-control nzErrorTip="Mã 1-20 ký tự, viết hoa">
+                        <input nz-input formControlName="code" placeholder="VD: GD, PGD, TP..." [attr.disabled]="editingCode() ? '' : null" style="text-transform:uppercase;" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label nzRequired>Tên chức danh</nz-form-label>
+                    <nz-form-control nzErrorTip="Vui lòng nhập tên">
+                        <input nz-input formControlName="name" placeholder="VD: Giám đốc" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Ghi chú</nz-form-label>
+                    <nz-form-control>
+                        <textarea nz-input formControlName="notes" placeholder="Mô tả chức danh" rows="3"></textarea>
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label nzRequired>Thứ tự</nz-form-label>
+                    <nz-form-control>
+                        <input nz-input type="number" formControlName="orderNumber" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Trạng thái</nz-form-label>
+                    <nz-form-control>
+                        <nz-switch formControlName="isActive"></nz-switch>
+                        <span style="margin-left:8px;">Hoạt động</span>
+                    </nz-form-control>
+                </nz-form-item>
+            </form>
+        </ng-container>
+        <ng-template #drawerFooter>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button nz-button nzType="default" (click)="closeForm()">Hủy</button>
+                <button nz-button nzType="primary" (click)="submitForm()" [nzLoading]="saving()"> {{ editingCode() ? 'Cập nhật' : 'Thêm' }} </button>
+            </div>
+        </ng-template>
+    </nz-drawer>
+    }
+</div>

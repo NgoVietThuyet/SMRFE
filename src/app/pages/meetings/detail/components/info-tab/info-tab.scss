@@ -1,0 +1,105 @@
+// InfoTab — rows xem + form sửa, theo form pattern style.scss.
+.info-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.info-row {
+    display: flex;
+    gap: var(--space-4);
+    font-size: var(--font-size-base);
+}
+
+.info-row--block {
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.info-key {
+    width: 175px;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-primary);
+}
+
+.info-value--strong {
+    font-weight: 600;
+}
+
+.info-pre {
+    white-space: pre-line;
+}
+
+.info-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 800px;
+}
+
+.info-grid {
+    display: flex;
+    gap: var(--space-3);
+
+    .info-field {
+        flex: 1;
+    }
+}
+
+.info-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.info-label {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.info-required {
+    color: var(--danger);
+}
+
+.info-control {
+    width: 100%;
+}
+
+.info-field-error {
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+    margin-top: var(--space-1);
+}
+
+.info-error {
+    background-color: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    border-radius: var(--radius-md);
+    padding: 12px var(--space-3);
+    font-size: var(--font-size-sm);
+}
+
+.info-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+@media (max-width: 767px) {
+    .info-grid {
+        flex-direction: column;
+    }
+
+    .info-key {
+        width: 138px;
+    }
+}

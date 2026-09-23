@@ -1,0 +1,40 @@
+
+> smr-fe@0.0.0 start
+> ng serve --host 127.0.0.1 --port 4200
+
+> Building...
+√ Building...
+Initial chunk files | Names          |  Raw size
+styles.css          | styles         |   1.15 MB | 
+main.js             | main           |  66.77 kB | 
+chunk-3THFAC5A.js   | -              |   4.68 kB | 
+chunk-BLNGP3BQ.js   | -              |   1.08 kB | 
+
+                    | Initial total  |   1.23 MB
+
+Lazy chunk files    | Names          |  Raw size
+chunk-425VNZUW.js   | meeting-room   | 233.67 kB | 
+chunk-XNR4BP4I.js   | tasks          | 187.88 kB | 
+chunk-QMZRK7A7.js   | meeting-detail | 138.48 kB | 
+chunk-4W36YQ3Y.js   | contacts       | 116.12 kB | 
+chunk-TDOXS7HB.js   | dashboard      |  65.24 kB | 
+chunk-54OK65M7.js   | meetings       |  59.53 kB | 
+chunk-JSGD2KNE.js   | -              |  44.13 kB | 
+chunk-BR4ECILA.js   | titles         |  42.26 kB | 
+chunk-JCXSAFC3.js   | -              |  37.18 kB | 
+chunk-JX5ICNW3.js   | login          |  26.71 kB | 
+chunk-MC3GPE4F.js   | -              |   9.71 kB | 
+chunk-TIJ4DSUQ.js   | -              |   7.21 kB | 
+chunk-H4LTTYE7.js   | -              |   5.89 kB | 
+chunk-VJRBWS4D.js   | -              |   2.25 kB | 
+chunk-VRWFVAPA.js   | -              | 641 bytes | 
+...and 1 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [12.344 seconds] - 2026-09-21T09:42:29.188Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+4:42:31 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+  ➜  Local:   http://127.0.0.1:4200/
+  ➜  press h + enter to show help
+4:42:33 PM [vite] (client) [optimizer] bundling dependencies...

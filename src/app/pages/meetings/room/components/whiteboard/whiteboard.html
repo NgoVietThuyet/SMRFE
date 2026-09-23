@@ -1,0 +1,95 @@
+<!-- WhiteboardCanvas — chiếm stage, toolbar nổi phía trên -->
+<div class="wb">
+    <div class="wb__toolbar" role="toolbar" aria-label="Bảng trắng">
+        <button nz-button nzType="text" class="wb__back" (click)="exited.emit()">
+            <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+            {{ t('wbBack') }}
+        </button>
+        <span class="wb__sep" aria-hidden="true"></span>
+
+        <span class="wb__group" role="group">
+            <button nz-button nzType="text" [class.wb__tool--active]="tool() === 'pen'" (click)="tool.set('pen')"
+                nz-tooltip [nzTooltipTitle]="t('wbPen')" nzTooltipPlacement="bottom" aria-label="Bút">
+                <span nz-icon nzType="edit" nzTheme="outline"></span>
+            </button>
+            <button nz-button nzType="text" [class.wb__tool--active]="tool() === 'highlighter'"
+                (click)="tool.set('highlighter')" nz-tooltip [nzTooltipTitle]="t('wbHighlighter')" nzTooltipPlacement="bottom"
+                aria-label="Bút dạ">
+                <span nz-icon nzType="highlight" nzTheme="outline"></span>
+            </button>
+            <button nz-button nzType="text" [class.wb__tool--active]="tool() === 'eraser'"
+                (click)="tool.set('eraser')" nz-tooltip [nzTooltipTitle]="t('wbEraser')" nzTooltipPlacement="bottom" aria-label="Tẩy">
+                <span nz-icon nzType="delete" nzTheme="outline"></span>
+            </button>
+        </span>
+        <span class="wb__sep" aria-hidden="true"></span>
+
+        <span class="wb__group" role="group">
+            <button nz-button nzType="text" [class.wb__tool--active]="tool() === 'rect'" (click)="tool.set('rect')"
+                nz-tooltip [nzTooltipTitle]="t('wbRect')" nzTooltipPlacement="bottom" aria-label="Hình chữ nhật">
+                <span nz-icon nzType="border" nzTheme="outline"></span>
+            </button>
+            <button nz-button nzType="text" [class.wb__tool--active]="tool() === 'circle'"
+                (click)="tool.set('circle')" nz-tooltip [nzTooltipTitle]="t('wbCircle')" nzTooltipPlacement="bottom"
+                aria-label="Hình tròn">
+                <span nz-icon nzType="ellipsis" nzTheme="outline"></span>
+            </button>
+            <button nz-button nzType="text" [class.wb__tool--active]="tool() === 'line'" (click)="tool.set('line')"
+                nz-tooltip [nzTooltipTitle]="t('wbLine')" nzTooltipPlacement="bottom" aria-label="Đường thẳng">
+                <span nz-icon nzType="minus" nzTheme="outline"></span>
+            </button>
+            <button nz-button nzType="text" [class.wb__tool--active]="tool() === 'text'" (click)="tool.set('text')"
+                nz-tooltip [nzTooltipTitle]="t('wbText')" nzTooltipPlacement="bottom" aria-label="Chữ">
+                <span nz-icon nzType="font-size" nzTheme="outline"></span>
+            </button>
+        </span>
+        <span class="wb__sep" aria-hidden="true"></span>
+
+        <span class="wb__colors" role="group" [attr.aria-label]="t('wbColor')">
+            @for (c of palette; track c) {
+            <button class="wb__swatch" [class.wb__swatch--active]="color() === c" [style.background-color]="c"
+                (click)="color.set(c)" [attr.aria-label]="c" [attr.aria-pressed]="color() === c"></button>
+            }
+        </span>
+
+        <nz-input-number class="wb__width" [ngModel]="width()" (ngModelChange)="width.set($event ?? 3)" [nzMin]="1"
+            [nzMax]="24" [nzStep]="1" nz-tooltip [nzTooltipTitle]="t('wbWidth')" nzTooltipPlacement="bottom" aria-label="Độ dày" />
+
+        <span class="wb__sep" aria-hidden="true"></span>
+        <button nz-button nzType="text" (click)="undo()" nz-tooltip [nzTooltipTitle]="t('wbUndo')" nzTooltipPlacement="bottom"
+            aria-label="Hoàn tác">
+            <span nz-icon nzType="undo" nzTheme="outline"></span>
+        </button>
+        <button nz-button nzType="text" (click)="redo()" nz-tooltip [nzTooltipTitle]="t('wbRedo')" nzTooltipPlacement="bottom"
+            aria-label="Làm lại">
+            <span nz-icon nzType="redo" nzTheme="outline"></span>
+        </button>
+        <button nz-button nzType="text" (click)="clearAll()" nz-tooltip [nzTooltipTitle]="t('wbClear')" nzTooltipPlacement="bottom"
+            aria-label="Xóa hết">
+            <span nz-icon nzType="clear" nzTheme="outline"></span>
+        </button>
+
+        <span class="wb__spacer"></span>
+        <button nz-button nzType="primary" (click)="saveToDocs()" [disabled]="saving()" [nzLoading]="saving()">
+            <span nz-icon nzType="save" nzTheme="outline"></span>
+            {{ t('wbSave') }}
+        </button>
+    </div>
+
+    @if (tool() === 'text') {
+    <div class="wb__textbar">
+        <input nz-input [ngModel]="textInput()" (ngModelChange)="textInput.set($event)"
+            [placeholder]="t('wbTextPlaceholder')" maxlength="200" aria-label="Nội dung chữ" />
+    </div>
+    }
+
+    <div #boardWrap class="wb__board">
+        <canvas #canvas class="wb__canvas" (pointerdown)="onPointerDown($event)"
+            (pointermove)="onPointerMove($event)" (pointerup)="onPointerUp()" (pointercancel)="onPointerUp()"
+            [style.touch-action]="'none'"></canvas>
+    </div>
+
+    @if (saving()) {
+    <div class="wb__saving"><nz-spin nzSize="large"></nz-spin></div>
+    }
+</div>

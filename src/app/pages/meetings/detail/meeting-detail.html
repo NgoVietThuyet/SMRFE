@@ -1,0 +1,151 @@
+<!-- =====================================================
+     MeetingDetail — header context + 5 tabs
+===================================================== -->
+<div class="meeting-detail">
+
+    @if (loading()) {
+    <div class="smr-loading">
+        <nz-spin nzSize="large"></nz-spin>
+    </div>
+    } @else if (notFound()) {
+    <div class="smr-section">
+        <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="notFoundTpl"
+            [nzNotFoundFooter]="notFoundFooter" />
+        <ng-template #notFoundTpl>
+            <p>Không tìm thấy cuộc họp</p>
+            <p>Cuộc họp không tồn tại hoặc bạn không có quyền xem.</p>
+        </ng-template>
+        <ng-template #notFoundFooter>
+            <button nz-button nzType="default" (click)="backToList()">Về danh sách</button>
+        </ng-template>
+    </div>
+    } @else if (loadError()) {
+    <div class="smr-section">
+        <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="detailError"
+            [nzNotFoundFooter]="detailErrorFooter" />
+        <ng-template #detailError>
+            <p>Không thể tải chi tiết</p>
+            <p>{{ loadError() }}</p>
+        </ng-template>
+        <ng-template #detailErrorFooter>
+            <button nz-button nzType="default" (click)="load()">Thử lại</button>
+        </ng-template>
+    </div>
+    } @else if (meeting(); as m) {
+
+    <!-- ── Header context ────────────────────────── -->
+    <div class="smr-page-header">
+        <div>
+            <h2 class="smr-page-header__title">{{ m.name }}</h2>
+            <p class="smr-page-header__desc">
+                {{ formatDateTime(m.expectedStartTime) }}
+                @if (m.expectedEndTime) {
+                <span> - {{ formatDateTime(m.expectedEndTime) }}</span>
+                }
+            </p>
+            <p class="smr-page-header__desc">
+                <span class="smr-status" [ngClass]="'smr-status--' + statusClass(m.status)">
+                    <span class="smr-status__dot"></span>
+                    {{ statusLabel(m.status) }}
+                </span>
+            </p>
+        </div>
+        <div class="smr-page-header__actions">
+            @if (canJoin()) {
+            <button nz-button nzType="primary" (click)="joinMeeting()" id="btn-join">
+                Tham gia
+            </button>
+            }
+            @if (canManage()) {
+            <button class="smr-icon-btn" nz-dropdown [nzDropdownMenu]="moreMenu" nzTrigger="click"
+                nzPlacement="bottomRight" aria-label="Thao tác khác">
+                <span nz-icon nzType="more" nzTheme="outline"></span>
+            </button>
+            <nz-dropdown-menu #moreMenu="nzDropdownMenu">
+                <ul nz-menu>
+                    <li nz-menu-item (click)="editMeeting()">
+                        <span nz-icon nzType="edit" nzTheme="outline"></span>
+                        <span>Chỉnh sửa</span>
+                    </li>
+                    <li nz-menu-item (click)="viewTasks()">
+                        <span nz-icon nzType="check-square" nzTheme="outline"></span>
+                        <span>Công việc</span>
+                    </li>
+                    @if (canCancel()) {
+                    <li nz-menu-item nzDanger (click)="openCancel()">
+                        <span nz-icon nzType="close-circle" nzTheme="outline"></span>
+                        <span>Hủy cuộc họp</span>
+                    </li>
+                    }
+                </ul>
+            </nz-dropdown-menu>
+            }
+        </div>
+    </div>
+
+    <!-- ── Tabs ──────────────────────────────────── -->
+    <nz-tabs [nzSelectedIndex]="activeTab()" (nzSelectedIndexChange)="activeTab.set($event)"
+        class="meeting-detail__tabs">
+        <nz-tab nzTitle="Thông tin chung">
+            <div class="smr-section">
+                <div class="smr-section__body">
+                    <app-info-tab [meeting]="m" (updated)="onDetailChanged($event)" />
+                </div>
+            </div>
+        </nz-tab>
+        <nz-tab nzTitle="Tài liệu">
+            <div class="smr-section">
+                <div class="smr-section__body">
+                    <app-docs-tab [meetingId]="m.id" />
+                </div>
+            </div>
+        </nz-tab>
+        <nz-tab nzTitle="Người tham gia">
+            <div class="smr-section">
+                <div class="smr-section__body">
+                    <app-participants-tab [meeting]="m" (changed)="onDetailChanged($event)" />
+                </div>
+            </div>
+        </nz-tab>
+        <nz-tab nzTitle="AI tóm tắt">
+            <div class="smr-section">
+                <div class="smr-section__body">
+                    <app-ai-tab />
+                </div>
+            </div>
+        </nz-tab>
+        <nz-tab nzTitle="Ghi hình">
+            <div class="smr-section">
+                <div class="smr-section__body">
+                    <app-recordings-tab [meetingId]="m.id" />
+                </div>
+            </div>
+        </nz-tab>
+    </nz-tabs>
+
+    }
+
+    <!-- ── Modal hủy họp ─────────────────────────── -->
+    <nz-modal [nzVisible]="cancelOpen()" nzTitle="Hủy cuộc họp" [nzFooter]="cancelFooter"
+        [nzMaskClosable]="false" (nzOnCancel)="closeCancel()">
+        <ng-container *nzModalContent>
+            @if (cancelError()) {
+            <div class="meeting-detail__error" role="alert">{{ cancelError() }}</div>
+            }
+            <label class="meeting-detail__label" for="cancel-reason">
+                Lý do hủy <span class="meeting-detail__required">*</span>
+            </label>
+            <textarea nz-input id="cancel-reason" rows="3" [maxlength]="1000"
+                placeholder="Nhập lý do hủy cuộc họp..." [ngModel]="cancelReason()"
+                (ngModelChange)="cancelReason.set($event)"></textarea>
+        </ng-container>
+        <ng-template #cancelFooter>
+            <button nz-button nzType="default" (click)="closeCancel()"
+                [disabled]="cancelling()">Không</button>
+            <button nz-button nzType="primary" nzDanger (click)="confirmCancel()"
+                [nzLoading]="cancelling()"
+                [disabled]="!cancelReason().trim() || cancelling()">Hủy cuộc họp</button>
+        </ng-template>
+    </nz-modal>
+
+</div>

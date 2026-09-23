@@ -1,0 +1,382 @@
+<!-- =====================================================
+     Contacts — Danh bạ (migrated to list-page)
+     Header trong suốt + Thẻ nổi bọc tree + detail + filter-bar
+===================================================== -->
+<div class="list-page">
+
+    <!-- ── Header trong suốt ─────────────────────── -->
+    <div class="list-page-header">
+        <div class="list-page-header-title">
+            <h1 class="list-page-header-heading">Danh bạ</h1>
+            <span class="list-page-header-subtitle">Cơ cấu tổ chức và hồ sơ nhân sự — tài khoản do hệ thống tự tạo</span>
+        </div>
+        <div class="list-page-header-actions">
+            <button nz-button class="list-page-header-btn-default" (click)="openOrgCreate()">
+                <span nz-icon nzType="apartment" nzTheme="outline"></span>
+                Thêm phòng ban
+            </button>
+            <button nz-button class="list-page-header-btn-primary" (click)="openEmpCreate()">
+                <span nz-icon nzType="user-add" nzTheme="outline"></span>
+                Thêm nhân sự
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Thẻ nổi ─────────────────────────────── -->
+    <div class="list-page-card">
+        <div class="list-page-card-inner">
+
+            <!-- ── Thanh lọc INLINE — nhân sự ───── -->
+            <div class="list-page-filter-bar">
+                <span class="list-page-filter-bar-label">Tìm kiếm nhân sự</span>
+                <div class="list-page-filter-bar-row">
+                    <div class="list-page-filter-bar-search">
+                        <input nz-input type="search" autocomplete="off" placeholder="Tìm tên, username, email..."
+                            aria-label="Tìm kiếm nhân sự" [ngModel]="empKeyword()" (ngModelChange)="onEmpKeywordInput($event)" />
+                        <button type="button" class="list-page-filter-bar-search-btn" aria-label="Tìm kiếm" (click)="loadEmployees()">
+                            <span nz-icon nzType="search" nzTheme="outline"></span>
+                        </button>
+                        <button type="button" class="list-page-filter-bar-refresh-btn" aria-label="Làm mới" (click)="reloadEmployees()">
+                            <span nz-icon nzType="reload" nzTheme="outline"></span>
+                        </button>
+                    </div>
+
+                    <nz-select class="list-page-header-select" [ngModel]="titleFilter()"
+                        (ngModelChange)="onTitleFilterChange($event)" aria-label="Lọc chức danh" nzPlaceHolder="Chức danh" nzAllowClear>
+                        @for (t of titles(); track t.code) {
+                        <nz-option [nzValue]="t.code" [nzLabel]="t.name" />
+                        }
+                    </nz-select>
+                    <nz-select class="list-page-header-select" [ngModel]="activeFilter()"
+                        (ngModelChange)="onActiveFilterChange($event)" aria-label="Lọc trạng thái" nzPlaceHolder="Trạng thái">
+                        @for (opt of activeOptions; track opt.label) {
+                        <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                        }
+                    </nz-select>
+
+                    <button nz-button class="list-page-header-btn-default" (click)="clearOrgFilter()" nz-tooltip nzTooltipTitle="Bỏ chọn phòng ban">
+                        <span nz-icon nzType="close" nzTheme="outline"></span>
+                        Bỏ lọc
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Body: 2 cột tree + detail ────── -->
+            <div class="list-page-body" style="flex:1; overflow:auto; padding:0;">
+                <div class="contacts__body" style="padding: 16px; gap:16px; display:flex; flex:1; min-height:0;">
+                    <!-- ── Cột cây cơ cấu ────────── -->
+                    <section class="contacts__tree-card" aria-label="Cơ cấu tổ chức" style="flex:0 0 360px; display:flex; flex-direction:column; border:1px solid var(--bs-border); border-radius:var(--radius-sm); background:#fff; padding:12px; height:fit-content; max-height: calc(100vh - var(--lp-scroll-basic)); overflow:auto;">
+                        <div class="contacts__tree-tools">
+                            <nz-input-wrapper>
+                                <input nz-input type="search" autocomplete="off" placeholder="Tìm phòng ban..."
+                                    aria-label="Tìm phòng ban" [ngModel]="treeKeyword()" (ngModelChange)="onTreeSearch($event)" />
+                                <span nzInputPrefix><span nz-icon nzType="search" nzTheme="outline"></span></span>
+                            </nz-input-wrapper>
+                            <div class="contacts__tree-btns">
+                                <button nz-button nzType="text" nzSize="small" (click)="expandAll()" nz-tooltip nzTooltipTitle="Mở rộng tất cả" aria-label="Mở rộng tất cả">
+                                    <span nz-icon nzType="expand" nzTheme="outline"></span>
+                                </button>
+                                <button nz-button nzType="text" nzSize="small" (click)="collapseAll()" nz-tooltip nzTooltipTitle="Thu gọn tất cả" aria-label="Thu gọn tất cả">
+                                    <span nz-icon nzType="shrink" nzTheme="outline"></span>
+                                </button>
+                                <button nz-button nzType="text" nzSize="small" (click)="loadOrgs(false)" nz-tooltip nzTooltipTitle="Tải lại cây" aria-label="Tải lại cây">
+                                    <span nz-icon nzType="reload" nzTheme="outline"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        @if (orgLoading()) {
+                        <div class="smr-loading"><nz-spin></nz-spin></div>
+                        } @else if (orgError()) {
+                        <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="treeError" [nzNotFoundFooter]="treeErrorFooter" />
+                        <ng-template #treeError>
+                            <p>Không thể tải cơ cấu tổ chức</p>
+                            <p>{{ orgError() }}</p>
+                        </ng-template>
+                        <ng-template #treeErrorFooter>
+                            <button nz-button nzType="default" (click)="loadOrgs()">Thử lại</button>
+                        </ng-template>
+                        } @else if (visibleNodes().length === 0) {
+                        <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có phòng ban nào" />
+                        } @else {
+                        <nz-tree class="contacts__tree list-page-tree" [nzData]="visibleNodes()" [nzSelectedKeys]="selectedKeys()"
+                            [nzExpandedKeys]="expandedKeys()" (nzClick)="onTreeClick($event)" (nzExpandChange)="onTreeExpand($event)"
+                            [nzTreeTemplate]="orgNodeTpl" />
+                        <ng-template #orgNodeTpl let-node>
+                            <span class="contacts__node" [class.contacts__node--inactive]="!$any(node.origin).isActive">
+                                <span nz-icon nzType="apartment" nzTheme="outline" class="contacts__node-icon"></span>
+                                <span class="contacts__node-name">{{ node.title }}</span>
+                                <span class="contacts__node-count">{{ $any(node.origin).subtreeCount }}</span>
+                            </span>
+                        </ng-template>
+                        }
+                    </section>
+
+                    <!-- ── Cột chi tiết ──────────── -->
+                    <section class="contacts__detail" aria-label="Chi tiết" style="flex:1; min-width:0; display:flex; flex-direction:column; gap:16px;">
+                        @if (selectedOrg()) {
+                        <div class="smr-section contacts__org" style="border:1px solid var(--bs-border); border-radius:var(--radius-sm);">
+                            <div class="contacts__org-head">
+                                <div>
+                                    <h3 class="contacts__org-name">{{ selectedOrg()!.name }}</h3>
+                                    <p class="contacts__org-meta">
+                                        {{ selectedOrg()!.isActive ? 'Đang hoạt động' : 'Ngừng hoạt động' }}
+                                        · {{ selectedOrg()!.employeeCount }} trực tiếp
+                                        · {{ selectedSubtreeCount() }} cả cây con
+                                    </p>
+                                </div>
+                                <div class="contacts__org-actions">
+                                    <button nz-button nzType="text" (click)="openEmpCreate(true)" nz-tooltip nzTooltipTitle="Thêm nhân sự vào phòng ban này">
+                                        <span nz-icon nzType="user-add" nzTheme="outline"></span>
+                                    </button>
+                                    <button nz-button nzType="text" (click)="openOrgCreate(selectedOrg()!.id)" nz-tooltip nzTooltipTitle="Thêm đơn vị con">
+                                        <span nz-icon nzType="plus" nzTheme="outline"></span>
+                                    </button>
+                                    <button nz-button nzType="text" (click)="openOrgEdit(selectedOrg()!)" nz-tooltip nzTooltipTitle="Sửa phòng ban">
+                                        <span nz-icon nzType="edit" nzTheme="outline"></span>
+                                    </button>
+                                    <button nz-button nzType="text" nzDanger (click)="confirmDeleteOrg(selectedOrg()!)" nz-tooltip nzTooltipTitle="Xóa phòng ban">
+                                        <span nz-icon nzType="delete" nzTheme="outline"></span>
+                                    </button>
+                                    <button nz-button nzType="text" (click)="clearOrgFilter()" nz-tooltip nzTooltipTitle="Bỏ chọn phòng ban">
+                                        <span nz-icon nzType="close" nzTheme="outline"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            @if (selectedOrg()!.notes) {
+                            <p class="contacts__org-notes">{{ selectedOrg()!.notes }}</p>
+                            }
+                            <dl class="contacts__org-detail">
+                                <div><dt>Đơn vị cha</dt><dd>{{ orgName(selectedOrg()!.pId) }}</dd></div>
+                                <div><dt>Thứ tự</dt><dd>{{ selectedOrg()!.orderNumber }}</dd></div>
+                                <div><dt>Mã đơn vị</dt><dd>{{ selectedOrg()!.id }}</dd></div>
+                            </dl>
+                        </div>
+                        }
+
+                        <!-- Danh sách nhân sự -->
+                        @if (empLoading()) {
+                        <div class="smr-loading"><nz-spin></nz-spin></div>
+                        } @else if (empError()) {
+                        <div class="smr-section" style="border:1px solid var(--bs-border); border-radius:var(--radius-sm);">
+                            <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="empErrorTpl" [nzNotFoundFooter]="empErrorFooter" />
+                            <ng-template #empErrorTpl>
+                                <p>Không thể tải danh sách nhân sự</p>
+                                <p>{{ empError() }}</p>
+                            </ng-template>
+                            <ng-template #empErrorFooter>
+                                <button nz-button nzType="default" (click)="loadEmployees()">Thử lại</button>
+                            </ng-template>
+                        </div>
+                        } @else if (items().length === 0) {
+                        <div class="smr-section" style="border:1px solid var(--bs-border); border-radius:var(--radius-sm);">
+                            <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có nhân sự" [nzNotFoundFooter]="empEmptyFooter" />
+                            <ng-template #empEmptyFooter>
+                                <button nz-button nzType="primary" (click)="openEmpCreate()">Thêm nhân sự</button>
+                            </ng-template>
+                        </div>
+                        } @else {
+                        <div class="smr-section contacts__list" style="border:1px solid var(--bs-border); border-radius:var(--radius-sm);">
+                            @for (u of items(); track u.userName) {
+                            <button type="button" class="contacts__row" (click)="openEmpDetail(u)">
+                                <nz-avatar class="contacts__avatar" [nzText]="initials(u.fullName)" />
+                                <span class="contacts__main">
+                                    <span class="contacts__name">{{ u.fullName }}</span>
+                                    <span class="contacts__sub">{{ u.titleName ?? titleName(u.titleCode) }} · {{ u.organizationName ?? u.orgId }}</span>
+                                </span>
+                                <span class="contacts__status" [class.contacts__status--locked]="!u.isActive">
+                                    {{ u.isActive ? 'Hoạt động' : 'Đã khóa' }}
+                                </span>
+                                <span nz-icon nzType="right" nzTheme="outline" class="contacts__go"></span>
+                            </button>
+                            }
+                        </div>
+                        }
+                    </section>
+                </div>
+            </div>
+
+            <!-- Paging tách rời -->
+            @if (total() > 0) {
+            <div class="list-page-paging">
+                <span>Tổng {{ total() }} nhân sự</span>
+                <nz-pagination [nzPageIndex]="page()" [nzPageSize]="pageSize" [nzTotal]="total()" (nzPageIndexChange)="onPageChange($event)" [nzShowSizeChanger]="false" nzSize="small" />
+            </div>
+            }
+
+        </div>
+    </div>
+
+    <!-- ── Drawer chi tiết nhân sự ─────────────── -->
+    @if (detailOpen()) {
+    <nz-drawer [nzVisible]="true" nzTitle="Hồ sơ nhân sự" [nzWidth]="640" nzWrapClassName="smr-entity-drawer" (nzOnClose)="closeEmpDetail()">
+        <ng-container *nzDrawerContent>
+            @if (detailLoading() && !detail()) {
+            <div class="smr-loading"><nz-spin></nz-spin></div>
+            } @else if (detailError() && !detail()) {
+            <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="detailErrorTpl" />
+            <ng-template #detailErrorTpl>
+                <p>Không thể tải chi tiết</p>
+                <p>{{ detailError() }}</p>
+            </ng-template>
+            } @else if (detail(); as d) {
+            <div class="contacts__profile">
+                <nz-avatar class="contacts__profile-avatar" [nzText]="initials(d.fullName)" />
+                <h3 class="contacts__profile-name">{{ d.fullName }}</h3>
+                <p class="contacts__profile-sub">{{ '@' }}{{ d.userName }}</p>
+                <span class="contacts__status" [class.contacts__status--locked]="!d.isActive">
+                    {{ d.isActive ? 'Đang hoạt động' : 'Đã khóa' }}
+                </span>
+                @if (detailLoading()) {
+                <p class="contacts__profile-hint"><nz-spin nzSize="small"></nz-spin> Đang cập nhật...</p>
+                }
+                @if (detailError()) {
+                <p class="contacts__profile-hint">{{ detailError() }}</p>
+                }
+            </div>
+            <dl class="contacts__kv">
+                <div><dt>Email</dt><dd>{{ d.email }}</dd></div>
+                <div><dt>Điện thoại</dt><dd>{{ d.phone || '—' }}</dd></div>
+                <div><dt>Địa chỉ</dt><dd>{{ d.address || '—' }}</dd></div>
+                <div><dt>Phòng ban</dt><dd>{{ d.organizationName ?? d.orgId }}</dd></div>
+                <div><dt>Chức danh</dt><dd>{{ d.titleName ?? titleName(d.titleCode) }}</dd></div>
+                <div><dt>Đăng nhập cuối</dt><dd>{{ d.lastLoginAt ? (d.lastLoginAt | date:'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập' }}</dd></div>
+                <div><dt>Đổi mật khẩu</dt><dd>{{ d.mustChangePassword ? 'Bắt buộc ở lần đăng nhập tới' : 'Không yêu cầu' }}</dd></div>
+                <div><dt>Ngày tạo</dt><dd>{{ d.createDate ? (d.createDate | date:'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
+                <div><dt>Cập nhật</dt><dd>{{ d.updateDate ? (d.updateDate | date:'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
+            </dl>
+            <div class="contacts__drawer-actions">
+                <button nz-button nzType="default" (click)="openEmpEdit(d)">
+                    <span nz-icon nzType="edit" nzTheme="outline"></span>
+                    Sửa
+                </button>
+                <button nz-button nzType="default" (click)="confirmToggleStatus(d)">
+                    <span nz-icon [nzType]="d.isActive ? 'lock' : 'unlock'" nzTheme="outline"></span>
+                    {{ d.isActive ? 'Khóa' : 'Mở khóa' }}
+                </button>
+                <button nz-button nzType="default" (click)="confirmResetPassword(d)">
+                    <span nz-icon nzType="key" nzTheme="outline"></span>
+                    Đặt lại mật khẩu
+                </button>
+            </div>
+            }
+        </ng-container>
+    </nz-drawer>
+    }
+
+    <!-- ── Drawer form nhân sự ─────────────────── -->
+    @if (empFormOpen()) {
+    <nz-drawer [nzVisible]="true" [nzTitle]="editingUser() ? 'Sửa nhân sự' : 'Thêm nhân sự'" [nzWidth]="640" nzWrapClassName="smr-entity-drawer" (nzOnClose)="closeEmpForm()">
+        <ng-container *nzDrawerContent>
+            <form nz-form nzLayout="vertical" [formGroup]="empForm" (ngSubmit)="submitEmpForm()">
+                <nz-form-item>
+                    <nz-form-label nzRequired>Họ và tên</nz-form-label>
+                    <nz-form-control nzErrorTip="Nhập họ tên nhân sự">
+                        <input nz-input formControlName="fullName" maxlength="200" placeholder="VD: Nguyễn Văn An" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label nzRequired>Email</nz-form-label>
+                    <nz-form-control nzErrorTip="Email chưa đúng định dạng">
+                        <input nz-input formControlName="email" type="email" placeholder="ten@congty.vn" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Số điện thoại</nz-form-label>
+                    <nz-form-control>
+                        <input nz-input formControlName="phone" placeholder="09xxxxxxxx" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Địa chỉ</nz-form-label>
+                    <nz-form-control>
+                        <input nz-input formControlName="address" placeholder="Địa chỉ liên hệ" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label nzRequired>Phòng ban</nz-form-label>
+                    <nz-form-control nzErrorTip="Chọn phòng ban">
+                        <nz-select formControlName="organizationId" nzPlaceHolder="Chọn phòng ban" nzShowSearch>
+                            @for (o of orgSelectOptions(); track o.value) {
+                            <nz-option [nzValue]="o.value" [nzLabel]="o.label" [nzDisabled]="o.disabled" />
+                            }
+                        </nz-select>
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label nzRequired>Chức danh</nz-form-label>
+                    <nz-form-control nzErrorTip="Chọn chức danh">
+                        <nz-select formControlName="titleCode" nzPlaceHolder="Chọn chức danh" nzShowSearch>
+                            @for (t of titles(); track t.code) {
+                            <nz-option [nzValue]="t.code" [nzLabel]="t.name" [nzDisabled]="!t.isActive" />
+                            }
+                        </nz-select>
+                    </nz-form-control>
+                </nz-form-item>
+                @if (!editingUser()) {
+                <p class="contacts__hint">Hệ thống tự tạo tên đăng nhập từ tên (trùng → thêm 01/02...) và mật khẩu mặc định. Mật khẩu không hiển thị ở đây.</p>
+                } @else {
+                <p class="contacts__hint">Tên đăng nhập: {{ '@' }}{{ editingUser() }} (không đổi).</p>
+                }
+                <div class="contacts__drawer-actions">
+                    <button nz-button nzType="default" type="button" (click)="closeEmpForm()">Hủy</button>
+                    <button nz-button nzType="primary" type="submit" [disabled]="empSaving()" [nzLoading]="empSaving()">
+                        {{ editingUser() ? 'Lưu thay đổi' : 'Thêm nhân sự' }}
+                    </button>
+                </div>
+            </form>
+        </ng-container>
+    </nz-drawer>
+    }
+
+    <!-- ── Drawer form phòng ban ───────────────── -->
+    @if (orgFormOpen()) {
+    <nz-drawer [nzVisible]="true" [nzTitle]="editingOrgId() ? 'Sửa phòng ban' : 'Thêm phòng ban'" [nzWidth]="560" nzWrapClassName="smr-entity-drawer" (nzOnClose)="closeOrgForm()">
+        <ng-container *nzDrawerContent>
+            <form nz-form nzLayout="vertical" [formGroup]="orgForm" (ngSubmit)="submitOrgForm()">
+                <nz-form-item>
+                    <nz-form-label nzRequired>Tên đơn vị</nz-form-label>
+                    <nz-form-control nzErrorTip="Nhập tên phòng ban">
+                        <input nz-input formControlName="name" maxlength="200" placeholder="VD: Phòng Kỹ thuật" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Đơn vị cha</nz-form-label>
+                    <nz-form-control>
+                        <nz-select formControlName="parentId" nzPlaceHolder="Không có (đơn vị gốc)" nzAllowClear nzShowSearch>
+                            @for (o of parentOptions(); track o.value) {
+                            <nz-option [nzValue]="o.value" [nzLabel]="o.label" />
+                            }
+                        </nz-select>
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Thứ tự sắp xếp</nz-form-label>
+                    <nz-form-control>
+                        <input nz-input formControlName="orderNumber" type="number" min="0" />
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Ghi chú</nz-form-label>
+                    <nz-form-control>
+                        <textarea nz-input formControlName="notes" rows="3"></textarea>
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Trạng thái</nz-form-label>
+                    <nz-form-control>
+                        <nz-switch formControlName="isActive" nzCheckedChildren="Hoạt động" nzUnCheckedChildren="Ngừng" />
+                    </nz-form-control>
+                </nz-form-item>
+                <div class="contacts__drawer-actions">
+                    <button nz-button nzType="default" type="button" (click)="closeOrgForm()">Hủy</button>
+                    <button nz-button nzType="primary" type="submit" [disabled]="orgSaving()" [nzLoading]="orgSaving()">
+                        {{ editingOrgId() ? 'Lưu thay đổi' : 'Thêm phòng ban' }}
+                    </button>
+                </div>
+            </form>
+        </ng-container>
+    </nz-drawer>
+    }
+
+</div>

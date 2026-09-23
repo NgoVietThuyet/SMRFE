@@ -1,0 +1,133 @@
+// Whiteboard — chiếm toàn stage, nền tối đồng bộ video area.
+.wb {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: #0b1220;
+}
+
+.wb__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 15px;
+    background-color: var(--room-bg);
+    border-bottom: 1px solid var(--room-line);
+    flex-shrink: 0;
+    overflow-x: auto;
+}
+
+.wb__back {
+    color: var(--room-text);
+    white-space: nowrap;
+}
+
+.wb__sep {
+    width: 1px;
+    height: 30px;
+    background-color: var(--room-line);
+    margin: 0 5px;
+    flex-shrink: 0;
+}
+
+.wb__group {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.wb__toolbar .ant-btn-text {
+    color: var(--room-text);
+
+    &:hover {
+        background-color: var(--room-panel);
+        color: var(--room-text);
+    }
+}
+
+.wb__tool--active {
+    background-color: var(--primary-600) !important;
+    color: #ffffff !important;
+}
+
+.wb__colors {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 5px;
+    flex-shrink: 0;
+}
+
+.wb__swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+
+    &--active {
+        border-color: var(--room-text);
+    }
+}
+
+.wb__width {
+    width: 80px;
+    flex-shrink: 0;
+    background-color: var(--room-panel);
+    border-color: var(--room-line);
+    color: #ffffff;
+
+    input {
+        color: #ffffff;
+        background-color: transparent;
+    }
+
+    .anticon {
+        color: #ffffff;
+    }
+}
+
+.wb__spacer {
+    flex: 1;
+}
+
+.wb__textbar {
+    padding: 10px 15px;
+    background-color: var(--room-bg);
+    border-bottom: 1px solid var(--room-line);
+    flex-shrink: 0;
+
+    .ant-input {
+        background-color: var(--room-panel);
+        border-color: var(--room-line);
+        color: var(--room-text);
+    }
+
+    input::placeholder {
+        color: var(--room-muted);
+    }
+}
+
+.wb__board {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+.wb__canvas {
+    position: absolute;
+    inset: 0;
+    cursor: crosshair;
+}
+
+.wb__saving {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(11, 18, 32, 0.6);
+}

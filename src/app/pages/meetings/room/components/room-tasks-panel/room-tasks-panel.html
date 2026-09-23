@@ -1,0 +1,46 @@
+<!-- RoomTasksPanel — list gọn + tạo nhanh trong panel 425px -->
+<div class="rtp">
+    @if (loading()) {
+    <div class="rtp__loading"><nz-spin nzSize="large"></nz-spin></div>
+    } @else if (loadError()) {
+    <div class="rtp__error">
+        <button nz-button nzType="link" (click)="load()">
+            <span nz-icon nzType="reload" nzTheme="outline"></span>
+            {{ lang() === 'vi' ? 'Thử lại' : 'Retry' }}
+        </button>
+    </div>
+    } @else {
+    <ul class="rtp__list">
+        @for (task of tasks(); track task.id) {
+        <li class="rtp__item">
+            <span class="smr-status smr-status--{{ statusClass(task.status) }}" aria-hidden="true"></span>
+            <span class="rtp__main">
+                <span class="rtp__title" [attr.title]="task.title">{{ task.title }}</span>
+                <span class="rtp__sub">
+                    @if (task.assigneeFullName) {
+                    <span class="smr-avatar smr-avatar--xs rtp__avatar">{{ initials(task.assigneeFullName) }}</span>
+                    <span class="rtp__assignee">{{ task.assigneeFullName }}</span>
+                    <span aria-hidden="true"> · </span>
+                    }
+                    <span class="rtp__due {{ dueClass(task) }}">{{ formatDue(task.dueDate) }}</span>
+                    <span class="rtp__prio" [style.background-color]="priorityDot(task.priority)" aria-hidden="true"></span>
+                </span>
+            </span>
+        </li>
+        } @empty {
+        <li class="rtp__empty">
+            <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="t('noTasks')" />
+        </li>
+        }
+    </ul>
+    <div class="rtp__foot">
+        <button nz-button nzType="primary" nzBlock (click)="createOpen.set(true)">
+            <span nz-icon nzType="plus" nzTheme="outline"></span>
+            {{ t('addTask') }}
+        </button>
+    </div>
+    }
+</div>
+
+<app-task-create-modal [open]="createOpen()" [meetingId]="meetingId()" (closed)="createOpen.set(false)"
+    (created)="createOpen.set(false); load()" />

@@ -1,0 +1,18 @@
+// Shell layout styles — bổ sung các điều chỉnh cụ thể cho shell
+// Các class gốc (.smr-layout, .smr-content, .smr-page) đã có trong styles.scss
+
+// Content area: khi sidebar thu gọn, content mở rộng thêm
+.smr-content {
+    transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    // Khi sidebar collapsed, content chiếm thêm không gian
+    // (flex: 1 tự xử lý, nhưng ghi rõ để dễ debug)
+    &--expanded {
+        // flex: 1 đã xử lý tự động
+    }
+}
+
+// Đảm bảo router-outlet không tạo extra element có ảnh hưởng layout
+router-outlet {
+    display: none;
+}

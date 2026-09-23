@@ -1,0 +1,104 @@
+<!-- =====================================================
+     CreateMeetingModal — popup tạo cuộc họp (480–800px).
+     Khung modal kế thừa .ant-modal-* trong style.scss.
+===================================================== -->
+<nz-modal [nzVisible]="open()" nzTitle="Tạo cuộc họp" [nzWidth]="800" [nzFooter]="footerTpl"
+    [nzMaskClosable]="false" [nzKeyboard]="!saving()" (nzOnCancel)="close()">
+
+    <ng-container *nzModalContent>
+        @if (submitError()) {
+        <div class="cmm-error" role="alert">{{ submitError() }}</div>
+        }
+
+        <form [formGroup]="form" class="cmm-form" novalidate>
+            <div class="cmm-field">
+                <label class="cmm-label" for="cmm-name">Tên cuộc họp <span class="cmm-required">*</span></label>
+                <input nz-input id="cmm-name" formControlName="name" placeholder="Nhập tên cuộc họp"
+                    [maxlength]="200" />
+                @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+                <div class="cmm-field-error">Vui lòng nhập tên cuộc họp.</div>
+                }
+            </div>
+
+            <div class="cmm-field">
+                <label class="cmm-label" for="cmm-desc">Mô tả</label>
+                <textarea nz-input id="cmm-desc" formControlName="description" rows="2"
+                    placeholder="Mô tả ngắn về cuộc họp"></textarea>
+            </div>
+
+            <div class="cmm-field">
+                <label class="cmm-label" for="cmm-agenda">Chương trình nghị sự</label>
+                <textarea nz-input id="cmm-agenda" formControlName="agenda" rows="3"
+                    placeholder="Các nội dung sẽ thảo luận"></textarea>
+            </div>
+
+            <div class="cmm-row">
+                <div class="cmm-field">
+                    <label class="cmm-label" for="cmm-start">Bắt đầu <span class="cmm-required">*</span></label>
+                    <nz-date-picker id="cmm-start" formControlName="expectedStartTime" nzShowTime
+                        nzFormat="dd/MM/yyyy HH:mm" nzPlaceHolder="Chọn thời gian" class="cmm-control" />
+                    @if (form.controls.expectedStartTime.touched && form.controls.expectedStartTime.hasError('required')) {
+                    <div class="cmm-field-error">Vui lòng chọn thời gian bắt đầu.</div>
+                    }
+                </div>
+                <div class="cmm-field">
+                    <label class="cmm-label" for="cmm-end">Kết thúc</label>
+                    <nz-date-picker id="cmm-end" formControlName="expectedEndTime" nzShowTime
+                        nzFormat="dd/MM/yyyy HH:mm" nzPlaceHolder="Chọn thời gian" class="cmm-control" />
+                    @if (form.hasError('endBeforeStart') && form.controls.expectedEndTime.touched) {
+                    <div class="cmm-field-error">Thời gian kết thúc phải sau thời gian bắt đầu.</div>
+                    } @else if (form.hasError('tooLong') && form.controls.expectedEndTime.touched) {
+                    <div class="cmm-field-error">Cuộc họp không được dài quá 24 giờ.</div>
+                    }
+                </div>
+            </div>
+
+            <div class="cmm-row">
+                <div class="cmm-field">
+                    <label class="cmm-label" for="cmm-visibility">Hiển thị</label>
+                    <nz-select id="cmm-visibility" formControlName="visibility" class="cmm-control">
+                        @for (opt of visibilityOptions; track opt.value) {
+                        <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                        }
+                    </nz-select>
+                </div>
+                <div class="cmm-field">
+                    <label class="cmm-label" for="cmm-participants">Người tham gia</label>
+                    <nz-select id="cmm-participants" formControlName="participantUserNames" nzMode="multiple"
+                        nzShowSearch nzServerSearch nzAllowClear placeholder="Tìm theo tên, email..."
+                        [nzLoading]="searchingUsers()" (nzOnSearch)="onUserSearch($event)"
+                        class="cmm-control">
+                        @for (u of participantOptions(); track u.userName) {
+                        <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName + ' (' + u.userName + ')'" />
+                        }
+                    </nz-select>
+                </div>
+            </div>
+
+            <fieldset class="cmm-settings" formGroupName="settings">
+                <legend class="cmm-label">Tùy chọn phòng họp</legend>
+                <label class="cmm-switch"><span>Phòng chờ duyệt</span><nz-switch formControlName="lobbyEnabled" /></label>
+                <label class="cmm-switch"><span>Cho phép khách</span><nz-switch formControlName="allowGuests" /></label>
+                <label class="cmm-switch"><span>Vào trước chủ trì</span><nz-switch formControlName="allowJoinBeforeHost" /></label>
+                <label class="cmm-switch"><span>Chat</span><nz-switch formControlName="chatEnabled" /></label>
+                <label class="cmm-switch"><span>Chia sẻ màn hình</span><nz-switch formControlName="screenShareEnabled" /></label>
+                <label class="cmm-switch"><span>Bảng trắng</span><nz-switch formControlName="whiteboardEnabled" /></label>
+                <label class="cmm-switch"><span>Tải file lên</span><nz-switch formControlName="fileUploadEnabled" /></label>
+                <label class="cmm-switch"><span>Ghi hình</span><nz-switch formControlName="recordingEnabled" /></label>
+                <label class="cmm-switch"><span>Phụ đề</span><nz-switch formControlName="captionsEnabled" /></label>
+                <label class="cmm-switch cmm-switch--disabled" title="Tính năng chưa sẵn sàng trong phiên bản này">
+                    <span>AI biên bản <small>Chưa sẵn sàng</small></span>
+                    <nz-switch formControlName="aiMinutesEnabled" [nzDisabled]="true" />
+                </label>
+            </fieldset>
+        </form>
+    </ng-container>
+
+    <ng-template #footerTpl>
+        <button nz-button nzType="default" (click)="close()" [disabled]="!!saving()">Hủy</button>
+        <button nz-button nzType="default" (click)="submit(true)" [nzLoading]="saving() === 'draft'"
+            [disabled]="!!saving()">Lưu nháp</button>
+        <button nz-button nzType="primary" (click)="submit(false)" [nzLoading]="saving() === 'create'"
+            [disabled]="!!saving()">Tạo cuộc họp</button>
+    </ng-template>
+</nz-modal>

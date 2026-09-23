@@ -1,0 +1,98 @@
+// CreateMeetingModal — chỉ layout form trong body.
+// Khung modal (header/body/footer) kế thừa .ant-modal-* trong styles.scss.
+.cmm-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.cmm-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cmm-label {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.cmm-required {
+    color: var(--danger);
+}
+
+.cmm-field-error {
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+    margin-top: var(--space-1);
+}
+
+.cmm-error {
+    background-color: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    border-radius: var(--radius-md);
+    padding: 12px var(--space-3);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-4);
+}
+
+.cmm-row {
+    display: flex;
+    gap: var(--space-3);
+
+    .cmm-field {
+        flex: 1;
+    }
+}
+
+.cmm-control {
+    width: 100%;
+}
+
+.cmm-settings {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2) var(--space-4);
+
+    .cmm-label {
+        grid-column: 1 / -1;
+    }
+}
+
+.cmm-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.cmm-switch--disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+
+    small {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        font-weight: 400;
+    }
+}
+
+@media (max-width: 767px) {
+    .cmm-row {
+        flex-direction: column;
+    }
+
+    .cmm-settings {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,3446 @@
+// ============================================================
+// SmartMeeting — Global Styles
+// Dựa theo STYLE.md: Enterprise Productivity UI
+// ============================================================
+
+// ------------------------------------------------------------
+// 0. Font Face — SVN-Gilroy
+// ------------------------------------------------------------
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Xlight.otf') format('opentype');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Xlight Italic.otf') format('opentype');
+    font-weight: 200;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Thin.otf') format('opentype');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Thin Italic.otf') format('opentype');
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Light Italic.otf') format('opentype');
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Italic.otf') format('opentype');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Medium.otf') format('opentype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Medium Italic.otf') format('opentype');
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy SemiBold.otf') format('opentype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy SemiBold Italic.otf') format('opentype');
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Bold Italic.otf') format('opentype');
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Heavy.otf') format('opentype');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Heavy Italic.otf') format('opentype');
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy XBold.otf') format('opentype');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy XBold Italic.otf') format('opentype');
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Black.otf') format('opentype');
+    font-weight: 950;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SVN-Gilroy';
+    src: url('/SVN-Gilroy/SVN-Gilroy Black Italic.otf') format('opentype');
+    font-weight: 950;
+    font-style: italic;
+    font-display: swap;
+}
+
+// ------------------------------------------------------------
+// 1. Design Tokens — Legacy (spec cũ) + SMR compat
+//    Bỏ scale x1.25, giá trị vật lý chuẩn
+// ------------------------------------------------------------
+:root {
+    // --- Legacy palette (Nguồn duy nhất) ---
+    --bs-white: #ffffff;
+    --bs-black: #000000;
+    --bs-sky-light: #7dd3fc;
+    --bs-cyan-deep: #075985;
+    --bs-teal-dark: #082f49;
+    --bs-ice-blue: #f1fbfe;
+    --bs-gray-night: #1f2937;
+    --bs-sky-primary: #0284c7;
+    --bs-green-forest: #042f2e;
+    --bs-gray-dark: #27272a;
+    --bs-sky-pale: #e0f2fe;
+    --bs-blue-ocean: #005993;
+    --bs-sky-bright: #38bdf8;
+    --bs-blue-ocean-2: #005994;
+    --bs-blue-link: #337ab7;
+    --bs-blue-ocean-bold: #16315e;
+    --bs-pale-grey: #dadada;
+    --bs-medium-grey: #666666;
+    --bs-blue-grey: #607d8b;
+    --bs-red: #dc2626;
+    --bs-dark: #1f2937;
+    --app-font-family: 'SVN-Gilroy', sans-serif;
+    --bs-border: #C9D9EA;
+
+    // --- Radius legacy (NGUỒN DUY NHẤT) ---
+    --radius-none: 0;
+    --radius-sm: 5px;
+    --radius-md: 6px;
+    --radius-pill: 9999px;
+    --radius-full: 50%;
+    --bs-border-radius: var(--radius-sm);
+    --bs-border-radius-sm: var(--radius-sm);
+    --bs-border-radius-lg: var(--radius-md);
+    --bs-border-radius-xl: var(--radius-md);
+    --bs-border-radius-xxl: var(--radius-md);
+    --bs-border-radius-pill: var(--radius-pill);
+
+    // --- Compat SMR tokens → map về legacy ---
+    --primary-600: var(--bs-cyan-deep);
+    --primary-500: #0369a1;
+    --primary-100: #e6f0fa;
+    --primary-50: #eff6ff;
+    --bg-page: #f5fafd;
+    --bg-surface: #ffffff;
+    --bg-subtle: #f1f5f9;
+    --border-default: var(--bs-border);
+    --border-strong: var(--bs-border);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    // --- Semantic ---
+    --success: #16a34a;
+    --success-bg: #f0fdf4;
+    --success-border: #bbf7d0;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --warning-border: #fde68a;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --danger-border: #fecaca;
+    --info: var(--bs-cyan-deep);
+    --info-bg: #eff6ff;
+    --info-border: #bfdbfe;
+    --disabled: #94a3b8;
+
+    // --- Shadow ---
+    --shadow-float: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-modal: 0 10px 30px rgba(15, 23, 42, 0.12);
+
+    // --- Spacing (chuẩn 4/8/12/16/20/24/32) ---
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    // --- Layout legacy ---
+    --sidebar-width: 240px;
+    --sidebar-collapsed-width: 64px;
+    --sidebar-transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --app-sider-width: 240px;
+
+    // --- Control legacy 48px ---
+    --control-height: 48px;
+    --control-height-sm: 35px;
+    --control-height-lg: 48px;
+
+    // --- Typography legacy ---
+    --font-family: var(--app-font-family);
+    --font-size-xs: 15px;
+    --font-size-sm: 16px;
+    --font-size-base: 16px;
+    --font-size-md: 20px;
+    --font-size-lg: 23px;
+    --font-size-xl: 24px;
+    --line-height: 1.5;
+
+    // --- Z-index ---
+    --z-sidebar: 100;
+    --z-sticky: 10;
+    --z-dropdown: 1050;
+    --z-modal: 1000;
+    --z-tooltip: 1070;
+
+    // --- Scrollbar ---
+    --sb-w: 8px;
+}
+
+$my-map: (
+    'white',
+    'black',
+    'sky-light',
+    'cyan-deep',
+    'teal-dark',
+    'ice-blue',
+    'gray-night',
+    'sky-primary',
+    'green-forest',
+    'gray-dark',
+    'sky-pale',
+    'blue-ocean',
+    'sky-bright',
+    'blue-ocean-2',
+    'blue-link',
+    'blue-ocean-bold',
+    'pale-grey',
+    'medium-grey',
+    'blue-grey',
+    'red',
+    'dark'
+);
+
+// ------------------------------------------------------------
+// 2. Reset & Base
+// ------------------------------------------------------------
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #ffffff !important;
+}
+
+html {
+    font-size: var(--font-size-base);
+    -webkit-text-size-adjust: 100%;
+    zoom: 1;
+}
+
+body {
+    font-family: var(--app-font-family) !important;
+    font-size: 16px;
+    line-height: var(--line-height);
+    color: var(--text-primary);
+    background: #ffffff !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+*:not(.material-icons):not(.material-icons-outlined):not(.material-icons-round):not(.material-icons-sharp):not(.material-icons-two-tone):not([class^='anticon']):not([class*=' anticon']):not(.bi):not(.font-mono):not(code):not(pre):not(kbd):not(samp) {
+    font-family: var(--app-font-family) !important;
+}
+
+button,
+input,
+select,
+textarea,
+.ant-btn,
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select,
+.ant-select-selector,
+.ant-select-item,
+.ant-picker,
+.ant-picker-input>input,
+.ant-table,
+.ant-menu,
+.ant-pagination,
+.ant-form,
+.ant-modal,
+.ant-drawer,
+.ant-dropdown,
+.ant-tabs,
+.ant-card,
+.btn,
+.form-control {
+    font-family: var(--app-font-family) !important;
+}
+
+.ant-select-arrow {
+    color: #005993 !important;
+}
+
+app-root {
+    height: 100% !important;
+    background: #ffffff !important;
+}
+
+.ant-layout {
+    background: #ffffff !important;
+}
+
+.ant-layout-content.app-content {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: #f5fafd !important;
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+
+    >*:not(router-outlet) {
+        display: flex !important;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 0;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+}
+
+// Remove default margin/padding on headings
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0;
+    padding: 0;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+p {
+    margin: 0;
+}
+
+a {
+    color: var(--primary-600);
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+// ------------------------------------------------------------
+// 3. Scrollbar legacy — thin 8px + gutter stable
+// ------------------------------------------------------------
+* {
+    scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: var(--sb-w);
+    height: var(--sb-w);
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: var(--radius-sm);
+    background: var(--bs-border);
+}
+
+::-webkit-scrollbar-track {
+    border-radius: var(--radius-sm);
+    background: transparent;
+}
+
+::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+// ------------------------------------------------------------
+// 4. App Layout Shell
+// — Sidebar (fixed left) + content area (TopHeader + page)
+// ------------------------------------------------------------
+.smr-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.smr-sidebar-backdrop {
+    display: none;
+}
+
+.smr-sidebar {
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-surface);
+    border-right: 1px solid var(--border-default);
+    transition: var(--sidebar-transition);
+    overflow: hidden;
+    position: relative;
+    z-index: var(--z-sidebar);
+
+    &.smr-sidebar--collapsed {
+        width: var(--sidebar-collapsed-width);
+    }
+}
+
+.smr-content {
+    flex: 1;
+    min-width: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--bg-page);
+}
+
+.smr-page {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-6) var(--space-8);
+    padding-bottom: 0px;
+}
+
+// ------------------------------------------------------------
+// 5. Page Header
+// ------------------------------------------------------------
+.smr-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+
+    &__title {
+        font-size: var(--font-size-xl);
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.3;
+    }
+
+    &__desc {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-base);
+        color: var(--text-secondary);
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        flex-shrink: 0;
+    }
+}
+
+// ------------------------------------------------------------
+// 6. Sidebar Nav — xem sidebar.scss (source of truth)
+// — .smr-nav / __item / __icon / __label / __badge / collapsed
+// ------------------------------------------------------------
+
+// ------------------------------------------------------------
+// 7. Sidebar Brand — legacy 90px gradient
+// ------------------------------------------------------------
+.smr-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 64px;
+    padding: 0 var(--space-4);
+    background: #0f4c81;
+    border-bottom: none;
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 18%;
+        background: rgba(255, 255, 255, 0.08);
+        clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+        pointer-events: none;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 16%;
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        pointer-events: none;
+    }
+
+    &__logo {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        background-color: rgba(255, 255, 255, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 700;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    &__name {
+        font-size: 19px;
+        font-weight: 600;
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: relative;
+        z-index: 1;
+    }
+}
+
+// ------------------------------------------------------------
+// 8. Top Header
+// — Toggle | Back? | Breadcrumb | Search? | bell + VI/EN + help? + avatar
+// ------------------------------------------------------------
+.smr-top-header {
+    height: 56px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: 0 var(--space-6);
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border-default);
+
+    &__left {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        min-width: 0;
+        flex: 1;
+    }
+
+    &__right {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        flex-shrink: 0;
+    }
+
+    &__breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-left: var(--space-2);
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    &__crumb-link {
+        font-size: var(--font-size-base);
+        color: var(--text-secondary);
+
+        &:hover {
+            color: var(--primary-600);
+        }
+    }
+
+    &__crumb-current {
+        font-size: var(--font-size-base);
+        font-weight: 600;
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__crumb-sep {
+        color: var(--text-muted);
+        flex-shrink: 0;
+    }
+
+    // Language switcher VI / EN
+    &__locale {
+        display: flex;
+        align-items: center;
+        padding: 2px;
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-md);
+        background-color: var(--bg-surface);
+        flex-shrink: 0;
+
+        button {
+            border: none;
+            background: transparent;
+            font-family: var(--font-family);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        &--active {
+            background-color: var(--primary-50) !important;
+            color: var(--primary-600) !important;
+        }
+    }
+
+    // Nút avatar mở dropdown user
+    &__avatar {
+        border: none;
+        background: transparent;
+        padding: 2px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: inline-flex;
+
+        .smr-avatar {
+            background-color: var(--primary-600);
+        }
+    }
+}
+
+// ------------------------------------------------------------
+// 9. Data Section
+// — White block with header + table/list
+// ------------------------------------------------------------
+.smr-section {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+
+    &+& {
+        margin-top: var(--space-6);
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--space-4);
+        height: 62px;
+        border-bottom: 1px solid var(--border-default);
+        flex-shrink: 0;
+        gap: var(--space-3);
+    }
+
+    &__title {
+        font-size: var(--font-size-md);
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    &__action {
+        font-size: var(--font-size-sm);
+        color: var(--primary-600);
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    &__body {
+        padding: var(--space-4);
+    }
+}
+
+// ------------------------------------------------------------
+// 10. Filter Toolbar
+// — Row of controls (search, selects, buttons)
+// ------------------------------------------------------------
+.smr-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    padding: var(--space-4) 0;
+
+    &--bordered {
+        padding: var(--space-4);
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-md);
+    }
+
+    &__spacer {
+        flex: 1;
+    }
+}
+
+// SearchInput dùng chung (Meeting, Documents, Personnel, Minutes)
+.smr-search {
+    width: 100%;
+    max-width: 450px;
+
+    .ant-input-affix-wrapper {
+        height: var(--control-height);
+    }
+}
+
+.smr-toolbar {
+    .smr-search {
+        flex: 1;
+        min-width: 300px;
+        max-width: none;
+    }
+}
+
+// ------------------------------------------------------------
+// 11. Button — ng-zorro override + SmartMeeting utilities
+// — Primary / Default / Danger / Disabled / Icon+Text
+// ------------------------------------------------------------
+.ant-btn {
+    height: var(--control-height);
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    white-space: nowrap;
+}
+
+.ant-btn-primary {
+    background-color: var(--primary-600);
+    border-color: var(--primary-600);
+    color: #ffffff;
+
+    &:hover,
+    &:focus {
+        background-color: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #ffffff;
+    }
+}
+
+.ant-btn-default {
+    background-color: var(--bg-surface);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+
+    &:hover,
+    &:focus {
+        background-color: var(--bg-page);
+        border-color: var(--primary-600);
+        color: var(--primary-600);
+    }
+}
+
+.ant-btn-dangerous {
+    color: var(--danger);
+    border-color: var(--danger-border);
+
+    &:hover,
+    &:focus {
+        color: var(--danger);
+        border-color: var(--danger);
+        background-color: var(--danger-bg);
+    }
+}
+
+.ant-btn[disabled],
+.ant-btn-disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+// Icon Button (32×32)
+.smr-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+    padding: 0;
+
+    &:hover {
+        background-color: var(--bg-subtle);
+        color: var(--text-primary);
+    }
+
+    &--danger:hover {
+        background-color: var(--danger-bg);
+        color: var(--danger);
+    }
+
+    .anticon {
+        font-size: 20px;
+    }
+}
+
+// Text Button (link-style, for "Xem tất cả", "Quên mật khẩu?")
+.smr-text-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--primary-600);
+    cursor: pointer;
+    transition: color 0.15s;
+    line-height: 1;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+// ------------------------------------------------------------
+// 12. Status / Badge
+// ------------------------------------------------------------
+.smr-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+
+    &__dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    &--upcoming {
+        color: var(--primary-600);
+
+        .smr-status__dot {
+            background: var(--primary-600);
+        }
+    }
+
+    &--ongoing {
+        color: var(--success);
+
+        .smr-status__dot {
+            background: var(--success);
+        }
+    }
+
+    &--ended {
+        color: #64748b;
+
+        .smr-status__dot {
+            background: #64748b;
+        }
+    }
+
+    &--cancelled {
+        color: var(--danger);
+
+        .smr-status__dot {
+            background: var(--danger);
+        }
+    }
+
+    &--pending {
+        color: var(--warning);
+
+        .smr-status__dot {
+            background: var(--warning);
+        }
+    }
+
+    &--draft {
+        color: var(--text-muted);
+
+        .smr-status__dot {
+            background: var(--text-muted);
+        }
+    }
+
+    &--archived {
+        color: var(--text-muted);
+
+        .smr-status__dot {
+            background: var(--text-muted);
+            opacity: 0.6;
+        }
+    }
+}
+
+.smr-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 10px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    white-space: nowrap;
+    line-height: 1.5;
+
+    &--upcoming {
+        background: var(--info-bg);
+        color: var(--primary-600);
+        border: 1px solid var(--info-border);
+    }
+
+    &--ongoing {
+        background: var(--success-bg);
+        color: var(--success);
+        border: 1px solid var(--success-border);
+    }
+
+    &--ended {
+        background: var(--bg-subtle);
+        color: #64748b;
+        border: 1px solid var(--border-default);
+    }
+
+    &--cancelled {
+        background: var(--danger-bg);
+        color: var(--danger);
+        border: 1px solid var(--danger-border);
+    }
+
+    &--pending {
+        background: var(--warning-bg);
+        color: var(--warning);
+        border: 1px solid var(--warning-border);
+    }
+
+    &--success {
+        background: var(--success-bg);
+        color: var(--success);
+        border: 1px solid var(--success-border);
+    }
+
+    &--info {
+        background: var(--info-bg);
+        color: var(--info);
+        border: 1px solid var(--info-border);
+    }
+}
+
+// ------------------------------------------------------------
+// 13. Avatar
+// ------------------------------------------------------------
+.smr-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: 600;
+    color: #ffffff;
+    flex-shrink: 0;
+    user-select: none;
+    font-size: var(--font-size-sm);
+
+    &--sm {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    &--md {
+        width: 40px;
+        height: 40px;
+        font-size: var(--font-size-xs);
+    }
+
+    &--lg {
+        width: 50px;
+        height: 50px;
+        font-size: var(--font-size-sm);
+    }
+
+    &--xl {
+        width: 60px;
+        height: 60px;
+        font-size: var(--font-size-base);
+    }
+}
+
+// ------------------------------------------------------------
+// 14. Table Override (ng-zorro nz-table)
+// ------------------------------------------------------------
+.ant-table {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+
+    .ant-table-thead>tr>th {
+        background-color: var(--bg-page);
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        padding: 12px var(--space-4);
+        border-bottom: 1px solid var(--border-default);
+
+        &::before {
+            display: none; // remove column separator
+        }
+    }
+
+    .ant-table-tbody>tr>td {
+        padding: 15px var(--space-4);
+        border-bottom: 1px solid var(--border-default);
+        color: var(--text-primary);
+    }
+
+    .ant-table-tbody>tr:hover>td {
+        background-color: var(--bg-page);
+    }
+
+    .ant-table-tbody>tr:last-child>td {
+        border-bottom: none;
+    }
+}
+
+.ant-table-container {
+    border-radius: var(--radius-md) !important;
+}
+
+// Pagination alignment
+.ant-pagination {
+    margin: var(--space-4) 0 0;
+    text-align: right;
+
+    .ant-pagination-item-active {
+        border-color: var(--primary-600);
+
+        a {
+            color: var(--primary-600);
+        }
+    }
+}
+
+// ------------------------------------------------------------
+// 15. Tabs Override (underline only)
+// ------------------------------------------------------------
+.ant-tabs-top>.ant-tabs-nav {
+    margin-bottom: 0;
+
+    &::before {
+        border-bottom-color: var(--border-default);
+    }
+
+    .ant-tabs-nav-wrap {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    }
+}
+
+.ant-tabs-tab {
+    font-size: var(--font-size-base);
+    color: #64748b;
+    padding: 12px 0;
+    margin-right: var(--space-6) !important;
+
+    &:hover {
+        color: var(--primary-600);
+    }
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--primary-600) !important;
+    font-weight: 500;
+}
+
+.ant-tabs-ink-bar {
+    background-color: var(--primary-600) !important;
+    height: 2px;
+}
+
+// Tabs in toolbar context (inside smr-section)
+.smr-section .ant-tabs-nav {
+    padding: 0 var(--space-4);
+}
+
+// ------------------------------------------------------------
+// 16. Form Override (nz-form)
+// ------------------------------------------------------------
+.ant-form-item-label>label {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.ant-form-item {
+    margin-bottom: var(--space-4);
+}
+
+.ant-form-item-explain-error {
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+    margin-top: 5px;
+}
+
+// --- Input / Select / Picker chuẩn dùng chung ---
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-picker,
+.ant-input-number,
+.ant-select-selector {
+    min-height: var(--control-height);
+    border-radius: var(--radius-md) !important;
+    border-color: var(--border-strong);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    box-shadow: none !important;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-picker,
+.ant-input-number,
+.ant-select {
+    width: 100%;
+}
+
+// Input nằm bên trong affix-wrapper (prefix/suffix/allow-clear/password):
+// viền + padding + chiều cao do wrapper quản. Input bên trong phải được reset,
+// nếu không min-height 45px làm nó cao hơn vùng nội dung của wrapper
+// → tràn khung, chữ lệch xuống so với icon.
+.ant-input-affix-wrapper>input.ant-input {
+    min-height: 0;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    color: inherit;
+}
+
+.ant-input::placeholder,
+.ant-picker-input>input::placeholder {
+    color: var(--text-muted);
+}
+
+.ant-input:hover,
+.ant-input-affix-wrapper:hover,
+.ant-picker:hover,
+.ant-input-number:hover,
+.ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+    border-color: var(--primary-500);
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper-focused,
+.ant-picker-focused,
+.ant-input-number-focused,
+.ant-select-focused .ant-select-selector {
+    border-color: var(--primary-600) !important;
+    box-shadow: 0 0 0 2px var(--primary-100) !important;
+}
+
+.ant-input[disabled],
+.ant-input-affix-wrapper-disabled,
+.ant-picker-disabled,
+.ant-input-number-disabled,
+.ant-select-disabled .ant-select-selector {
+    background-color: var(--bg-subtle);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+textarea.ant-input {
+    min-height: 120px;
+    resize: vertical;
+}
+
+// ------------------------------------------------------------
+// 17. Modal Override
+// ------------------------------------------------------------
+.ant-modal-header {
+    border-bottom: 1px solid var(--border-default);
+    padding: var(--space-4) var(--space-6);
+
+    .ant-modal-title {
+        font-size: var(--font-size-md);
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+}
+
+.ant-modal-body {
+    padding: var(--space-6);
+}
+
+.ant-modal-footer {
+    border-top: 1px solid var(--border-default);
+    padding: var(--space-3) var(--space-6);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+// ConfirmModal — kế thừa BaseModal, chỉ thêm pattern nội dung xác nhận.
+// Variants nghiệp vụ: Danger / Warning / Information (đổi icon + màu ở component).
+.smr-confirm {
+    &__content {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-4);
+    }
+
+    &__icon {
+        flex-shrink: 0;
+    }
+
+    &__body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__title {
+        font-size: var(--font-size-md);
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    &__desc {
+        margin-top: var(--space-1);
+        font-size: var(--font-size-base);
+        color: var(--text-secondary);
+    }
+}
+
+// ------------------------------------------------------------
+// 18. Drawer Override
+// ------------------------------------------------------------
+.ant-drawer-header {
+    border-bottom: 1px solid var(--border-default);
+    padding: var(--space-4) var(--space-6);
+
+    .ant-drawer-title {
+        font-size: var(--font-size-md);
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+}
+
+.ant-drawer-body {
+    padding: var(--space-6);
+}
+
+.ant-drawer-footer {
+    border-top: 1px solid var(--border-default);
+    padding: var(--space-3) var(--space-6);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+// ------------------------------------------------------------
+// 19. Dropdown / Select Override
+// ------------------------------------------------------------
+.ant-dropdown-menu,
+.ant-select-dropdown {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-float);
+    padding: 5px;
+}
+
+.ant-dropdown-menu-item {
+    height: 45px;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    padding: 0 var(--space-3);
+
+    &:hover {
+        background-color: var(--bg-subtle);
+    }
+
+    &-danger {
+        color: var(--danger) !important;
+
+        &:hover {
+            background-color: var(--danger-bg) !important;
+        }
+    }
+}
+
+.ant-select-item {
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+
+    &-option-selected:not(.ant-select-item-option-disabled) {
+        background-color: var(--primary-50);
+        color: var(--primary-600);
+        font-weight: 500;
+    }
+
+    &-option-active:not(.ant-select-item-option-disabled) {
+        background-color: var(--bg-subtle);
+    }
+}
+
+// ActionMenu trigger — nút [...] mở dropdown Xem / Sửa / Tải / Xóa.
+// Dropdown menu dùng lại .ant-dropdown-menu ở trên.
+.smr-action-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+
+    &:hover {
+        background-color: var(--bg-subtle);
+        color: var(--text-primary);
+    }
+}
+
+// ------------------------------------------------------------
+// 20. Tooltip Override
+// ------------------------------------------------------------
+.ant-tooltip-inner {
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+}
+
+// ------------------------------------------------------------
+// 21. Card Override (hạn chế dùng — chỉ khi thực sự cần)
+// ------------------------------------------------------------
+.ant-card {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    box-shadow: none;
+
+    .ant-card-head {
+        border-bottom: 1px solid var(--border-default);
+        font-size: var(--font-size-md);
+        font-weight: 600;
+        color: var(--text-primary);
+        min-height: 62px;
+        padding: 0 var(--space-4);
+    }
+
+    .ant-card-body {
+        padding: var(--space-4) var(--space-5);
+    }
+}
+
+// ------------------------------------------------------------
+// 22. Notification / Message Override
+// ------------------------------------------------------------
+.ant-message-notice-content {
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    box-shadow: var(--shadow-float);
+}
+
+// ------------------------------------------------------------
+// 23. Utility Classes
+// ------------------------------------------------------------
+
+// Flex helpers
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.items-start {
+    align-items: flex-start;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.justify-end {
+    justify-content: flex-end;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.gap-1 {
+    gap: var(--space-1);
+}
+
+.gap-2 {
+    gap: var(--space-2);
+}
+
+.gap-3 {
+    gap: var(--space-3);
+}
+
+.gap-4 {
+    gap: var(--space-4);
+}
+
+.gap-6 {
+    gap: var(--space-6);
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+.min-w-0 {
+    min-width: 0;
+}
+
+// Text helpers
+.text-xs {
+    font-size: var(--font-size-xs);
+}
+
+.text-sm {
+    font-size: var(--font-size-sm);
+}
+
+.text-base {
+    font-size: var(--font-size-base);
+}
+
+.text-md {
+    font-size: var(--font-size-md);
+}
+
+.text-lg {
+    font-size: var(--font-size-lg);
+}
+
+.text-xl {
+    font-size: var(--font-size-xl);
+}
+
+.font-400 {
+    font-weight: 400;
+}
+
+.font-500 {
+    font-weight: 500;
+}
+
+.font-600 {
+    font-weight: 600;
+}
+
+.font-700 {
+    font-weight: 700;
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-warning {
+    color: var(--warning);
+}
+
+.text-info {
+    color: var(--info);
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// Spacing helpers
+.mt-1 {
+    margin-top: var(--space-1);
+}
+
+.mt-2 {
+    margin-top: var(--space-2);
+}
+
+.mt-4 {
+    margin-top: var(--space-4);
+}
+
+.mt-6 {
+    margin-top: var(--space-6);
+}
+
+.mb-4 {
+    margin-bottom: var(--space-4);
+}
+
+.mb-6 {
+    margin-bottom: var(--space-6);
+}
+
+// Visibility
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+// Full width control
+.w-full {
+    width: 100%;
+}
+
+// Divider
+.smr-divider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid var(--border-default);
+    margin: var(--space-4) 0;
+}
+
+// Empty state — dùng nz-empty + nzNotFoundImage="simple" của ng-zorro.
+// Không tự vẽ empty riêng.
+
+// Loading state — chỉ icon (nz-spin), không text.
+// Table ưu tiên loading của nz-table, không tự tạo spinner riêng từng module.
+.smr-loading {
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// ------------------------------------------------------------
+// 24. Responsive
+// ------------------------------------------------------------
+@media (max-width: 1023px) {
+    .smr-page {
+        padding: var(--space-6) var(--space-6);
+    }
+}
+
+@media (max-width: 767px) {
+    .smr-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        z-index: var(--z-sidebar);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &.smr-sidebar--open {
+            transform: translateX(0);
+            width: var(--sidebar-width);
+        }
+    }
+
+    .smr-content {
+        width: 100%;
+    }
+
+    .smr-sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: calc(var(--z-sidebar) - 1);
+        padding: 0;
+        border: 0;
+        background: rgba(15, 23, 42, 0.42);
+    }
+
+    .smr-page {
+        padding: var(--space-4);
+    }
+}
+
+// ------------------------------------------------------------
+// 25. Transitions (subtle, enterprise — không animation dư thừa)
+// ------------------------------------------------------------
+.smr-transition {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+// ------------------------------------------------------------
+// 26. Reduced Motion — accessibility
+// ------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .smr-sidebar {
+        transition: none;
+    }
+}
+
+// ============================================================
+// LEGACY ENTERPRISE BUNDLE — spec cũ 13 nhóm (bỏ scale)
+// Ghi đè toàn cục để đồng bộ SMR với hệ cũ
+// ============================================================
+@import 'styles/list-page-scroll';
+
+// Legacy utility loops — sizing, spacing, colors
+@for $i from 0 through 100 {
+    .w-#{$i} {
+        width: #{$i + '%'} !important;
+    }
+
+    .h-#{$i} {
+        height: #{$i + '%'} !important;
+    }
+
+    .border-radius-#{$i}px {
+        border-radius: #{$i + 'px'} !important;
+    }
+
+    .border-radius-#{$i} {
+        border-radius: #{$i + '%'} !important;
+    }
+
+    .top-#{$i} {
+        top: #{$i + '%'} !important;
+    }
+
+    .bottom-#{$i} {
+        bottom: #{$i + '%'} !important;
+    }
+
+    .right-#{$i} {
+        right: #{$i + '%'} !important;
+    }
+
+    .left-#{$i} {
+        left: #{$i + '%'} !important;
+    }
+
+    .z-#{$i} {
+        z-index: #{$i} !important;
+    }
+}
+
+@for $i from 1 through 1000 {
+    .w-#{$i}px {
+        width: #{$i + 'px'};
+    }
+
+    .h-#{$i}px {
+        height: #{$i + 'px'} !important;
+    }
+
+    .max-w-#{$i}px {
+        max-width: #{$i + 'px'} !important;
+    }
+
+    .max-h-#{$i}px {
+        max-height: #{$i + 'px'} !important;
+    }
+
+    .min-w-#{$i}px {
+        min-width: #{$i + 'px'} !important;
+    }
+
+    .min-h-#{$i}px {
+        min-height: #{$i + 'px'} !important;
+    }
+}
+
+@for $i from 100 through 900 {
+    .fw-#{$i} {
+        font-weight: #{$i} !important;
+    }
+}
+
+@for $i from 10 through 100 {
+    .fs-#{$i} {
+        font-size: #{$i}px !important;
+    }
+}
+
+@each $key in $my-map {
+    .text-color-#{$key} {
+        color: var(--bs-#{$key}) !important;
+    }
+
+    .bg-color-#{$key} {
+        background-color: var(--bs-#{$key}) !important;
+    }
+
+    .border-color-#{$key} {
+        border-color: var(--bs-#{$key}) !important;
+    }
+
+    .text-hover-#{$key}:hover {
+        color: var(--bs-#{$key}) !important;
+    }
+}
+
+$max-spacing: 20;
+$spacing-unit: 0.25rem;
+
+@for $i from 0 through $max-spacing {
+    .m-#{$i} {
+        margin: $i * $spacing-unit !important;
+    }
+
+    .mt-#{$i} {
+        margin-top: $i * $spacing-unit !important;
+    }
+
+    .mb-#{$i} {
+        margin-bottom: $i * $spacing-unit !important;
+    }
+
+    .ms-#{$i} {
+        margin-left: $i * $spacing-unit !important;
+    }
+
+    .me-#{$i} {
+        margin-right: $i * $spacing-unit !important;
+    }
+
+    .mx-#{$i} {
+        margin-left: $i * $spacing-unit !important;
+        margin-right: $i * $spacing-unit !important;
+    }
+
+    .my-#{$i} {
+        margin-top: $i * $spacing-unit !important;
+        margin-bottom: $i * $spacing-unit !important;
+    }
+
+    .p-#{$i} {
+        padding: $i * $spacing-unit !important;
+    }
+
+    .pt-#{$i} {
+        padding-top: $i * $spacing-unit !important;
+    }
+
+    .pb-#{$i} {
+        padding-bottom: $i * $spacing-unit !important;
+    }
+
+    .ps-#{$i} {
+        padding-left: $i * $spacing-unit !important;
+    }
+
+    .pe-#{$i} {
+        padding-right: $i * $spacing-unit !important;
+    }
+
+    .px-#{$i} {
+        padding-left: $i * $spacing-unit !important;
+        padding-right: $i * $spacing-unit !important;
+    }
+
+    .py-#{$i} {
+        padding-top: $i * $spacing-unit !important;
+        padding-bottom: $i * $spacing-unit !important;
+    }
+}
+
+@for $i from 1 through 10 {
+    .gap-#{$i} {
+        gap: #{$i * 4}px !important;
+    }
+}
+
+.cursor-pointer {
+    cursor: pointer !important;
+}
+
+.text-upper {
+    text-transform: uppercase !important;
+}
+
+.position-absolute {
+    position: absolute !important;
+}
+
+.position-relative {
+    position: relative !important;
+}
+
+.overflow-y-auto {
+    overflow-y: auto !important;
+}
+
+.border-none {
+    border: none !important;
+}
+
+.text-underline {
+    text-decoration: underline !important;
+}
+
+.background-color-layout {
+    background-color: #ffffff !important;
+}
+
+.z-index-999 {
+    z-index: 999 !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-start {
+    text-align: start !important;
+}
+
+.text-end {
+    text-align: end !important;
+}
+
+.text-justify {
+    text-align: justify !important;
+}
+
+.flex-wrap {
+    flex-wrap: wrap !important;
+}
+
+.justify-content-between {
+    justify-content: space-between !important;
+}
+
+.justify-content-around {
+    justify-content: space-around !important;
+}
+
+.justify-content-evenly {
+    justify-content: space-evenly !important;
+}
+
+.justify-content-center {
+    justify-content: center !important;
+}
+
+.justify-content-start {
+    justify-content: flex-start !important;
+}
+
+.justify-content-end {
+    justify-content: flex-end !important;
+}
+
+.align-items-start {
+    align-items: flex-start !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+.align-items-end {
+    align-items: flex-end !important;
+}
+
+.filter-container {
+    padding: 6px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.table-container {
+    padding: 0 0 0 6px;
+}
+
+.flex-form {
+    display: flex;
+    gap: 12px;
+}
+
+.paging-container {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 50px;
+    background: white;
+    border-top: solid 1px var(--bs-border);
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+@media (min-width: 1400px) {
+
+    .container,
+    .container-lg,
+    .container-md,
+    .container-sm,
+    .container-xl,
+    .container-xxl {
+        max-width: 100% !important;
+    }
+}
+
+// ── NG-ZORRO legacy overrides ──
+%btn-vtb-base {
+    height: 48px !important;
+    padding: 0 20px !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    border-radius: var(--radius-sm) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    transition: all 0.2s ease-in-out !important;
+    cursor: pointer !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+
+    i {
+        font-size: 16px !important;
+    }
+
+    app-custom-icon .icon-white {
+        filter: none !important;
+    }
+}
+
+%btn-vtb-gray {
+    @extend %btn-vtb-base;
+    border: 1px solid var(--bs-border) !important;
+    color: #475569 !important;
+
+    i {
+        color: #475569 !important;
+    }
+
+    &:hover {
+        background: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+        color: #1e293b !important;
+
+        i {
+            color: #1e293b !important;
+        }
+    }
+}
+
+.list-page-header-btn-default {
+    @extend %btn-vtb-gray;
+}
+
+.list-page-header-icon-btn {
+    @extend %btn-vtb-gray;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    padding: 0 !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+%btn-vtb-blue {
+    @extend %btn-vtb-base;
+    border: 1px solid var(--bs-cyan-deep, #075985) !important;
+    color: var(--bs-cyan-deep, #075985) !important;
+
+    i {
+        color: var(--bs-cyan-deep, #075985) !important;
+    }
+
+    &:hover {
+        background: #e6f0fa !important;
+        border-color: #0369a1 !important;
+        color: #0369a1 !important;
+
+        i {
+            color: #0369a1 !important;
+        }
+    }
+}
+
+%btn-vtb-red {
+    @extend %btn-vtb-base;
+    border: 1px solid #dc2626 !important;
+    color: #dc2626 !important;
+
+    i {
+        color: #dc2626 !important;
+    }
+
+    app-custom-icon svg [stroke]:not([stroke='none']) {
+        stroke: currentColor !important;
+    }
+
+    app-custom-icon svg [fill]:not([fill='none']) {
+        fill: currentColor !important;
+    }
+
+    &:hover {
+        background: #fef2f2 !important;
+        border-color: #b91c1c !important;
+        color: #b91c1c !important;
+
+        i {
+            color: #b91c1c !important;
+        }
+    }
+}
+
+.ant-drawer,
+.ant-drawer-content,
+.ant-drawer-header,
+.ant-drawer-body,
+.cdk-overlay-container .ant-modal,
+.cdk-overlay-container .ant-dropdown,
+.cdk-overlay-container .ant-select-dropdown {
+    font-family: var(--app-font-family) !important;
+}
+
+.cdk-overlay-container {
+    z-index: 99999 !important;
+}
+
+.cdk-overlay-container {
+
+    button:has(app-custom-icon),
+    a:has(app-custom-icon) {
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    li:has(app-custom-icon) {
+        display: flex !important;
+        align-items: center !important;
+    }
+}
+
+.ant-modal-header {
+    border-bottom: none !important;
+}
+
+.ant-modal-confirm {
+    .ant-modal-content {
+        border-radius: var(--radius-sm) !important;
+        overflow: hidden;
+    }
+
+    .ant-modal-body {
+        padding: 22px 24px 18px;
+    }
+
+    .ant-modal-confirm-body>.anticon {
+        color: var(--bs-cyan-deep, #075985);
+        font-size: 22px;
+        margin-inline-end: 14px;
+    }
+
+    .ant-modal-confirm-title {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #1f2937 !important;
+    }
+
+    .ant-modal-confirm-content {
+        margin-top: 8px !important;
+        font-size: 16px;
+        color: #475569;
+        text-align: left !important;
+    }
+
+    .ant-modal-confirm-btns {
+        margin-top: 20px;
+
+        .ant-btn-default {
+            @extend %btn-vtb-gray;
+        }
+
+        .ant-btn-primary {
+            @extend %btn-vtb-blue;
+        }
+
+        .ant-btn-dangerous.ant-btn-primary {
+            @extend %btn-vtb-red;
+        }
+    }
+
+    &:has(.ant-btn-dangerous) .ant-modal-confirm-body>.anticon {
+        color: #dc2626;
+    }
+}
+
+.ant-message {
+    top: 80px !important;
+    z-index: 100000 !important;
+}
+
+.ant-table-tbody>tr:nth-child(even)>td {
+    background-color: #f4f8fb;
+}
+
+.ant-table-tbody>tr:nth-child(odd)>td {
+    background-color: #ffffff;
+}
+
+.ant-table-tbody>tr.ant-table-row:hover>td,
+.ant-table-tbody>tr:hover>td {
+    background: inherit !important;
+}
+
+.ant-table-tbody>tr:nth-child(even):hover>td {
+    background-color: #f4f8fb !important;
+}
+
+.ant-table-tbody>tr:nth-child(odd):hover>td {
+    background-color: #ffffff !important;
+}
+
+.ant-table-tbody>tr.ant-table-placeholder>td,
+.ant-table-tbody>tr.ant-table-placeholder:hover>td {
+    background-color: #ffffff !important;
+}
+
+.ant-table-thead>tr>th {
+    font-weight: 400 !important;
+    text-transform: uppercase;
+    font-size: 16px !important;
+    background: #ffffff !important;
+}
+
+.ant-table-thead>tr>th::before {
+    display: none !important;
+}
+
+.ant-table-tbody>tr>td {
+    font-size: 16px !important;
+}
+
+.ant-table-container {
+    overflow: hidden;
+    border-bottom-left-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
+}
+
+// ── Drawer legacy ──
+.ant-drawer-content-wrapper {
+    box-shadow: -4px 0 24px rgba(15, 23, 42, 0.15) !important;
+}
+
+.ant-drawer-content-wrapper.drawer-grey-background {
+
+    .ant-drawer-header,
+    .ant-drawer-body {
+        background: #f4f8fb !important;
+    }
+}
+
+.ant-drawer-header {
+    padding: 32px calc(32px + var(--sb-w)) 16px 32px !important;
+    min-height: 96px !important;
+    flex-shrink: 0 !important;
+    border-bottom: none !important;
+    background: #ffffff !important;
+
+    .ant-drawer-header-title {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ant-drawer-title {
+        font-size: 24px !important;
+        font-weight: 500 !important;
+        color: var(--bs-cyan-deep, #075985) !important;
+        letter-spacing: 0.3px;
+        line-height: 1.3 !important;
+    }
+
+    .ant-drawer-extra {
+        margin-right: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+}
+
+.ant-drawer-body {
+    padding: 0 32px 16px !important;
+    background: #ffffff !important;
+    scrollbar-gutter: stable;
+
+    .ant-form-item-label {
+        padding: 0 0 6px 0 !important;
+        text-align: left !important;
+        height: 28px !important;
+
+        >label {
+            font-size: 16px !important;
+            font-weight: 500 !important;
+            color: #334155 !important;
+            height: 22px !important;
+            line-height: 22px !important;
+            margin-bottom: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+
+            &::after {
+                content: '' !important;
+                display: none !important;
+            }
+
+            &.ant-form-item-required {
+                &::before {
+                    display: none !important;
+                }
+
+                &::after {
+                    content: '*' !important;
+                    color: #ef4444 !important;
+                    font-size: 16px !important;
+                    margin-left: 4px !important;
+                    display: inline-block !important;
+                    font-family: SimSun, sans-serif !important;
+                }
+            }
+        }
+    }
+
+    .ant-form-item {
+        margin-bottom: 16px !important;
+        width: 100% !important;
+    }
+
+    .ant-form-item-control {
+        width: 100% !important;
+    }
+
+    input.ant-input,
+    input.custom-input,
+    textarea.ant-input,
+    textarea.custom-input,
+    .ant-input-number {
+        border: 1px solid var(--bs-border) !important;
+        border-radius: 0 !important;
+        height: 48px !important;
+        line-height: 48px !important;
+        padding: 0 11px !important;
+        font-size: 16px !important;
+        color: #0f172a !important;
+        background-color: #ffffff !important;
+        transition: all 0.2s ease-in-out !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+
+        &::placeholder {
+            color: #94a3b8 !important;
+            font-weight: 400;
+        }
+
+        &:hover {
+            border-color: var(--bs-cyan-deep, #075985) !important;
+        }
+
+        &:focus,
+        &.ant-input-focused {
+            border-color: var(--bs-cyan-deep, #075985) !important;
+            box-shadow: 0 0 0 2px rgba(7, 89, 133, 0.15) !important;
+            outline: none !important;
+        }
+
+        &[readonly],
+        &[disabled] {
+            background-color: #f8fafc !important;
+            color: #64748b !important;
+            border-color: var(--bs-border) !important;
+            cursor: not-allowed !important;
+        }
+    }
+
+    .ant-input-affix-wrapper input.ant-input {
+        height: auto !important;
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    .custom-select,
+    nz-select:not(.paging-select) {
+        width: 100% !important;
+        height: 48px !important;
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        display: inline-block !important;
+
+        .ant-select-selector {
+            border: 1px solid var(--bs-border) !important;
+            border-radius: 0 !important;
+            min-height: 48px !important;
+            line-height: 48px !important;
+            padding: 0 11px !important;
+            font-size: 16px !important;
+            color: #0f172a !important;
+            background-color: #ffffff !important;
+            transition: all 0.2s ease-in-out !important;
+            box-shadow: none !important;
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+    }
+
+    nz-date-picker,
+    .ant-picker {
+        width: 100% !important;
+        height: 48px !important;
+        border: 1px solid var(--bs-border) !important;
+        border-radius: 0 !important;
+        padding: 0 11px !important;
+        background-color: #ffffff !important;
+        transition: all 0.2s ease-in-out !important;
+        box-shadow: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+
+    textarea.custom-input,
+    textarea.ant-input {
+        height: auto !important;
+        min-height: 80px !important;
+        padding: 8px 12px !important;
+        line-height: 1.5 !important;
+    }
+}
+
+.text-end .ant-input-number-input {
+    text-align: right !important;
+}
+
+.drawer-btn-save {
+    @extend %btn-vtb-blue;
+    font-weight: 500 !important;
+    font-size: 16px !important;
+    height: 48px !important;
+    padding: 0 20px !important;
+    gap: 4px !important;
+    margin: 0 !important;
+}
+
+.drawer-btn-close {
+    @extend %btn-vtb-gray;
+    font-weight: 500 !important;
+    font-size: 16px !important;
+    height: 48px !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+
+    i {
+        font-size: 18px !important;
+    }
+}
+
+.drawer-btn-save+.drawer-btn-close {
+    margin-left: 8px !important;
+}
+
+.btn-vtb-action {
+    @extend %btn-vtb-base;
+
+    &.btn-vtb-gray {
+        @extend %btn-vtb-gray;
+    }
+
+    &.btn-vtb-blue {
+        @extend %btn-vtb-blue;
+    }
+
+    &.btn-vtb-red {
+        @extend %btn-vtb-red;
+    }
+
+    &.btn-vtb-cancel {
+        @extend %btn-vtb-gray;
+    }
+
+    &.btn-vtb-reset {
+        @extend %btn-vtb-gray;
+    }
+
+    &.btn-vtb-save {
+        @extend %btn-vtb-blue;
+    }
+
+    &.btn-vtb-unlock {
+        @extend %btn-vtb-blue;
+    }
+
+    &.btn-vtb-lock,
+    &.btn-vtb-danger,
+    &.btn-vtb-force,
+    &.btn-vtb-warn {
+        @extend %btn-vtb-red;
+    }
+}
+
+// ── List page legacy ──
+.list-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+.list-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 12px;
+    flex-shrink: 0;
+    padding-bottom: 16px;
+    background: transparent;
+    box-sizing: border-box;
+    z-index: 2;
+}
+
+.list-page-card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid var(--bs-border);
+    border-radius: 5px 5px 0 0;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.list-page-card-inner {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 32px 0;
+    box-sizing: border-box;
+}
+
+.list-page-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.list-page-header-back {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm) !important;
+    color: #45566e;
+    cursor: pointer;
+    font-size: 22px !important;
+    line-height: 1 !important;
+    margin: 0;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+
+    &:hover {
+        background: #f1f5f9 !important;
+        color: var(--bs-cyan-deep, #075985) !important;
+    }
+}
+
+.list-page-header-heading {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--bs-cyan-deep, #075985);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.35;
+}
+
+.list-page-header-subtitle {
+    font-size: 16px;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.35;
+    margin: 0;
+}
+
+.list-page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 100%;
+    margin-left: auto;
+
+    >form {
+        display: contents;
+    }
+
+    .ant-btn {
+        height: 48px !important;
+        line-height: 48px !important;
+        box-sizing: border-box !important;
+    }
+}
+
+.list-page-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    scrollbar-gutter: stable;
+}
+
+.list-page-body>.table-container,
+.list-page-body>.contract-table-scroll {
+    flex: 0 0 auto;
+    min-height: 0;
+    width: 100%;
+    padding: 0 !important;
+    margin: 0;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.list-page-body .ant-table-wrapper,
+.list-page-body nz-table,
+.list-page-body .ant-spin-nested-loading,
+.list-page-body .ant-spin-container,
+.list-page-body .ant-table {
+    width: 100% !important;
+    max-width: 100%;
+}
+
+.list-page .ant-table-tbody>tr>td,
+.list-page-tab-body .ant-table-tbody>tr>td,
+.list-page-body .ant-table-tbody>tr>td {
+    vertical-align: middle !important;
+}
+
+.list-page .ant-table-tbody>tr.ant-table-row>td,
+.list-page-tab-body .ant-table-tbody>tr.ant-table-row>td,
+.list-page-body .ant-table-tbody>tr.ant-table-row>td {
+    height: 76px !important;
+    box-sizing: border-box;
+}
+
+.list-page-paging {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    flex-shrink: 0;
+    height: 62.31px;
+    box-sizing: border-box;
+    margin-top: auto;
+    padding: 6px 16px;
+    border-top: 1px solid var(--bs-border);
+    font-size: 16px;
+    color: #64748b;
+    background: #ffffff;
+    z-index: 2;
+
+    .ant-pagination-item {
+        border: none;
+        background-color: rgb(238 244 255);
+    }
+
+    .ant-pagination-item-active {
+        font-weight: 500;
+        background: var(--bs-cyan-deep, #075985) !important;
+        border-color: var(--bs-cyan-deep, #075985) !important;
+
+        a {
+            color: #fff !important;
+        }
+    }
+}
+
+.ant-pagination {
+    margin: 0 !important;
+
+    .ant-pagination-item {
+        border: none !important;
+        background-color: rgb(238 244 255) !important;
+    }
+
+    .ant-pagination-item:hover {
+        background-color: #e1ebfa !important;
+
+        a {
+            color: var(--bs-cyan-deep, #075985) !important;
+        }
+    }
+
+    .ant-pagination-item-active {
+        font-weight: 500 !important;
+        background: var(--bs-cyan-deep, #075985) !important;
+        border-color: var(--bs-cyan-deep, #075985) !important;
+
+        a {
+            color: #fff !important;
+        }
+    }
+}
+
+.list-page-filter-bar {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 var(--sb-w) 12px 0;
+    background: #ffffff;
+}
+
+.list-page-filter-bar-label {
+    font-size: 16px;
+    color: #64748b;
+}
+
+.list-page-filter-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    padding-bottom: 2px;
+
+    >form {
+        display: contents;
+    }
+
+    .ant-btn {
+        height: 48px !important;
+        line-height: 48px !important;
+        box-sizing: border-box !important;
+        flex-shrink: 0;
+    }
+
+    .list-page-filter-bar-search~* {
+        margin-left: 8px;
+    }
+}
+
+.list-page-filter-bar-row::-webkit-scrollbar {
+    height: 4px;
+}
+
+.list-page-filter-bar-row .list-page-header-search {
+    flex: 1 1 260px !important;
+    width: auto !important;
+    min-width: 200px !important;
+}
+
+.list-page-filter-bar-search {
+    flex: 1 1 260px !important;
+    min-width: 200px !important;
+    max-width: 520px;
+    position: relative;
+    display: flex !important;
+    align-items: center;
+    flex-shrink: 1 !important;
+}
+
+.list-page-filter-bar-search input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    height: 34px !important;
+    border: 1px solid var(--bs-border) !important;
+    border-radius: 0 !important;
+    padding: 0 68px 0 12px !important;
+    font-size: 16px !important;
+    background: #fff !important;
+}
+
+.list-page-filter-bar-search:has(.list-page-filter-bar-search-reset-btn) input {
+    padding-right: 40px !important;
+}
+
+.list-page-filter-bar-search .list-page-filter-bar-search-reset-btn {
+    position: absolute !important;
+    right: 4px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: var(--radius-sm) !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    z-index: 1 !important;
+}
+
+.list-page-filter-bar-search .list-page-filter-bar-search-reset-btn:hover {
+    background: #f1f5f9 !important;
+    color: #075985 !important;
+}
+
+.list-page-filter-bar-search .list-page-filter-bar-search-reset-btn app-custom-icon {
+    color: inherit !important;
+}
+
+.list-page-header-select {
+    flex: 0 0 220px !important;
+    width: 220px !important;
+    min-width: 180px !important;
+    max-width: 240px !important;
+}
+
+.list-page-filter-bar-row .ant-select.list-page-header-select {
+    flex: 0 0 220px !important;
+}
+
+.list-page-tabs {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+.list-page-tab-header {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    flex-shrink: 0;
+    height: 64px;
+    min-height: 64px;
+    background: transparent;
+    box-sizing: border-box;
+
+
+    .list-page-tabset {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 48px;
+        width: 100%;
+    }
+}
+
+.list-page-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 25px;
+    height: 20px;
+    margin-left: 3px;
+    padding: 0 6px;
+    position: relative;
+    top: -9px;
+    border-radius: var(--radius-pill);
+    background: var(--bs-red, #dc2626);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    box-sizing: border-box;
+
+    &.is-active {
+        background: var(--bs-red, #dc2626);
+        color: #ffffff;
+    }
+}
+
+// ── Overrides SMR specifics to legacy ──
+.smr-section {
+    border-color: var(--bs-border);
+    border-radius: var(--radius-sm);
+}
+
+.smr-section__header {
+    height: 62px;
+    border-bottom-color: var(--bs-border);
+}
+
+.ant-table .ant-table-thead>tr>th {
+    background: #ffffff !important;
+    font-weight: 400 !important;
+    text-transform: uppercase;
+    font-size: 16px !important;
+}
+
+.ant-table .ant-table-tbody>tr>td {
+    font-size: 16px !important;
+}
+
+.ant-table .ant-table-tbody>tr:nth-child(even)>td {
+    background: #f4f8fb;
+}
+
+.ant-table .ant-table-tbody>tr:nth-child(odd)>td {
+    background: #ffffff;
+}
+
+.ant-table .ant-table-tbody>tr:hover>td {
+    background: inherit !important;
+}
+
+.ant-modal-header {
+    border-bottom: none !important;
+}
+
+.ant-modal-content {
+    border-radius: var(--radius-sm) !important;
+}
+
+.smr-page {
+    background: #f5fafd;
+}
+
+// ── Chiều cao chuẩn 48px toàn cục ──
+.ant-btn.ant-btn,
+.ant-input.ant-input,
+.ant-input-affix-wrapper.ant-input-affix-wrapper,
+.ant-select-selector.ant-select-selector {
+    height: 48px !important;
+    font-size: 16px !important;
+    line-height: 38px !important;
+}
+
+.ant-select-selector.ant-select-selector {
+    min-height: 48px !important;
+}
+
+.ant-select-single.ant-select {
+    height: 48px !important;
+}
+
+.ant-select-multiple .ant-select-selector.ant-select-selector {
+    height: auto !important;
+    min-height: 48px !important;
+    line-height: normal !important;
+}
+
+.list-page-filter-bar-search-btn.ant-btn,
+.list-page-filter-bar-refresh-btn.ant-btn {
+    height: 28px !important;
+    line-height: 1 !important;
+}
+
+.app-pagination__size-select .ant-select-selector {
+    height: 28px !important;
+    min-height: 28px !important;
+    line-height: 26px !important;
+}
+
+.tree-list-row-action-btn.ant-btn {
+    height: 28px !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    line-height: 1 !important;
+}
+
+.paging-nav-btn.ant-btn {
+    height: 24px !important;
+    width: 24px !important;
+    line-height: 24px !important;
+}
+
+// Legacy detail, vtb, tree, timeline etc. — minimal shims
+.dash-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #ffffff;
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-sm) !important;
+    overflow: hidden;
+
+    &__header {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--bs-border);
+    }
+}
+
+.vtb-form-panel {
+    background: #ffffff;
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-sm);
+    padding: 32px;
+    margin-bottom: 16px;
+}
+
+.border-DADADA {
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-sm);
+}
+
+.ant-tree-checkbox-inner {
+    border-radius: 0 !important;
+}
+
+.ant-tree-checkbox-checked::after {
+    border-radius: 0 !important;
+}
+
+// ============================================================
+// CLEAN RESPONSIVE LAYER — danh sách, drawer và modal dùng chung
+// ============================================================
+.responsive-cards {
+    display: none;
+}
+
+.ant-tabs-ink-bar {
+    background: var(--primary-600) !important;
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--primary-600) !important;
+}
+
+.entity-summary {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 0 20px;
+    border-bottom: 1px solid var(--border-default);
+
+    h2 {
+        margin: 4px 0 0;
+        color: var(--text-primary);
+        font-size: 20px;
+        font-weight: 600;
+    }
+}
+
+.entity-summary__code {
+    color: var(--primary-600);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.entity-detail-list {
+    display: flex;
+    flex-direction: column;
+    margin: 8px 0 24px;
+
+    > div {
+        display: grid;
+        grid-template-columns: 160px minmax(0, 1fr);
+        gap: 16px;
+        padding: 13px 0;
+        border-bottom: 1px solid var(--border-default);
+    }
+
+    dt {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    dd {
+        min-width: 0;
+        margin: 0;
+        color: var(--text-primary);
+        overflow-wrap: anywhere;
+    }
+}
+
+.entity-drawer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 8px;
+}
+
+.smr-entity-drawer {
+    .ant-drawer-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-default);
+    }
+
+    .ant-drawer-body {
+        padding: 20px;
+        overflow-x: hidden;
+    }
+
+    .ant-drawer-title {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .ant-drawer-footer {
+        position: sticky;
+        bottom: 0;
+        padding: 12px 20px;
+        border-top: 1px solid var(--border-default);
+        background: #fff;
+    }
+}
+
+.ant-modal-body {
+    max-height: min(68vh, 720px);
+    overflow-y: auto;
+}
+
+.ant-modal-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: #fff;
+}
+
+@media (max-width: 767px) {
+    .smr-top-header {
+        height: 56px;
+        padding-inline: 12px;
+    }
+
+    .smr-top-header__right {
+        gap: 4px;
+    }
+
+    .smr-top-header__locale,
+    .smr-top-header__bell {
+        display: none;
+    }
+
+    .smr-top-header__breadcrumb {
+        margin-left: 0;
+    }
+
+    .smr-page {
+        padding: 12px;
+    }
+
+    .list-page,
+    .list-page-tabs,
+    .list-page-card,
+    .list-page-card-inner,
+    .list-page-body {
+        min-width: 0;
+        width: 100%;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .list-page-card-inner {
+        padding: 0 !important;
+    }
+
+    .list-page-header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 4px 0 12px;
+    }
+
+    .list-page-header-title {
+        display: flex;
+        flex: 1 0 100%;
+        width: 100%;
+        min-width: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .list-page-header-subtitle {
+        display: block;
+        width: 100%;
+        white-space: normal;
+    }
+
+    .list-page-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .list-page-header-heading {
+        font-size: 22px;
+    }
+
+    .list-page-header-actions .ant-btn {
+        min-width: 44px;
+        padding-inline: 12px;
+    }
+
+    .list-page-tab-header {
+        height: 50px;
+        min-height: 50px;
+        gap: 4px;
+    }
+
+    .list-page-filter-bar {
+        padding: 12px;
+    }
+
+    .list-page-filter-bar-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        overflow: visible;
+        padding: 0;
+    }
+
+    .list-page-filter-bar-row .list-page-filter-bar-search {
+        flex: 1 0 100% !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none;
+    }
+
+    .list-page-filter-bar-row .ant-select.list-page-header-select {
+        flex: 1 1 calc(50% - 4px) !important;
+        width: calc(50% - 4px) !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    .list-page-filter-bar-search ~ * {
+        margin-left: 0 !important;
+    }
+
+    .list-page-filter-bar-row > .ant-btn {
+        flex: 1 1 auto;
+        margin-left: 0 !important;
+    }
+
+    .responsive-table {
+        display: none !important;
+    }
+
+    .responsive-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .responsive-card {
+        padding: 14px;
+        border: 1px solid var(--border-default);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        cursor: pointer;
+    }
+
+    .responsive-card:focus-visible {
+        outline: 2px solid var(--primary-600);
+        outline-offset: 2px;
+    }
+
+    .responsive-card__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .responsive-card__title-wrap {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .responsive-card__eyebrow {
+        margin: 0 0 3px;
+        color: var(--primary-600);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    .responsive-card__title {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+
+    .responsive-card__subtitle {
+        display: -webkit-box;
+        margin: 4px 0 0;
+        overflow: hidden;
+        color: var(--text-muted);
+        font-size: 13px;
+        line-height: 1.4;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .responsive-card__meta {
+        display: grid;
+        gap: 8px;
+        margin: 14px 0 0;
+
+        > div {
+            display: grid;
+            grid-template-columns: 88px minmax(0, 1fr);
+            gap: 8px;
+        }
+
+        dt {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        dd {
+            min-width: 0;
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+    }
+
+    .responsive-card__meta--inline {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .responsive-card .ant-btn {
+        margin-top: 12px;
+    }
+
+    .list-page-paging {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px;
+        overflow-x: auto;
+    }
+
+    .smr-entity-drawer.ant-drawer-content-wrapper {
+        width: 100vw !important;
+        max-width: 100vw !important;
+    }
+
+    .entity-detail-list > div {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .entity-drawer-actions,
+    .contacts__drawer-actions,
+    .tdd__actions {
+        position: sticky;
+        bottom: -20px;
+        z-index: 2;
+        margin-inline: -20px;
+        padding: 12px 20px;
+        border-top: 1px solid var(--border-default);
+        background: #fff;
+        flex-wrap: wrap;
+    }
+
+    .ant-modal {
+        width: calc(100vw - 24px) !important;
+        max-width: calc(100vw - 24px);
+        margin: 12px auto;
+        top: 0;
+        padding-bottom: 0;
+    }
+
+    .ant-modal-body {
+        max-height: calc(100vh - 156px);
+    }
+}

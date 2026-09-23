@@ -1,0 +1,104 @@
+<!-- =====================================================
+     TaskCreateModal — popup tạo công việc.
+     Pattern khung modal kế thừa .ant-modal-* (style.scss).
+===================================================== -->
+<nz-modal [nzVisible]="open()" [nzTitle]="parentId() ? 'Tạo công việc con' : 'Tạo công việc'" [nzWidth]="700" [nzFooter]="footerTpl"
+    [nzMaskClosable]="false" [nzKeyboard]="!saving()" (nzOnCancel)="close()">
+
+    <ng-container *nzModalContent>
+        @if (parentId() && parentTitle()) {
+            <div style="margin-bottom:12px; padding:8px 12px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; font-size:14px; color:#075985;">
+                <span nz-icon nzType="apartment" nzTheme="outline"></span> Tạo trong: <strong>{{ parentTitle() }}</strong>
+            </div>
+        }
+        @if (submitError()) {
+        <div class="tcm-error" role="alert">{{ submitError() }}</div>
+        }
+
+        <form [formGroup]="form" class="tcm-form" novalidate>
+            <div class="tcm-field">
+                <label class="tcm-label" for="tcm-title">Tên công việc <span class="tcm-required">*</span></label>
+                <input nz-input id="tcm-title" formControlName="title" placeholder="Nhập tên công việc"
+                    [maxlength]="300" />
+                @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+                <div class="tcm-field-error">Vui lòng nhập tên công việc.</div>
+                }
+            </div>
+
+            <div class="tcm-field">
+                <label class="tcm-label" for="tcm-desc">Mô tả</label>
+                <textarea nz-input id="tcm-desc" formControlName="description" rows="2"
+                    placeholder="Mô tả ngắn về công việc"></textarea>
+            </div>
+
+            <div class="tcm-field">
+                <label class="tcm-label" for="tcm-meeting">Cuộc họp</label>
+                @if (meetingId()) {
+                <input nz-input id="tcm-meeting" [value]="selectedMeetingName() ?? 'Cuộc họp hiện tại'"
+                    [disabled]="true" aria-describedby="tcm-meeting-hint" />
+                <div class="tcm-hint" id="tcm-meeting-hint">Công việc sẽ gắn với cuộc họp này.</div>
+                } @else {
+                <nz-select id="tcm-meeting" formControlName="meetingId" nzAllowClear nzShowSearch
+                    nzServerSearch [nzLoading]="meetingLoading()" nzPlaceHolder="Không gắn cuộc họp"
+                    (nzOnSearch)="onMeetingSearch($event)" class="tcm-control">
+                    @for (m of meetingOptions(); track m.id) {
+                    <nz-option [nzValue]="m.id" [nzLabel]="m.name" />
+                    }
+                </nz-select>
+                <div class="tcm-hint">Để trống nếu đây là công việc riêng.</div>
+                }
+            </div>
+
+            <div class="tcm-row">
+                <div class="tcm-field">
+                    <label class="tcm-label" for="tcm-assignee">Người phụ trách</label>
+                    <nz-select id="tcm-assignee" formControlName="assigneeUserName" nzAllowClear nzShowSearch
+                        nzServerSearch [nzLoading]="searchingUsers()" nzPlaceHolder="Chọn người phụ trách"
+                        (nzOnSearch)="onUserSearch($event)" class="tcm-control">
+                        @for (u of assigneeOptions(); track u.userName) {
+                        <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName + ' (' + u.userName + ')'" />
+                        }
+                    </nz-select>
+                </div>
+                <div class="tcm-field">
+                    <label class="tcm-label" for="tcm-due">Thời hạn</label>
+                    <nz-date-picker id="tcm-due" formControlName="dueDate" nzShowTime
+                        nzFormat="dd/MM/yyyy HH:mm" nzPlaceHolder="Chọn thời hạn" class="tcm-control" />
+                </div>
+            </div>
+
+            <div class="tcm-row">
+                <div class="tcm-field">
+                    <label class="tcm-label" for="tcm-status">Trạng thái</label>
+                    <nz-select id="tcm-status" formControlName="status" class="tcm-control">
+                        @for (opt of statusOptions; track opt.value) {
+                        <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                        }
+                    </nz-select>
+                </div>
+                <div class="tcm-field">
+                    <label class="tcm-label" for="tcm-priority">Ưu tiên</label>
+                    <nz-select id="tcm-priority" formControlName="priority" class="tcm-control">
+                        @for (opt of priorityOptions; track opt.value) {
+                        <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                        }
+                    </nz-select>
+                </div>
+            </div>
+
+            <label class="tcm-switch-row">
+                <label nz-checkbox formControlName="isPublic" id="tcm-public"></label>
+                <span>
+                    <span class="tcm-switch-title">Công khai cho mọi người</span>
+                    <span class="tcm-hint">Bất kỳ ai đăng nhập đều xem được công việc này.</span>
+                </span>
+            </label>
+        </form>
+    </ng-container>
+
+    <ng-template #footerTpl>
+        <button nz-button nzType="default" (click)="close()" [disabled]="saving()">Hủy</button>
+        <button nz-button nzType="primary" (click)="submit()" [nzLoading]="saving()"
+            [disabled]="saving()">Tạo công việc</button>
+    </ng-template>
+</nz-modal>

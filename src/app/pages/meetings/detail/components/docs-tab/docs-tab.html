@@ -1,0 +1,68 @@
+<div class="docs-toolbar">
+    <div class="smr-search">
+        <nz-input-wrapper>
+            <input nz-input type="search" autocomplete="off" placeholder="Tìm kiếm tài liệu..."
+                aria-label="Tìm kiếm tài liệu" [ngModel]="keyword()" (ngModelChange)="keyword.set($event)" />
+            <span nzInputPrefix><span nz-icon nzType="search" nzTheme="outline"></span></span>
+        </nz-input-wrapper>
+    </div>
+</div>
+
+@if (loadError()) {
+<nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="docsError" [nzNotFoundFooter]="docsErrorFooter" />
+<ng-template #docsError>
+    <p>Không thể tải tài liệu</p>
+    <p>{{ loadError() }}</p>
+</ng-template>
+<ng-template #docsErrorFooter>
+    <button nz-button nzType="default" (click)="load()">Thử lại</button>
+</ng-template>
+} @else {
+<nz-table [nzData]="filtered()" [nzFrontPagination]="false" [nzShowPagination]="false" [nzLoading]="loading()"
+    [nzNoResult]="noDocs" nzSize="middle">
+    <ng-template #noDocs>
+        <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có tài liệu nào được tải lên." />
+    </ng-template>
+    <thead>
+        <tr>
+            <th>Tên tài liệu</th>
+            <th nzWidth="150px">Kích thước</th>
+            <th nzWidth="212px">Thời gian</th>
+            <th nzWidth="80px" nzAlign="right"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (f of filtered(); track f.id) {
+        <tr>
+            <td>
+                <span class="docs-file">
+                    <span nz-icon [nzType]="iconFor(f.fileName, f.mimeType)" nzTheme="outline"
+                        class="docs-file__icon"></span>
+                    <span class="docs-file__name">{{ f.fileName }}</span>
+                </span>
+            </td>
+            <td><span class="text-secondary text-sm">{{ formatSize(f.fileSize) }}</span></td>
+            <td><span class="text-secondary text-sm">{{ formatDate(f.createDate) }}</span></td>
+            <td nzAlign="right">
+                <button class="smr-icon-btn" nz-dropdown [nzDropdownMenu]="fileMenu" nzTrigger="click"
+                    nzPlacement="bottomRight" [attr.aria-label]="'Thao tác với ' + f.fileName">
+                    <span nz-icon nzType="more" nzTheme="outline"></span>
+                </button>
+                <nz-dropdown-menu #fileMenu="nzDropdownMenu">
+                    <ul nz-menu>
+                        <li nz-menu-item (click)="openFile(f)">
+                            <span nz-icon nzType="eye" nzTheme="outline"></span>
+                            <span>Mở</span>
+                        </li>
+                        <li nz-menu-item (click)="downloadFile(f)">
+                            <span nz-icon nzType="download" nzTheme="outline"></span>
+                            <span>Tải xuống</span>
+                        </li>
+                    </ul>
+                </nz-dropdown-menu>
+            </td>
+        </tr>
+        }
+    </tbody>
+</nz-table>
+}

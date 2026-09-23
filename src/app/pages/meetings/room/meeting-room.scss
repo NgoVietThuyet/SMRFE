@@ -1,0 +1,1168 @@
+// MeetingRoom — dark theme theo mẫu phòng họp.
+// Dùng font + radius + primary của SMR, nền tối cho video.
+.room--dark {
+    --room-bg: #111827;
+    --room-panel: #1f2937;
+    --room-line: #374151;
+    --room-text: #ffffff;
+    --room-muted: #ffffff;
+}
+
+.room {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--room-bg);
+    color: var(--room-text);
+    font-family: var(--font-family);
+}
+
+// ── Top bar 64px (official, compact) ───────────
+.room__top {
+    height: 64px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0 var(--space-4);
+    background-color: var(--room-bg);
+    border-bottom: 1px solid var(--room-line);
+}
+
+.room__title {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.room__sub {
+    font-size: var(--font-size-xs);
+    color: var(--room-muted);
+    white-space: nowrap;
+}
+
+.room__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-size-sm);
+    color: var(--room-muted);
+    flex-shrink: 0;
+}
+
+.room__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    border: none;
+    background: transparent;
+    color: var(--room-text);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    white-space: nowrap;
+
+    &:hover {
+        background-color: var(--room-panel);
+    }
+
+    .anticon {
+        font-size: 22px;
+    }
+}
+
+.room__rec {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.room__rec-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ef4444;
+}
+
+.room__timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-size-base);
+    color: var(--room-text);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+
+    &--pre {
+        font-size: var(--font-size-sm);
+        color: #fbbf24;
+    }
+}
+
+.room__name {
+    margin: 0;
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.room__secure {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-size-sm);
+    color: var(--room-muted);
+    flex-shrink: 0;
+}
+
+.room__top-spacer {
+    flex: 1;
+}
+
+.room__pill {
+    border: 1px solid var(--room-line);
+    background-color: var(--room-panel);
+    color: var(--room-text);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    padding: 8px 15px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &--on {
+        border-color: #ffffff;
+        color: #ffffff;
+    }
+}
+
+// ── Main ──────────────────────────────────────────
+.room__main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+.room__stage {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    background-color: #0b1220;
+}
+
+.room__video {
+    position: absolute;
+    inset: 0;
+
+    iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+}
+
+.room__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0b1220;
+}
+
+.room__overlay-text {
+    color: #ffffff;
+}
+
+.room__overlay-msg {
+    font-size: var(--font-size-sm);
+    color: #d1d5db;
+    margin-top: 4px;
+}
+
+.room__overlay-hint {
+    color: #9ca3af;
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-3);
+}
+
+.room__overlay-actions {
+    display: flex;
+    gap: var(--space-3);
+}
+
+// ── PreJoin (official) ──────────────────────────
+.room__prejoin {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(1200px 600px at 50% 0%, #1e293b 0%, #0b1220 60%);
+    padding: var(--space-6);
+    overflow-y: auto;
+}
+
+.room__prejoin-card {
+    width: 100%;
+    max-width: 560px;
+    background-color: #111827;
+    border: 1px solid #374151;
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.room__prejoin-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 28px;
+}
+
+.room__prejoin-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.room__prejoin-name {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: #e5e7eb;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.room__prejoin-sub {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: #9ca3af;
+}
+
+.room__prejoin-meta {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-sm);
+    color: #9ca3af;
+}
+
+.room__prejoin-wait {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 999px;
+    color: #fbbf24;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.room__prejoin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.room__prejoin-hint {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    color: #6b7280;
+}
+
+.room__prejoin-shortcut {
+    color: #4b5563;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+}
+
+// Thanh người đang phát biểu (thay live-transcript khi chưa có Jigasi)
+.room__speaker {
+    position: absolute;
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: var(--space-4);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background-color: rgba(17, 24, 39, 0.85);
+    border: 1px solid var(--room-line);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+}
+
+.room__live-badge {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: var(--radius-sm);
+    padding: 1px 8px;
+    flex-shrink: 0;
+}
+
+.room__speaker-name {
+    font-weight: 600;
+    color: var(--room-text);
+    flex-shrink: 0;
+}
+
+.room__speaker-hint {
+    color: var(--room-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// ── Side panel 380px (official) ───────────────
+.room__side {
+    width: 380px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background-color: var(--room-bg);
+    border-left: 1px solid var(--room-line);
+}
+
+// Tab strip: 5 tab icon+label gọn, nút đóng ở cuối
+.room__tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--room-line);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.room__tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    min-width: 40px;
+    gap: 0;
+    border: none;
+    background: transparent;
+    color: var(--room-muted);
+    font-family: var(--font-family);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 10px 8px;
+    border-radius: var(--radius-md);
+    white-space: nowrap;
+    position: relative;
+
+    .anticon {
+        font-size: 20px;
+    }
+
+    &:hover {
+        background-color: var(--room-panel);
+        color: var(--room-text);
+    }
+
+    &--active {
+        background-color: var(--room-panel);
+        color: #ffffff;
+    }
+}
+
+.room__tab-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.room__tab-close {
+    margin-left: auto;
+    flex: 0 0 40px;
+}
+
+.room__panel-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.room__panel-body>app-room-docs-panel,
+.room__panel-body>app-room-tasks-panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+// ── RoomTasksPanel (list gọn trong panel 425px) ──
+.rtp {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.rtp__loading,
+.rtp__error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+}
+
+.rtp__list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: var(--space-2) 0;
+}
+
+.rtp__item {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+    padding: var(--space-2) var(--space-4);
+}
+
+.rtp__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.rtp__title {
+    font-size: var(--font-size-base);
+    color: var(--room-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rtp__sub {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    line-height: 1.35;
+    font-size: var(--font-size-xs);
+    color: var(--room-muted);
+}
+
+.rtp__assignee {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rtp__avatar {
+    background-color: var(--primary-600);
+    flex-shrink: 0;
+}
+
+.rtp__due {
+    white-space: nowrap;
+    color: #ffffff;
+
+    &.is-overdue,
+    &.is-due-soon {
+        color: #ffffff;
+    }
+}
+
+.rtp__prio {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.rtp__foot {
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--room-line);
+    flex-shrink: 0;
+}
+
+.rtp__empty {
+    padding: var(--space-4);
+}
+
+// ── RoomDocsPanel ──
+.rdp {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.rdp__tools {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4) var(--space-1);
+    flex-shrink: 0;
+}
+
+.rdp__search {
+    flex: 1;
+    min-width: 0;
+
+    .ant-input-affix-wrapper {
+        background-color: var(--room-panel);
+        border-color: var(--room-line);
+        color: var(--room-text);
+    }
+
+    input::placeholder {
+        color: var(--room-muted);
+    }
+}
+
+.rdp__loading,
+.rdp__error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+}
+
+.rdp__list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: var(--space-2) 0;
+}
+
+.rdp__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+}
+
+.rdp__icon {
+    font-size: 25px;
+    color: var(--room-muted);
+    flex-shrink: 0;
+}
+
+.rdp__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.rdp__name {
+    font-size: var(--font-size-base);
+    color: var(--room-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rdp__sub {
+    font-size: var(--font-size-xs);
+    color: var(--room-muted);
+}
+
+.rdp__actions {
+    display: inline-flex;
+    flex-shrink: 0;
+
+    .ant-btn-text {
+        color: var(--room-muted);
+
+        &:hover {
+            color: var(--room-text);
+            background-color: var(--room-panel);
+        }
+    }
+}
+
+.rdp__empty {
+    padding: var(--space-4);
+}
+
+// ── AI panel (trạng thái trung thực, BE chưa có endpoint) ──
+.room__ai {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-6) var(--space-4);
+    gap: var(--space-2);
+    overflow-y: auto;
+}
+
+.room__ai-icon {
+    font-size: 40px;
+    color: #ffffff;
+}
+
+.room__ai-title {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--room-text);
+}
+
+.room__unread {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    background-color: var(--danger);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.room__search {
+    padding: var(--space-3) var(--space-4) var(--space-1);
+    flex-shrink: 0;
+
+    .ant-input-affix-wrapper {
+        background-color: var(--room-panel);
+        border-color: var(--room-line);
+        color: var(--room-text);
+    }
+
+    input::placeholder {
+        color: var(--room-muted);
+    }
+}
+
+.room__group-title {
+    margin: 0;
+    padding: var(--space-3) var(--space-4) var(--space-1);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--room-muted);
+    flex-shrink: 0;
+}
+
+.room__chat-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.room__list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 var(--space-2);
+}
+
+.room__chat-scroll .room__list {
+    flex: 1 1 auto;
+}
+
+.room__user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+}
+
+.room__avatar {
+    background-color: var(--primary-600);
+}
+
+.room__user-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.room__user-name {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.room__crown {
+    color: #ffffff;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.room__user-sub {
+    font-size: var(--font-size-sm);
+    color: var(--room-muted);
+}
+
+.room__role {
+    display: inline-block;
+    background-color: var(--room-panel);
+    border-radius: var(--radius-sm);
+    padding: 0 8px;
+    font-size: var(--font-size-xs);
+}
+
+.room__joined-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--success);
+    flex-shrink: 0;
+}
+
+.room__empty {
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--room-muted);
+}
+
+.room__side-foot {
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--room-line);
+    flex-shrink: 0;
+}
+
+.room__msg {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-2) var(--space-4);
+}
+
+.room__msg-head {
+    font-size: var(--font-size-xs);
+    color: var(--room-muted);
+}
+
+.room__msg-text {
+    font-size: var(--font-size-base);
+    overflow-wrap: anywhere;
+}
+
+.room__composer {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--room-line);
+    flex-shrink: 0;
+
+    .ant-input {
+        background-color: var(--room-panel);
+        border-color: var(--room-line);
+        color: var(--room-text);
+    }
+
+    input::placeholder {
+        color: var(--room-muted);
+    }
+}
+
+// ── Dock 72px (official controls) ──────────────
+.room__controls {
+    flex-shrink: 0;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-4);
+    background-color: var(--room-bg);
+    border-top: 1px solid var(--room-line);
+    flex-wrap: wrap;
+}
+
+.room__ctl {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--room-panel);
+    color: var(--room-text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, transform 0.12s;
+    padding: 0;
+
+    .anticon {
+        font-size: 22px;
+    }
+
+    &:active {
+        transform: scale(0.96);
+    }
+
+    &:hover {
+        background-color: var(--room-line);
+    }
+
+    &--on {
+        background-color: var(--primary-600);
+        color: #ffffff;
+
+        &:hover {
+            background-color: #1d4ed8;
+        }
+    }
+
+    &--off {
+        background-color: var(--danger);
+        color: #ffffff;
+
+        &:hover {
+            background-color: #b91c1c;
+        }
+    }
+}
+
+.room__ctl-sep {
+    width: 1px;
+    height: 30px;
+    background-color: var(--room-line);
+    margin: 0 var(--space-1);
+}
+
+.room__count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    background-color: var(--primary-600);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &--danger {
+        background-color: var(--danger);
+    }
+}
+
+.room__leave {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 48px;
+    padding: 0 var(--space-5);
+    border-radius: 24px;
+    border: none;
+    background-color: var(--danger);
+    color: #ffffff;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+
+    .anticon {
+        font-size: 20px;
+        transform: rotate(135deg);
+    }
+
+    &:hover {
+        background-color: #b91c1c;
+    }
+}
+
+.room__end {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 48px;
+    padding: 0 var(--space-4);
+    border-radius: 24px;
+    border: 1px solid var(--danger);
+    background: transparent;
+    color: #f87171;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+        background-color: rgba(220, 38, 38, 0.15);
+    }
+}
+
+.room__kick {
+    flex-shrink: 0;
+}
+
+.room__lang {
+    height: 40px;
+    padding: 0 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--room-line);
+    background-color: var(--room-panel);
+    color: var(--room-text);
+    font-family: var(--font-family);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:hover {
+        border-color: #ffffff;
+        color: #ffffff;
+    }
+}
+
+.room__video--hidden {
+    visibility: hidden;
+    position: absolute;
+    inset: 0;
+}
+
+.room__modal-text {
+    color: #ffffff;
+    margin: 0;
+}
+
+// ── Ép ng-zorro gắn ở body (dropdown / modal / empty) về chữ trắng ──
+// Dropdown (settings ⋮, kick ⋯) — nền tối đồng bộ room
+.room-menu-dark .ant-dropdown-menu {
+    background-color: var(--room-panel);
+    border: 1px solid var(--room-line);
+}
+
+.room-menu-dark .ant-dropdown-menu-item {
+    color: #ffffff;
+
+    &:hover {
+        background-color: var(--room-line);
+    }
+
+    .anticon {
+        color: #ffffff;
+    }
+}
+
+// Item danger (Mời ra khỏi phòng) trong room cũng chữ trắng
+// (ngoại lệ duy nhất giữ đỏ là nút Kết thúc cuộc họp)
+.room-menu-dark .ant-dropdown-menu-item-danger {
+    color: #ffffff;
+
+    &:hover {
+        background-color: var(--room-line);
+        color: #ffffff;
+    }
+
+    .anticon {
+        color: #ffffff;
+    }
+}
+
+// nz-empty trong room (docs/tasks/AI/error/aiEmpty) — nền tối → chữ trắng
+.room__panel-body .ant-empty-description,
+.room__ai .ant-empty-description,
+.room__overlay .ant-empty-description {
+    color: #ffffff;
+}
+
+// Modal xác nhận kết thúc (nzWrapClassName room-modal-dark)
+.room-modal-dark .ant-modal-content {
+    background-color: var(--room-panel);
+}
+
+.room-modal-dark .ant-modal-header {
+    background-color: var(--room-panel);
+    border-bottom-color: var(--room-line);
+}
+
+.room-modal-dark .ant-modal-title {
+    color: #ffffff;
+}
+
+.room-modal-dark .ant-modal-close {
+    color: #ffffff;
+}
+
+.room-modal-dark .ant-modal-footer {
+    border-top-color: var(--room-line);
+}
+
+// ── Nút ng-zorro trong room: chữ + icon trắng ──
+// (nút default nền sáng chữ tối của theme light → chuyển nền tối
+// để chữ trắng đọc được; nút Kết thúc .room__end giữ màu đỏ riêng)
+.room {
+    .ant-btn-default {
+        background-color: var(--room-panel);
+        border-color: var(--room-line);
+        color: #ffffff;
+
+        &:hover,
+        &:focus {
+            border-color: #ffffff;
+            color: #ffffff;
+            background-color: var(--room-line);
+        }
+
+        .anticon {
+            color: #ffffff;
+        }
+    }
+
+    .ant-btn-link {
+        color: #ffffff;
+
+        &:hover,
+        &:focus {
+            color: #ffffff;
+        }
+
+        .anticon {
+            color: #ffffff;
+        }
+    }
+
+    .ant-btn-primary .anticon,
+    .ant-btn-text .anticon {
+        color: #ffffff;
+    }
+}
+
+// Nút Hủy trong modal xác nhận kết thúc (nền tối → chữ trắng;
+// nút Đồng ý danger nền đỏ chữ trắng giữ nguyên)
+.room-modal-dark .ant-modal-footer .ant-btn-default {
+    background-color: transparent;
+    border-color: var(--room-line);
+    color: #ffffff;
+}
+
+// ── Chi tiết ng-zorro còn sót trong room ──
+// Spinner loading → trắng
+.room .ant-spin-dot-item {
+    background-color: #ffffff;
+}
+
+// Icon prefix trong ô search (participants/docs) → trắng
+.room__search .anticon,
+.rdp__search .anticon {
+    color: #ffffff;
+}
+
+@media (max-width: 960px) {
+    .room__side {
+        position: absolute;
+        top: 64px;
+        bottom: 72px;
+        right: 0;
+        width: 92vw;
+        max-width: 380px;
+        z-index: 10;
+        box-shadow: -8px 0 24px rgba(0,0,0,0.4);
+    }
+
+    .room__title {
+        display: none;
+    }
+
+    .room__count {
+        display: none;
+    }
+
+    .room__tab-label {
+        display: none;
+    }
+
+    .room__prejoin-card {
+        padding: 20px 16px;
+    }
+
+    .room__controls {
+        gap: var(--space-1);
+        padding: 0 var(--space-2);
+    }
+
+    .room__ctl {
+        width: 44px;
+        height: 44px;
+    }
+
+    .room__leave, .room__end {
+        height: 44px;
+        padding: 0 var(--space-3);
+        font-size: var(--font-size-xs);
+    }
+
+    .room__lang {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .room__prejoin-actions {
+        flex-direction: column;
+        width: 100%;
+        button {
+            width: 100%;
+        }
+    }
+}

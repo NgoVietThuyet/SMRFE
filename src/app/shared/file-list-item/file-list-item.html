@@ -1,0 +1,43 @@
+<!-- =====================================================
+     FileListItem — SmartMeeting
+     File icon | Name + metadata | Action menu
+===================================================== -->
+
+<div class="file-item" role="listitem">
+
+    <!-- ── Left: File icon ──────────────────────────── -->
+    <span class="file-item__icon" [style.color]="getIconColor()" aria-hidden="true">
+        <span nz-icon [nzType]="getIcon()" nzTheme="outline"></span>
+    </span>
+
+    <!-- ── Center: Name + metadata ─────────────────── -->
+    <div class="file-item__body">
+        <span class="file-item__name" [title]="fileName()">{{ fileName() }}</span>
+        @if (uploadedBy() || uploadedAt()) {
+        <span class="file-item__meta">
+            @if (uploadedBy()) { {{ uploadedBy() }} }
+            @if (uploadedBy() && uploadedAt()) { &middot; }
+            @if (uploadedAt()) { {{ uploadedAt() | date: 'dd/MM' }} }
+        </span>
+        }
+    </div>
+
+    <!-- ── Right: Action menu ───────────────────────── -->
+    @if (actions().length > 0) {
+    <button class="smr-action-menu-trigger" nz-dropdown [nzDropdownMenu]="fileMenu" nzTrigger="click"
+        nzPlacement="bottomRight" [attr.aria-label]="'Thao tác với ' + fileName()">
+        <span nz-icon nzType="ellipsis" nzTheme="outline"></span>
+    </button>
+    <nz-dropdown-menu #fileMenu="nzDropdownMenu">
+        <ul nz-menu>
+            @for (action of actions(); track action.label) {
+            <li nz-menu-item [nzDanger]="action.danger ?? false" (click)="onAction(action.label)">
+                <span nz-icon [nzType]="action.icon" nzTheme="outline"></span>
+                <span>{{ action.label }}</span>
+            </li>
+            }
+        </ul>
+    </nz-dropdown-menu>
+    }
+
+</div>

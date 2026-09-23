@@ -1,0 +1,388 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+// Contacts — list-page (tree + detail) kế thừa styles.scss
+.contacts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+.list-page {
+    // :host đảm nhiệm height
+}
+
+.contacts__subtitle {
+    margin: var(--space-1) 0 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.contacts__body {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+    min-height: 0;
+}
+
+// ── Cột cây ───────────────────────────────
+.contacts__tree-card {
+    width: 380px;
+    max-width: 380px;
+    min-width: 320px;
+    flex-shrink: 0;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: #fff;
+    padding: var(--space-3);
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+    position: sticky;
+    top: var(--space-4);
+}
+
+.contacts__tree-tools {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+
+.contacts__tree-btns {
+    display: flex;
+    gap: var(--space-1);
+    justify-content: flex-end;
+    color: var(--text-muted);
+}
+
+.contacts__tree {
+    background: transparent;
+}
+
+.contacts__node {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.contacts__node-icon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.contacts__node-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.contacts__node--inactive .contacts__node-name {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.contacts__node-count {
+    flex-shrink: 0;
+    min-width: 25px;
+    padding: 0 8px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary, #f1f5f9);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    line-height: 22px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+// ── Cột chi tiết ──────────────────────────
+.contacts__detail {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.contacts__org {
+    margin-top: 0;
+}
+
+.contacts__org-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.contacts__org-name {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.contacts__org-meta {
+    margin: var(--space-1) 0 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.contacts__org-actions {
+    display: flex;
+    gap: var(--space-1);
+    flex-shrink: 0;
+}
+
+.contacts__org-notes {
+    margin: var(--space-2) 0 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.contacts__org-detail {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 12px 0 0;
+
+    div {
+        min-width: 0;
+        padding: 10px 12px;
+        border-radius: var(--radius-md);
+        background: #f8fafc;
+    }
+
+    dt {
+        color: var(--text-muted);
+        font-size: 12px;
+    }
+
+    dd {
+        margin: 3px 0 0;
+        color: var(--text-primary);
+        font-size: 14px;
+        overflow-wrap: anywhere;
+    }
+}
+
+.contacts__toolbar {
+    padding: 0;
+}
+
+.contacts__filter {
+    width: 225px;
+    flex-shrink: 0;
+}
+
+// ── Hàng nhân sự ──────────────────────────
+.contacts__list {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-2);
+    margin-top: 0;
+}
+
+.contacts__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3);
+    border: none;
+    border-bottom: 1px solid var(--border-default);
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    border-radius: var(--radius-md);
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: rgba(37, 99, 235, 0.04);
+    }
+}
+
+.contacts__avatar {
+    background-color: var(--primary-600);
+    flex-shrink: 0;
+}
+
+.contacts__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.contacts__name {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contacts__sub {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contacts__status {
+    flex-shrink: 0;
+    padding: 1px 10px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--success);
+    background: rgba(22, 163, 74, 0.1);
+
+    &--locked {
+        color: var(--text-muted);
+        background: rgba(148, 163, 184, 0.15);
+    }
+}
+
+.contacts__go {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.contacts__pagination {
+    display: flex;
+    justify-content: flex-end;
+}
+
+// ── Drawer chi tiết ───────────────────────
+.contacts__profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    text-align: center;
+    padding: var(--space-4) 0;
+}
+
+.contacts__profile-avatar {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+    background-color: var(--primary-600);
+}
+
+.contacts__profile-name {
+    margin: var(--space-2) 0 0;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+.contacts__profile-sub {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.contacts__profile-hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.contacts__kv {
+    margin: 0 0 var(--space-4);
+    display: flex;
+    flex-direction: column;
+
+    > div {
+        display: flex;
+        gap: var(--space-3);
+        padding: var(--space-2) 0;
+        border-bottom: 1px solid var(--border-default);
+    }
+
+    dt {
+        width: 130px;
+        flex-shrink: 0;
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
+    }
+
+    dd {
+        margin: 0;
+        flex: 1;
+        min-width: 0;
+        font-size: var(--font-size-sm);
+        color: var(--text-primary);
+        overflow-wrap: anywhere;
+    }
+}
+
+.contacts__drawer-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.contacts__hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin: 0 0 var(--space-3);
+}
+
+// ── Responsive ────────────────────────────
+@media (max-width: 1023px) {
+    .contacts__tree-card {
+        width: 280px;
+        min-width: 280px;
+    }
+
+    .contacts__filter {
+        width: 188px;
+    }
+}
+
+@media (max-width: 767px) {
+    .contacts__body {
+        flex-direction: column;
+    }
+
+    .contacts__tree-card {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        position: static;
+        max-height: 320px;
+        overflow-x: hidden;
+    }
+
+    .contacts__tree,
+    :host ::ng-deep .ant-tree-list,
+    :host ::ng-deep .ant-tree-list-holder {
+        max-width: 100%;
+        overflow-x: hidden !important;
+    }
+
+    .contacts__node-name {
+        max-width: 180px;
+    }
+
+    .contacts__filter {
+        width: 100%;
+    }
+
+    .contacts__org-detail {
+        grid-template-columns: 1fr;
+    }
+
+    .contacts__toolbar {
+        flex-wrap: wrap;
+    }
+}

@@ -1,0 +1,54 @@
+<!-- RoomDocsPanel — tài liệu cuộc họp + tải lên trong panel -->
+<div class="rdp">
+    <div class="rdp__tools">
+        <nz-input-wrapper class="rdp__search">
+            <input nz-input type="search" autocomplete="off" [placeholder]="t('searchDocs')"
+                aria-label="Tìm tài liệu" [ngModel]="keyword()" (ngModelChange)="keyword.set($event)" />
+            <span nzInputPrefix><span nz-icon nzType="search" nzTheme="outline"></span></span>
+        </nz-input-wrapper>
+        <button nz-button nzType="primary" (click)="pickFile()" [disabled]="uploading()" [title]="t('upload')">
+            <span nz-icon nzType="upload" nzTheme="outline"></span>
+            {{ uploading() ? t('uploading') : t('upload') }}
+        </button>
+        <input #fileInput type="file" hidden
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg,.zip"
+            (change)="onFileSelected($event)" />
+    </div>
+
+    @if (loading()) {
+    <div class="rdp__loading"><nz-spin nzSize="large"></nz-spin></div>
+    } @else if (loadError()) {
+    <div class="rdp__error">
+        <button nz-button nzType="link" (click)="load()">
+            <span nz-icon nzType="reload" nzTheme="outline"></span>
+            {{ lang() === 'vi' ? 'Thử lại' : 'Retry' }}
+        </button>
+    </div>
+    } @else {
+    <ul class="rdp__list">
+        @for (f of filtered(); track f.id) {
+        <li class="rdp__item">
+            <span nz-icon [nzType]="iconFor(f.fileName, f.mimeType)" nzTheme="outline" class="rdp__icon"></span>
+            <span class="rdp__main">
+                <span class="rdp__name" [attr.title]="f.fileName">{{ f.fileName }}</span>
+                <span class="rdp__sub">{{ formatSize(f.fileSize) }}</span>
+            </span>
+            <span class="rdp__actions">
+                <button nz-button nzType="text" nzSize="small" (click)="openFile(f)" [title]="t('open')"
+                    [attr.aria-label]="t('open')">
+                    <span nz-icon nzType="eye" nzTheme="outline"></span>
+                </button>
+                <button nz-button nzType="text" nzSize="small" (click)="downloadFile(f)" [title]="t('download')"
+                    [attr.aria-label]="t('download')">
+                    <span nz-icon nzType="download" nzTheme="outline"></span>
+                </button>
+            </span>
+        </li>
+        } @empty {
+        <li class="rdp__empty">
+            <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="t('noDocs')" />
+        </li>
+        }
+    </ul>
+    }
+</div>

@@ -1,0 +1,59 @@
+@if (loadError()) {
+<nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="recError"
+    [nzNotFoundFooter]="recErrorFooter" />
+<ng-template #recError>
+    <p>Không thể tải bản ghi</p>
+    <p>{{ loadError() }}</p>
+</ng-template>
+<ng-template #recErrorFooter>
+    <button nz-button nzType="default" (click)="load()">Thử lại</button>
+</ng-template>
+} @else if (!loading() && segments().length === 0) {
+<nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="noRec" />
+<ng-template #noRec>
+    <p>Chưa có bản ghi</p>
+    <p>Cuộc họp này chưa có video ghi hình.</p>
+</ng-template>
+} @else {
+<div class="rec-layout">
+    @if (selected(); as seg) {
+    <div class="rec-player">
+        @if (playUrl()) {
+        <video class="rec-video" controls preload="metadata" [src]="playUrl()">
+            Trình duyệt không hỗ trợ phát video.
+        </video>
+        } @else {
+        <div class="rec-video rec-video--loading">
+            {{ loadingUrl() ? 'Đang lấy link phát...' : 'Không lấy được link phát.' }}
+        </div>
+        }
+        <div class="rec-meta">
+            <div>
+                <p class="rec-name">{{ seg.fileName }}</p>
+                <p class="rec-sub">{{ formatDate(seg.createDate) }}</p>
+            </div>
+            @if (playUrl()) {
+            <a nz-button nzType="default" [href]="playUrl()" [download]="seg.fileName">
+                <span nz-icon nzType="download" nzTheme="outline"></span>
+                Tải xuống
+            </a>
+            }
+        </div>
+    </div>
+    }
+    @if (segments().length > 1) {
+    <ol class="rec-segments">
+        @for (s of segments(); track s.id; let i = $index) {
+        <li>
+            <button type="button" class="rec-segment" [class.rec-segment--active]="s.id === selectedId()"
+                (click)="select(s)">
+                <span class="rec-segment__index">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                <span class="rec-segment__name">{{ s.fileName }}</span>
+                <span nz-icon nzType="play-circle" nzTheme="outline" class="rec-segment__play"></span>
+            </button>
+        </li>
+        }
+    </ol>
+    }
+</div>
+}

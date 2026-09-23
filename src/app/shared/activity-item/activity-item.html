@@ -1,0 +1,27 @@
+<!-- =====================================================
+     ActivityItem — SmartMeeting
+     Icon | Actor + Action + Target | Time
+===================================================== -->
+
+<div class="activity-item">
+
+    <!-- ── Left: Activity icon ──────────────────────── -->
+    <span class="activity-item__icon" aria-hidden="true">
+        <span nz-icon [nzType]="getActivityIcon()" nzTheme="outline"></span>
+    </span>
+
+    <!-- ── Center: Content ──────────────────────────── -->
+    <div class="activity-item__body">
+        <p class="activity-item__text">
+            <span class="activity-item__actor">{{ actorName() }}</span>
+            {{ action() }}
+            <span class="activity-item__target">"{{ targetName() }}"</span>
+        </p>
+        @if (occurredAt()) {
+        <time class="activity-item__time" [dateTime]="occurredAt()">
+            {{ occurredAt() | date: 'dd/MM HH:mm' }}
+        </time>
+        }
+    </div>
+
+</div>

@@ -1,0 +1,78 @@
+// TaskCreateModal — chỉ layout form trong body.
+// Khung modal kế thừa .ant-modal-* trong styles.scss.
+.tcm-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.tcm-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tcm-label {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.tcm-required {
+    color: var(--danger);
+}
+
+.tcm-field-error {
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+    margin-top: var(--space-1);
+}
+
+.tcm-error {
+    background-color: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    border-radius: var(--radius-md);
+    padding: 12px var(--space-3);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-4);
+}
+
+.tcm-hint {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: var(--space-1);
+}
+
+.tcm-row {
+    display: flex;
+    gap: var(--space-3);
+
+    .tcm-field {
+        flex: 1;
+    }
+}
+
+.tcm-control {
+    width: 100%;
+}
+
+.tcm-switch-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    cursor: pointer;
+}
+
+.tcm-switch-title {
+    display: block;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+}
+
+@media (max-width: 767px) {
+    .tcm-row {
+        flex-direction: column;
+    }
+}

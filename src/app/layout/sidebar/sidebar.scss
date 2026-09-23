@@ -1,0 +1,172 @@
+// Sidebar — legacy enterprise (bỏ scale)
+// .smr-sidebar khung đã định nghĩa trong styles.scss (376/64, border #C9D9EA)
+// File này bổ sung sider-logo-wrapper + menu legacy
+
+// ── Nav list legacy ─────────────────────────────────────
+.smr-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px 10px;
+
+    &__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    &__divider {
+        height: 1px;
+        background-color: var(--bs-border);
+        margin: 10px 0;
+    }
+
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 44px;
+        line-height: 44px;
+        margin: 0 0 4px;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        color: var(--text-secondary);
+        font-size: 15px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+        position: relative;
+        white-space: nowrap;
+        overflow: hidden;
+
+        &:hover {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            text-decoration: none;
+        }
+
+        &--active {
+            background-color: #dbeafe !important;
+            color: #1d4ed8 !important;
+            font-weight: 600;
+
+            &::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 10px;
+                bottom: 10px;
+                width: 3px;
+                background-color: #2563eb;
+                border-radius: 0 2px 2px 0;
+            }
+
+            .smr-nav__icon {
+                color: var(--bs-cyan-deep);
+            }
+        }
+    }
+
+    &__icon {
+        font-size: 18px;
+        flex-shrink: 0;
+        color: inherit;
+        display: flex;
+        align-items: center;
+    }
+
+    &__label {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 20px;
+        padding: 0 6px;
+        background-color: #e60012;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 999px;
+        flex-shrink: 0;
+    }
+
+    &__sub {
+        list-style: none;
+        margin: 2px 0 8px 16px;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__sub-item {
+        height: 40px !important;
+        line-height: 40px !important;
+        font-size: 14px !important;
+        margin: 0 !important;
+        background: transparent !important;
+
+        &:hover {
+            background-color: #eef5fc !important;
+        }
+
+        &.smr-nav__item--active {
+            background-color: #e3f0fb !important;
+        }
+    }
+
+    &__caret {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+        font-size: 12px;
+
+        &.is-open {
+            transform: rotate(180deg);
+        }
+    }
+
+    &__item--parent {
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        font-family: inherit;
+
+        &:hover {
+            background-color: #eef5fc;
+        }
+    }
+}
+
+// ── Brand legacy — gradient header 90px ─────────────────
+:host {
+    display: contents;
+}
+
+// Collapsed
+.smr-sidebar--collapsed {
+    .smr-nav {
+        padding: 16px 6px;
+    }
+
+    .smr-nav__item {
+        justify-content: center;
+        gap: 0;
+        padding: 0;
+        margin: 0 0 12px;
+    }
+}

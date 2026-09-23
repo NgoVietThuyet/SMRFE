@@ -1,0 +1,308 @@
+<!-- =====================================================
+     TaskDetailDrawer — chi tiết công việc.
+     Xem/Sửa + Chia sẻ & Quyền (creator) + Xóa (creator).
+===================================================== -->
+<nz-drawer [nzVisible]="open()" [nzWidth]="720" nzPlacement="right" nzWrapClassName="smr-entity-drawer" [nzTitle]="drawerTitle" (nzOnClose)="close()">
+    <ng-template #drawerTitle>
+        @if (task(); as t) {
+        <span class="tdd__title-text" [attr.title]="t.title">{{ t.title }}</span>
+        } @else {
+        <span>Chi tiết công việc</span>
+        }
+    </ng-template>
+
+    <div *nzDrawerContent class="tdd">
+        @if (loading()) {
+        <div class="smr-loading"><nz-spin></nz-spin></div>
+        } @else if (loadError()) {
+        <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="errTpl" [nzNotFoundFooter]="errFooter" />
+        <ng-template #errTpl>
+            <p>Không tải được chi tiết</p>
+            <p>{{ loadError() }}</p>
+        </ng-template>
+        <ng-template #errFooter>
+            <button nz-button nzType="default" (click)="load()">Thử lại</button>
+        </ng-template>
+        } @else if (task(); as t) {
+
+        <!-- ── Mode Sửa ─────────────────────────── -->
+        @if (editing()) {
+        @if (submitError()) {
+        <div class="tdd__error" role="alert">{{ submitError() }}</div>
+        }
+        <form [formGroup]="editForm" class="tdd__form" novalidate>
+            <div class="tdd__field">
+                <label class="tdd__label" for="tdd-title">Tên công việc <span class="tdd__required">*</span></label>
+                <input nz-input id="tdd-title" formControlName="title" [maxlength]="300" />
+                @if (editForm.controls.title.touched && editForm.controls.title.hasError('required')) {
+                <div class="tdd__field-error">Vui lòng nhập tên công việc.</div>
+                }
+            </div>
+
+            <div class="tdd__field">
+                <label class="tdd__label" for="tdd-desc">Mô tả</label>
+                <textarea nz-input id="tdd-desc" formControlName="description" rows="3"></textarea>
+            </div>
+
+            <div class="tdd__field">
+                <label class="tdd__label" for="tdd-assignee">Người phụ trách</label>
+                <nz-select id="tdd-assignee" formControlName="assigneeUserName" nzAllowClear nzShowSearch nzServerSearch
+                    [nzLoading]="searchingUsers()" nzPlaceHolder="Chọn người phụ trách"
+                    (nzOnSearch)="onAssigneeSearch($event)">
+                    @for (u of assigneeOptions(); track u.userName) {
+                    <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName + ' (' + u.userName + ')'" />
+                    }
+                </nz-select>
+            </div>
+
+            <div class="tdd__field">
+                <label class="tdd__label" for="tdd-due">Thời hạn</label>
+                <nz-date-picker id="tdd-due" formControlName="dueDate" nzShowTime nzFormat="dd/MM/yyyy HH:mm"
+                    nzPlaceHolder="Chọn thời hạn" class="tdd__full" />
+            </div>
+
+            <div class="tdd__row">
+                <div class="tdd__field">
+                    <label class="tdd__label" for="tdd-status">Trạng thái</label>
+                    <nz-select id="tdd-status" formControlName="status">
+                        @for (opt of statusOptions; track opt.value) {
+                        <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                        }
+                    </nz-select>
+                </div>
+                <div class="tdd__field">
+                    <label class="tdd__label" for="tdd-priority">Ưu tiên</label>
+                    <nz-select id="tdd-priority" formControlName="priority">
+                        @for (opt of priorityOptions; track opt.value) {
+                        <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                        }
+                    </nz-select>
+                </div>
+            </div>
+        </form>
+        <div class="tdd__actions">
+            <button nz-button nzType="default" (click)="cancelEdit()" [disabled]="saving()">Hủy</button>
+            <button nz-button nzType="primary" (click)="saveEdit()" [nzLoading]="saving()">Lưu</button>
+        </div>
+        }
+
+        <!-- ── Mode Xem ─────────────────────────── -->
+        @else {
+        <dl class="tdd__view">
+            @if (t.meetingName) {
+            <div class="tdd__view-row">
+                <dt>Cuộc họp</dt>
+                <dd><a class="tdd__meeting-link" [routerLink]="['/meetings', t.meetingId]">{{ t.meetingName }}</a>
+                </dd>
+            </div>
+            }
+            @if (t.description) {
+            <div class="tdd__view-row">
+                <dt>Mô tả</dt>
+                <dd class="tdd__desc">{{ t.description }}</dd>
+            </div>
+            }
+            <div class="tdd__view-row">
+                <dt>Người phụ trách</dt>
+                <dd class="tdd__assignee">
+                    @if (t.assigneeUserName) {
+                    <span class="smr-avatar smr-avatar--sm tdd__avatar">{{ initials(t.assigneeFullName ||
+                        t.assigneeUserName) }}</span>
+                    <span>{{ t.assigneeFullName || t.assigneeUserName }}</span>
+                    } @else {
+                    <span class="tdd__muted">Chưa gán</span>
+                    }
+                </dd>
+            </div>
+            <div class="tdd__view-row">
+                <dt>Thời hạn</dt>
+                <dd [ngClass]="dueClass(t)">{{ formatDateTime(t.dueDate) }}</dd>
+            </div>
+            <div class="tdd__view-row">
+                <dt>Trạng thái</dt>
+                <dd>
+                    <span class="smr-status" [ngClass]="'smr-status--' + statusClass(t.status)">
+                        <span class="smr-status__dot"></span>
+                        {{ statusLabel(t.status) }}
+                    </span>
+                </dd>
+            </div>
+            <div class="tdd__view-row">
+                <dt>Ưu tiên</dt>
+                <dd>{{ priorityLabel(t.priority) }}</dd>
+            </div>
+            <div class="tdd__view-row">
+                <dt>Cấp công việc</dt>
+                <dd>{{ levelLabel(t.level) }}</dd>
+            </div>
+            @if (t.parentId) {
+            <div class="tdd__view-row">
+                <dt>Công việc cha</dt>
+                <dd>{{ t.parentId }}</dd>
+            </div>
+            }
+            <div class="tdd__view-row">
+                <dt>Phạm vi</dt>
+                <dd>{{ t.isPublic ? 'Công khai cho mọi người' : 'Chỉ người được chia sẻ' }}</dd>
+            </div>
+            @if (t.sourceRef) {
+            <div class="tdd__view-row">
+                <dt>Nguồn tham chiếu</dt>
+                <dd class="tdd__desc">{{ t.sourceRef }}</dd>
+            </div>
+            }
+            <div class="tdd__view-row">
+                <dt>Tạo bởi</dt>
+                <dd>{{ t.createBy }} @if (t.createDate) { <span class="tdd__muted">· {{ formatDateTime(t.createDate)
+                        }}</span> }</dd>
+            </div>
+            @if (t.updateDate) {
+            <div class="tdd__view-row">
+                <dt>Cập nhật</dt>
+                <dd>{{ formatDateTime(t.updateDate) }}</dd>
+            </div>
+            }
+        </dl>
+
+        <div class="tdd__actions">
+            @if (t.canEdit) {
+            <button nz-button nzType="primary" (click)="startEdit()">
+                <span nz-icon nzType="edit" nzTheme="outline"></span>
+                Sửa
+            </button>
+            }
+            @if (t.level < 2) {
+            <button nz-button nzType="default" (click)="openSubCreate(t)">
+                <span nz-icon nzType="plus" nzTheme="outline"></span>
+                {{ t.level === 0 ? 'Thêm công việc nhỏ' : 'Thêm task' }}
+            </button>
+            }
+            @if (t.isCreator) {
+            <button nz-button nzType="default" nzDanger (click)="openDelete()">
+                <span nz-icon nzType="delete" nzTheme="outline"></span>
+                Xóa
+            </button>
+            }
+        </div>
+
+        <!-- ── Hierarchy: Công việc nhỏ / Task con ───── -->
+        <div class="tdd__hierarchy">
+            <div class="tdd__hierarchy-head">
+                <h3 class="tdd__share-title">
+                    {{ t.level === 0 ? 'Công việc nhỏ' : t.level === 1 ? 'Task con' : 'Cấp dưới' }}
+                    <span class="tdd__muted">({{ t.childrenCount }} — {{ t.completedChildrenCount }} hoàn thành, {{ t.progress }}%)</span>
+                </h3>
+                <div style="flex:1; height:6px; background:#e2e8f0; border-radius:999px; overflow:hidden; max-width:120px;">
+                    <div [style.width.%]="t.progress" [style.background]="t.progress===100 ? '#16a34a' : '#075985'" style="height:100%;"></div>
+                </div>
+            </div>
+            @if (t.children && t.children.length > 0) {
+                <ul class="tdd__hierarchy-list">
+                    @for (c of t.children; track c.id) {
+                        <li class="tdd__hierarchy-item">
+                            <div class="tdd__hierarchy-main">
+                                <span class="smr-status" [ngClass]="'smr-status--' + statusClass(c.status)"><span class="smr-status__dot"></span></span>
+                                <span class="tdd__hierarchy-title" [title]="c.title">{{ c.title }}</span>
+                                <span class="tdd__muted" style="font-size:12px;">{{ levelLabel(c.level) }}</span>
+                            </div>
+                            <div class="tdd__hierarchy-meta">
+                                @if (c.assigneeFullName || c.assigneeUserName) {
+                                    <span class="smr-avatar smr-avatar--sm tdd__avatar" style="width:22px; height:22px; font-size:10px;">{{ initials(c.assigneeFullName || c.assigneeUserName) }}</span>
+                                    <span style="font-size:13px;">{{ c.assigneeFullName || c.assigneeUserName }}</span>
+                                } @else { <span class="tdd__muted" style="font-size:13px;">Chưa gán</span> }
+                                <span style="font-size:12px; color:#64748b;">{{ formatDateTime(c.dueDate) }}</span>
+                                <span class="tdd__muted" style="font-size:12px;">{{ statusLabel(c.status) }}</span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            } @else {
+                <p class="tdd__muted tdd__share-empty">
+                    {{ t.level === 0 ? 'Chưa có công việc nhỏ.' : t.level === 1 ? 'Chưa có task con.' : 'Không có cấp dưới.' }}
+                    @if (t.level < 2) { <a (click)="openSubCreate(t)" style="cursor:pointer; color:#075985; margin-left:6px;">+ Thêm ngay</a> }
+                </p>
+            }
+        </div>
+
+        <!-- ── Chia sẻ & Quyền (chỉ creator) ───── -->
+        @if (t.isCreator) {
+        <div class="tdd__share">
+            <h3 class="tdd__share-title">Chia sẻ & Quyền</h3>
+
+            <div class="tdd__share-public">
+                <div>
+                    <span class="tdd__share-label">Công khai cho mọi người</span>
+                    <span class="tdd__share-hint">Bất kỳ ai đăng nhập đều xem được.</span>
+                </div>
+                <nz-switch [ngModel]="t.isPublic" (ngModelChange)="togglePublic($event)" [nzLoading]="publicToggling()"
+                    aria-label="Công khai công việc" />
+            </div>
+
+            @if (t.shares && t.shares.length > 0) {
+            <ul class="tdd__share-list">
+                @for (s of t.shares; track s.userName) {
+                <li class="tdd__share-item">
+                    <span class="smr-avatar smr-avatar--sm tdd__avatar">{{ initials(s.fullName) }}</span>
+                    <span class="tdd__share-name">{{ s.fullName }} <span class="tdd__muted">({{ s.userName
+                            }})</span></span>
+                    <span class="tdd__share-perm">{{ permissionLabel(s.permission) }}</span>
+                    <button class="smr-icon-btn" type="button" (click)="removeShare(s)"
+                        [attr.aria-label]="'Xóa chia sẻ cho ' + s.fullName"
+                        [disabled]="removingShareUser() === s.userName">
+                        <span nz-icon nzType="close" nzTheme="outline"></span>
+                    </button>
+                </li>
+                }
+            </ul>
+            } @else {
+            <p class="tdd__muted tdd__share-empty">Chưa chia sẻ cho riêng ai.</p>
+            }
+
+            @if (addShareError()) {
+            <div class="tdd__error" role="alert">{{ addShareError() }}</div>
+            }
+
+            <div class="tdd__share-add">
+                <nz-select class="tdd__share-user" [ngModel]="addShareUserName()"
+                    (ngModelChange)="onShareUserChange($event)" (nzOnSearch)="onShareUserSearch($event)" nzAllowClear
+                    nzShowSearch nzServerSearch [nzLoading]="addShareSaving()" nzPlaceHolder="Tìm người để chia sẻ...">
+                    @for (u of shareUserOptions(); track u.userName) {
+                    <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName + ' (' + u.userName + ')'" />
+                    }
+                </nz-select>
+                <nz-select class="tdd__share-perm-select" [ngModel]="addSharePermission()"
+                    (ngModelChange)="onSharePermissionChange($event)" aria-label="Quyền chia sẻ">
+                    @for (opt of permissionOptions; track opt.value) {
+                    <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                    }
+                </nz-select>
+                <button nz-button nzType="default" (click)="addShareSubmit()"
+                    [disabled]="!addShareUserName() || addShareSaving()" [nzLoading]="addShareSaving()">
+                    Thêm
+                </button>
+            </div>
+        </div>
+        }
+        }
+
+        }
+    </div>
+</nz-drawer>
+
+<!-- Tạo con modal -->
+<app-task-create-modal [open]="subCreateOpen()" [parentId]="subCreateParentId()" [parentTitle]="subCreateParentTitle()" [meetingId]="task()?.meetingId ?? null" (closed)="closeSubCreate()" (created)="onSubCreated()" />
+
+<!-- ── Modal xác nhận xóa ─────────────────────────── -->
+<nz-modal [nzVisible]="deleteOpen()" nzTitle="Xóa công việc" [nzFooter]="deleteFooter" [nzMaskClosable]="false"
+    (nzOnCancel)="closeDelete()">
+    <ng-container *nzModalContent>
+        <p>Bạn có chắc muốn xóa công việc này?</p>
+        <p class="tdd__muted">Hành động này không thể hoàn tác.</p>
+    </ng-container>
+    <ng-template #deleteFooter>
+        <button nz-button nzType="default" (click)="closeDelete()" [disabled]="deleteSaving()">Không</button>
+        <button nz-button nzType="primary" nzDanger (click)="confirmDelete()" [nzLoading]="deleteSaving()">
+            Xóa
+        </button>
+    </ng-template>
+</nz-modal>

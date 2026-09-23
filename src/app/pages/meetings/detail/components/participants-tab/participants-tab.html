@@ -1,0 +1,91 @@
+<div class="participants-toolbar">
+    <div class="smr-search">
+        <nz-input-wrapper>
+            <input nz-input type="search" autocomplete="off" placeholder="Tìm kiếm người tham gia..."
+                aria-label="Tìm kiếm người tham gia" [ngModel]="keyword()" (ngModelChange)="keyword.set($event)" />
+            <span nzInputPrefix><span nz-icon nzType="search" nzTheme="outline"></span></span>
+        </nz-input-wrapper>
+    </div>
+    <span class="smr-toolbar__spacer"></span>
+    @if (meeting().canManage && !adding()) {
+    <button nz-button nzType="default" (click)="openAdd()">
+        <span nz-icon nzType="plus" nzTheme="outline"></span>
+        Thêm người
+    </button>
+    }
+</div>
+
+@if (adding()) {
+<div class="participants-add">
+    <nz-select class="participants-add__select" [ngModel]="selected()" nzMode="multiple" nzShowSearch nzServerSearch
+        nzAllowClear placeholder="Tìm theo tên, email..." [nzLoading]="searchingUsers()"
+        (nzOnSearch)="onUserSearch($event)" (ngModelChange)="selected.set($event)" aria-label="Chọn người để thêm">
+        @for (u of searchedUsers(); track u.userName) {
+        <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName + ' (' + u.userName + ')'" />
+        }
+    </nz-select>
+    <button nz-button nzType="default" (click)="cancelAdd()" [disabled]="!!mutating()">Hủy</button>
+    <button nz-button nzType="primary" (click)="confirmAdd()" [disabled]="selected().length === 0 || !!mutating()"
+        [nzLoading]="mutating() === 'add'">Thêm</button>
+</div>
+}
+
+<nz-table [nzData]="filtered()" [nzFrontPagination]="false" [nzShowPagination]="false" [nzNoResult]="noMembers"
+    nzSize="middle">
+    <ng-template #noMembers>
+        <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Không tìm thấy người tham gia" />
+    </ng-template>
+    <thead>
+        <tr>
+            <th>Người tham gia</th>
+            <th nzWidth="200px">Vai trò</th>
+            <th nzWidth="188px">Trạng thái</th>
+            <th nzWidth="80px" nzAlign="right"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (p of filtered(); track p.userName) {
+        <tr>
+            <td>
+                <span class="participants-user">
+                    <span class="smr-avatar smr-avatar--sm">{{ initials(p.fullName) }}</span>
+                    <span class="participants-user__info">
+                        <span class="participants-user__name">{{ p.fullName }}</span>
+                        <span class="participants-user__email">{{ p.email || p.userName }}</span>
+                    </span>
+                </span>
+            </td>
+            <td><span class="text-secondary">{{ roleLabel(p.role) }}</span></td>
+            <td>
+                @if (p.isJoined) {
+                <span class="smr-status smr-status--ongoing">
+                    <span class="smr-status__dot"></span>
+                    Đã tham gia
+                </span>
+                } @else {
+                <span class="smr-status smr-status--ended">
+                    <span class="smr-status__dot"></span>
+                    Chưa vào
+                </span>
+                }
+            </td>
+            <td nzAlign="right">
+                @if (meeting().canManage) {
+                <button class="smr-icon-btn" nz-dropdown [nzDropdownMenu]="userMenu" nzTrigger="click"
+                    nzPlacement="bottomRight" [attr.aria-label]="'Thao tác với ' + p.fullName">
+                    <span nz-icon nzType="more" nzTheme="outline"></span>
+                </button>
+                <nz-dropdown-menu #userMenu="nzDropdownMenu">
+                    <ul nz-menu>
+                        <li nz-menu-item nzDanger (click)="confirmRemove(p)">
+                            <span nz-icon nzType="delete" nzTheme="outline"></span>
+                            <span>Xóa khỏi cuộc họp</span>
+                        </li>
+                    </ul>
+                </nz-dropdown-menu>
+                }
+            </td>
+        </tr>
+        }
+    </tbody>
+</nz-table>

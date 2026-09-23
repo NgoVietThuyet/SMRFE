@@ -1,0 +1,62 @@
+// ActivityItem — scoped styles
+// Không dùng timeline trang trí phức tạp.
+// Section 2.7: content 18px, meta 12-16px, actor font-weight 500.
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: 12px var(--space-4);
+    border-bottom: 1px solid var(--border-default);
+    transition: background-color 0.15s;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    // ── Icon ───────────────────────────────────────
+    &__icon {
+        flex-shrink: 0;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-subtle);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-size: 18px;
+        margin-top: 2px;
+    }
+
+    // ── Body ───────────────────────────────────────
+    &__body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__text {
+        margin: 0;
+        font-size: var(--font-size-base);
+        color: var(--text-primary);
+        line-height: 1.5;
+    }
+
+    &__actor {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    &__target {
+        font-weight: 500;
+        color: var(--primary-600);
+    }
+
+    &__time {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+    }
+}

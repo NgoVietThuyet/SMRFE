@@ -1,0 +1,82 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+// Meetings — list-page-tabs generic (theo contractor-list §1-4)
+// Header 32 32 24, card margin 0 32, inner 32 32 0 — kế thừa global
+.list-page-tabs {
+    // :host đảm nhiệm height
+}
+
+// Tabs override riêng cho meetings — nhân đôi class để thắng global 0,3,1
+:host ::ng-deep .list-page-tab-header.list-page-tab-header .ant-tabs-ink-bar {
+    background: var(--primary-600) !important;
+    height: 2px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+:host ::ng-deep .list-page-tab-header .ant-tabs-tab {
+    color: #9eb3c9 !important;
+    font-size: 16px !important;
+    padding: 12px 16px !important;
+
+
+}
+
+:host ::ng-deep .list-page-tab-header .ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--primary-600) !important;
+    font-weight: 600 !important;
+}
+
+:host ::ng-deep .list-page-tab-header .ant-tabs-nav::before {
+    border-bottom: none !important;
+}
+
+.meetings__toolbar {
+    padding: 0;
+}
+
+.meetings__filter {
+    width: 225px;
+    flex-shrink: 0;
+}
+
+.meetings__table-wrap {
+    overflow-x: auto;
+}
+
+.meetings__name {
+    display: block;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.meetings__desc {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+}
+
+.meetings__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+// Đang diễn ra — ưu tiên thị giác (đậm + chữ hoa)
+.meetings__status--ongoing {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 767px) {
+    .meetings__filter {
+        width: 100%;
+    }
+}

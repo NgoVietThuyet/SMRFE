@@ -1,0 +1,84 @@
+<!-- =====================================================
+     Sidebar — SmartMeeting
+        - expanded 300px / collapsed 80px
+        - Brand + Primary Nav + Secondary Nav
+        - Toggle / bell / avatar nằm ở TopHeader
+===================================================== -->
+
+<aside class="smr-sidebar" [class.smr-sidebar--collapsed]="displayCollapsed()"
+    [class.smr-sidebar--open]="mobileOpen()">
+
+    <!-- ── Brand ─────────────────────────────────────── -->
+    <div class="smr-brand">
+        <div class="smr-brand__logo">
+            <span nz-icon nzType="video-camera" nzTheme="outline"></span>
+        </div>
+        @if (!displayCollapsed()) {
+        <span class="smr-brand__name">SmartMeeting</span>
+        }
+    </div>
+
+    <!-- ── Main navigation ───────────────────────────── -->
+    <nav class="smr-nav" aria-label="Main navigation">
+        <ul class="smr-nav__list">
+            @for (item of mainNav; track item.route) {
+            <li>
+                <a class="smr-nav__item" [routerLink]="item.route" routerLinkActive="smr-nav__item--active"
+                    [nzTooltipTitle]="displayCollapsed() ? item.label : ''" nzTooltipPlacement="right" nz-tooltip
+                    [attr.aria-label]="item.label" (click)="navigate.emit()">
+                    <span class="smr-nav__icon" nz-icon [nzType]="item.icon" nzTheme="outline"></span>
+                    @if (!displayCollapsed()) {
+                    <span class="smr-nav__label">{{ item.label }}</span>
+                    @if (item.badge) {
+                    <span class="smr-nav__badge">{{ item.badge }}</span>
+                    }
+                    }
+                </a>
+            </li>
+            }
+        </ul>
+
+        <!-- divider -->
+        <div class="smr-nav__divider" role="separator"></div>
+
+        <ul class="smr-nav__list">
+            @for (item of bottomNav; track item.label) {
+              @if (item.children) {
+                <li>
+                    <button class="smr-nav__item smr-nav__item--parent" [class.smr-nav__item--active]="isCatalogActive()" (click)="toggleCatalogs()" [attr.aria-expanded]="expandedCatalogs()" [attr.aria-label]="item.label" [nzTooltipTitle]="displayCollapsed() ? item.label : ''" nzTooltipPlacement="right" nz-tooltip>
+                        <span class="smr-nav__icon" nz-icon [nzType]="item.icon" nzTheme="outline"></span>
+                        @if (!displayCollapsed()) {
+                        <span class="smr-nav__label">{{ item.label }}</span>
+                        <span class="smr-nav__caret" [class.is-open]="expandedCatalogs()"><span nz-icon nzType="down" nzTheme="outline" style="font-size:12px;"></span></span>
+                        }
+                    </button>
+                    @if (!displayCollapsed() && expandedCatalogs()) {
+                    <ul class="smr-nav__sub">
+                        @for (child of item.children; track child.route) {
+                        <li>
+                            <a class="smr-nav__item smr-nav__sub-item" [routerLink]="child.route" routerLinkActive="smr-nav__item--active" [routerLinkActiveOptions]="{exact: false}" [attr.aria-label]="child.label" (click)="navigate.emit()">
+                                <span class="smr-nav__icon" nz-icon [nzType]="child.icon" nzTheme="outline"></span>
+                                <span class="smr-nav__label">{{ child.label }}</span>
+                            </a>
+                        </li>
+                        }
+                    </ul>
+                    }
+                </li>
+              } @else {
+                <li>
+                    <a class="smr-nav__item" [routerLink]="item.route!" routerLinkActive="smr-nav__item--active"
+                        [nzTooltipTitle]="displayCollapsed() ? item.label : ''" nzTooltipPlacement="right" nz-tooltip
+                        [attr.aria-label]="item.label" (click)="navigate.emit()">
+                        <span class="smr-nav__icon" nz-icon [nzType]="item.icon" nzTheme="outline"></span>
+                        @if (!displayCollapsed()) {
+                        <span class="smr-nav__label">{{ item.label }}</span>
+                        }
+                    </a>
+                </li>
+              }
+            }
+        </ul>
+    </nav>
+
+</aside>

@@ -1,0 +1,82 @@
+@if (!editing()) {
+<div class="info-view">
+    <div class="info-row">
+        <span class="info-key">Tên cuộc họp</span>
+        <span class="info-value info-value--strong">{{ meeting().name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-key">Hiển thị</span>
+        <span class="info-value">{{ visibilityLabel(meeting().visibility) }}</span>
+    </div>
+    @if (meeting().description) {
+    <div class="info-row info-row--block">
+        <span class="info-key">Mô tả</span>
+        <span class="info-value">{{ meeting().description }}</span>
+    </div>
+    }
+    @if (meeting().agenda) {
+    <div class="info-row info-row--block">
+        <span class="info-key">Chương trình</span>
+        <span class="info-value info-pre">{{ meeting().agenda }}</span>
+    </div>
+    }
+    @if (canEdit()) {
+    <div class="info-actions">
+        <button nz-button nzType="default" (click)="startEdit()">Chỉnh sửa</button>
+    </div>
+    }
+</div>
+} @else {
+<form [formGroup]="form" class="info-form" novalidate (ngSubmit)="save()">
+    @if (saveError()) {
+    <div class="info-error" role="alert">{{ saveError() }}</div>
+    }
+    <div class="info-field">
+        <label class="info-label" for="info-name">Tên cuộc họp <span class="info-required">*</span></label>
+        <input nz-input id="info-name" formControlName="name" [maxlength]="200" />
+        @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+        <div class="info-field-error">Vui lòng nhập tên cuộc họp.</div>
+        }
+    </div>
+    <div class="info-grid">
+        <div class="info-field">
+            <label class="info-label" for="info-start">Thời gian dự kiến <span class="info-required">*</span></label>
+            <nz-date-picker id="info-start" formControlName="expectedStartTime" nzShowTime
+                nzFormat="dd/MM/yyyy HH:mm" class="info-control" />
+            @if (form.controls.expectedStartTime.touched && form.controls.expectedStartTime.hasError('required')) {
+            <div class="info-field-error">Vui lòng chọn thời gian.</div>
+            }
+        </div>
+        <div class="info-field">
+            <label class="info-label" for="info-end">Kết thúc</label>
+            <nz-date-picker id="info-end" formControlName="expectedEndTime" nzShowTime
+                nzFormat="dd/MM/yyyy HH:mm" class="info-control" />
+            @if (endAfterStart() && form.controls.expectedEndTime.touched) {
+            <div class="info-field-error">Thời gian kết thúc phải sau thời gian bắt đầu.</div>
+            }
+        </div>
+    </div>
+    <div class="info-field">
+        <label class="info-label" for="info-visibility">Hiển thị</label>
+        <nz-select id="info-visibility" formControlName="visibility" class="info-control">
+            @for (opt of visibilityOptions; track opt.value) {
+            <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+            }
+        </nz-select>
+    </div>
+    <div class="info-field">
+        <label class="info-label" for="info-desc">Mô tả</label>
+        <textarea nz-input id="info-desc" formControlName="description" rows="2"></textarea>
+    </div>
+    <div class="info-field">
+        <label class="info-label" for="info-agenda">Chương trình</label>
+        <textarea nz-input id="info-agenda" formControlName="agenda" rows="3"></textarea>
+    </div>
+    <div class="info-actions">
+        <button nz-button nzType="default" type="button" (click)="cancelEdit()"
+            [disabled]="saving()">Hủy</button>
+        <button nz-button nzType="primary" type="submit" [nzLoading]="saving()"
+            [disabled]="saving()">Lưu thay đổi</button>
+    </div>
+</form>
+}

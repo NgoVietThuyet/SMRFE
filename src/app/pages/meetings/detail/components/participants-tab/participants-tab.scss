@@ -1,0 +1,48 @@
+// ParticipantsTab — toolbar + add row + user cells.
+.participants-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.participants-add {
+    display: flex;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.participants-add__select {
+    flex: 1;
+    min-width: 0;
+}
+
+.participants-user {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.participants-user__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.participants-user__name {
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.participants-user__email {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
