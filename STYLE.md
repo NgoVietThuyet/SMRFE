@@ -1,5 +1,31 @@
 # SmartMeeting — Style Guide (Legacy Enterprise — Bỏ scale x1.25)
 
+> **Cập nhật 10/2026 — Design tokens v2 (thay thế các mục mâu thuẫn bên dưới).**
+> Nguồn duy nhất: `src/styles/tokens/_tokens.scss`. Token cũ (`--bs-*`, `--primary-*`, `--text-*`, `--workspace-*`) vẫn còn nhưng chỉ là alias trỏ về token mới.
+
+## 0. Design tokens v2 (ưu tiên cao nhất)
+
+| Nhóm | Token | Ghi chú |
+|---|---|---|
+| Màu nền | `--color-bg-page / -surface / -subtle / -hover` | |
+| Viền | `--color-border` (input, divider), `--color-border-subtle` (card, bảng) | |
+| Chữ | `--color-text` 17.9:1 · `--color-text-secondary` 7.6:1 · `--color-text-muted` 4.8:1 | Không dùng `#94a3b8` cho chữ (2.56:1) |
+| Brand | `--color-primary` #075985 · `-hover` · `-subtle` · `--color-on-primary` | 1 màu nhấn duy nhất — **không** dùng `#2563eb/#1d4ed8` |
+| Trạng thái | `--color-{success,warning,danger}-text / -bg / -border`, `--color-ai` | Chữ trạng thái dùng `-text` (đạt AA) |
+| Chữ | `--text-xs 12 · sm 14 (body) · md 16 · lg 20 · xl 24 · 2xl 30` | Body/table/form 14px |
+| Khoảng cách | `--space-1..12` (bội số 4) | |
+| Bo góc | `--radius-xs 4 · sm 6 (input/nút) · md 10 (card) · lg 16 · full` | |
+| Control | `--control-sm 32 · md 40 (mặc định) · lg 48 (login, CTA phòng họp)` | Thay cho 48px ép toàn cục |
+| Bảng | `--table-row-height 56`, header sentence case | Thay cho row 76 + header viết HOA |
+| Theme | `.theme-dark` (phòng họp), `.theme-light` (vùng sáng bên trong vùng tối) | |
+
+**Component dùng chung:** `<smr-avatar>` (initials + 8 màu cố định theo tên), `shared/utils/status-map.ts` (nhãn + tông trạng thái cuộc họp/công việc), `shared/utils/friendly-error.ts` (thông báo lỗi thân thiện), `SelectA11yDirective` + `provideA11yPatch()` (tên truy cập cho input ng-zorro).
+
+**MUST:** mỗi màn hình tối đa 1 nút primary đặc (thường là "Tạo …" ở page header); icon trong nút dùng `currentColor`; mọi ô lọc có `aria-label`; cột "Thao tác" cố định phải (`nzRight`) với tối đa 1 hành động chữ + menu "⋯".
+**MUST NOT:** hard-code mã hex trong SCSS component; dùng `opacity` để làm mờ chữ (vỡ tương phản); hiển thị thông điệp HTTP thô cho người dùng.
+
+---
+
 > Nguồn chân lý: `src/theme.less` (Less vars ng-zorro) + `src/styles.scss` (SCSS tokens + overrides) + `src/styles/list-page-scroll.scss`. Đồng bộ với hệ cũ 13 nhóm. Bỏ scale x1.25 — giá trị vật lý chuẩn, không dùng `zoom:1.25`.
 
 ## 1. Design Tokens Gốc

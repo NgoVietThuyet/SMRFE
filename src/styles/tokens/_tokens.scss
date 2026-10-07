@@ -1,0 +1,188 @@
+// ============================================================
+// SmartMeeting — Design Tokens (NGUỒN DUY NHẤT)
+// Tầng 1: primitive (chỉ dùng trong file này)
+// Tầng 2: semantic  --color-*, --text-*, --space-*, --radius-*
+// Tầng 3: component --btn-*, --table-*, --card-*, --room-*
+// Component SCSS chỉ được dùng tầng 2/3, KHÔNG hard-code hex.
+// Token cũ (--bs-*, --primary-*, --text-muted…) trong styles.scss
+// đã được trỏ về đây để không vỡ giao diện cũ.
+// ============================================================
+
+// ---------- Tầng 1: Primitive ----------
+$brand-50: #f0f7fc;
+$brand-100: #e0eff8;
+$brand-200: #bfdcef;
+$brand-300: #8cc1e3;
+$brand-400: #4f9fd0;
+$brand-500: #1f7fb8;
+$brand-600: #0b6699;
+$brand-700: #075985;
+$brand-800: #0a4a6e;
+$brand-900: #0c3d5a;
+
+$slate-0: #ffffff;
+$slate-25: #f8fafc;
+$slate-50: #f1f5f9;
+$slate-100: #e2e8f0;
+$slate-200: #c9d9ea;
+$slate-300: #94a3b8;
+$slate-500: #64748b;
+$slate-600: #475569;
+$slate-800: #1e293b;
+$slate-900: #0f172a;
+$slate-950: #0b1220;
+
+$green-50: #f0fdf4;
+$green-200: #bbf7d0;
+$green-600: #16a34a;
+$green-700: #15803d;
+$amber-50: #fffbeb;
+$amber-200: #fde68a;
+$amber-600: #d97706;
+$amber-700: #b45309;
+$red-50: #fef2f2;
+$red-200: #fecaca;
+$red-600: #dc2626;
+$red-700: #b91c1c;
+$violet-50: #f5f3ff;
+$violet-600: #7c3aed;
+
+// Màu semantic (light) — dùng cho :root và .theme-light (khôi phục nền sáng bên trong vùng tối)
+@mixin semantic-light {
+    // ---------- Tầng 2: Semantic (light) ----------
+    --color-bg-page: #{$slate-25};
+    --color-bg-surface: #{$slate-0};
+    --color-bg-subtle: #{$slate-50};
+    --color-bg-hover: #{$slate-50};
+    --color-border: #{$slate-200};
+    --color-border-subtle: #{$slate-100};
+
+    --color-text: #{$slate-900};
+    --color-text-secondary: #{$slate-600}; // 7.58:1 trên trắng
+    --color-text-muted: #{$slate-500}; // 4.76:1 trên trắng (cũ #94a3b8 = 2.56 ❌)
+    --color-text-disabled: #{$slate-300};
+    --color-text-inverse: #{$slate-0};
+
+    --color-primary: #{$brand-700}; // 7.56:1 trên trắng
+    --color-primary-hover: #{$brand-800};
+    --color-primary-active: #{$brand-900};
+    --color-primary-subtle: #{$brand-100};
+    --color-primary-subtle-hover: #{$brand-200};
+    --color-on-primary: #{$slate-0};
+
+    --color-success-text: #{$green-700}; // 4.79:1 trên success-bg
+    --color-success: #{$green-600};
+    --color-success-bg: #{$green-50};
+    --color-success-border: #{$green-200};
+    --color-warning-text: #{$amber-700}; // 4.84:1
+    --color-warning: #{$amber-600};
+    --color-warning-bg: #{$amber-50};
+    --color-warning-border: #{$amber-200};
+    --color-danger-text: #{$red-700}; // 5.91:1
+    --color-danger: #{$red-600}; // nền nút nguy hiểm, chữ trắng 4.83:1
+    --color-danger-bg: #{$red-50};
+    --color-danger-border: #{$red-200};
+    --color-ai: #{$violet-600};
+    --color-ai-bg: #{$violet-50};
+
+    --focus-ring: 0 0 0 3px rgb(7 89 133 / 0.35);
+    color-scheme: light;
+}
+
+:root {
+    @include semantic-light;
+
+    // Typography — SVN-Gilroy, thang 1.2
+    --font-family: 'SVN-Gilroy', 'Segoe UI', Arial, sans-serif;
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-md: 16px;
+    --text-lg: 20px;
+    --text-xl: 24px;
+    --text-2xl: 30px;
+    --leading-xs: 16px;
+    --leading-sm: 20px;
+    --leading-md: 24px;
+    --leading-lg: 28px;
+    --leading-xl: 32px;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    // Spacing (bội số 4)
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    // Radius
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+
+    // Shadow
+    --shadow-1: 0 1px 2px rgb(15 23 42 / 0.06);
+    --shadow-2: 0 4px 12px rgb(15 23 42 / 0.08);
+    --shadow-3: 0 12px 32px rgb(15 23 42 / 0.16);
+
+    // Kích thước control
+    --control-sm: 32px;
+    --control-md: 40px;
+    --control-lg: 48px;
+
+    // Motion
+    --duration-fast: 120ms;
+    --duration-base: 200ms;
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+    // ---------- Tầng 3: Component ----------
+    --btn-height: var(--control-md);
+    --btn-radius: var(--radius-sm);
+    --input-height: var(--control-md);
+    --table-row-height: 56px;
+    --table-header-bg: var(--color-bg-subtle);
+    --paging-height: 56px;
+    --card-padding: var(--space-5);
+    --card-radius: var(--radius-md);
+    --topbar-height: 56px;
+    --page-max-width: 1440px;
+}
+
+// Khôi phục light bên trong vùng tối (vd. bảng bên phòng họp)
+.theme-light {
+    @include semantic-light;
+}
+
+// Phòng họp: dark theme riêng, đặt class .theme-dark trên container phòng
+.theme-dark {
+    --color-bg-page: #{$slate-950};
+    --color-bg-surface: #111827;
+    --color-bg-subtle: #1f2937;
+    --color-bg-hover: #263142;
+    --color-border: #273244;
+    --color-border-subtle: #1f2937;
+    --color-text: #e5e7eb; // 14.33:1
+    --color-text-secondary: #9ca3af; // 6.99:1
+    --color-text-muted: #9ca3af;
+    --color-primary: #{$brand-400};
+    --color-primary-hover: #{$brand-300};
+    --color-primary-subtle: rgb(79 159 208 / 0.18);
+    --color-on-primary: #{$slate-950};
+    --focus-ring: 0 0 0 3px rgb(79 159 208 / 0.5);
+    color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --duration-fast: 0ms;
+        --duration-base: 0ms;
+    }
+}

@@ -39,7 +39,7 @@ export class Sidebar {
 
   readonly bottomNav: NavItem[] = [
     {
-      label: 'Danh mục',
+      label: 'Tổ chức',
       icon: 'appstore',
       route: '/catalogs',
       children: [

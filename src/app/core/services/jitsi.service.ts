@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-// Kiểu tối thiểu của JitsiMeetExternalAPI (meet.d2s.vn/external_api.js)
+// Kiểu tối thiểu của JitsiMeetExternalAPI. Host và script URL do BE cấp qua join-info.
 export interface JitsiApi {
     executeCommand(command: string, ...args: unknown[]): void;
     addEventListener(event: string, handler: (payload?: Record<string, unknown>) => void): void;
@@ -13,12 +13,15 @@ export interface JitsiApi {
 
 export interface JitsiRoomOptions {
     domain: string;
+    externalApiUrl?: string;
     roomName: string;
     displayName: string;
     subject: string;
     startWithAudioMuted: boolean;
     startWithVideoMuted: boolean;
     parentNode: HTMLElement;
+    /** Thiết bị chọn ở phòng chờ (Jitsi khớp theo label). */
+    devices?: { audioInput?: string; audioOutput?: string; videoInput?: string };
 }
 
 declare global {
@@ -39,14 +42,15 @@ declare global {
 export class JitsiService {
     private loadPromise: Promise<void> | null = null;
 
-    load(domain: string): Promise<void> {
+    load(domain?: string, externalApiUrl?: string): Promise<void> {
         if (typeof window !== 'undefined' && window.JitsiMeetExternalAPI) {
             return Promise.resolve();
         }
+        const effectiveDomain = domain && domain !== 'undefined' ? domain : 'meet.d2s.vn';
         if (!this.loadPromise) {
             this.loadPromise = new Promise<void>((resolve, reject) => {
                 const script = document.createElement('script');
-                script.src = `https://${domain}/external_api.js`;
+                script.src = externalApiUrl || `https://${effectiveDomain}/external_api.js`;
                 script.async = true;
                 script.onload = () => resolve();
                 script.onerror = () => {
@@ -60,12 +64,14 @@ export class JitsiService {
     }
 
     async createRoom(options: JitsiRoomOptions): Promise<JitsiApi> {
-        await this.load(options.domain);
+        const effectiveDomain = options.domain && options.domain !== 'undefined' ? options.domain : 'meet.d2s.vn';
+        await this.load(effectiveDomain, options.externalApiUrl);
         const Ctor = window.JitsiMeetExternalAPI;
         if (!Ctor) throw new Error('Không tải được Jitsi Meet API.');
-        return new Ctor(options.domain, {
+        return new Ctor(effectiveDomain, {
             roomName: options.roomName,
             parentNode: options.parentNode,
+            ...(options.devices ? { devices: options.devices } : {}),
             userInfo: { displayName: options.displayName },
             configOverwrite: {
                 prejoinPageEnabled: false,

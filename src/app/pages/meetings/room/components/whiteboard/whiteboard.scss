@@ -1,10 +1,10 @@
-// Whiteboard — chiếm toàn stage, nền tối đồng bộ video area.
+// Whiteboard — chiếm toàn stage, dùng token của phòng họp.
 .wb {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
-    background-color: #0b1220;
+    background-color: var(--room-bg);
 }
 
 .wb__toolbar {
@@ -78,15 +78,15 @@
     flex-shrink: 0;
     background-color: var(--room-panel);
     border-color: var(--room-line);
-    color: #ffffff;
+    color: var(--room-text);
 
     input {
-        color: #ffffff;
+        color: var(--room-text);
         background-color: transparent;
     }
 
     .anticon {
-        color: #ffffff;
+        color: var(--room-text);
     }
 }
 
@@ -129,5 +129,5 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(11, 18, 32, 0.6);
+    background-color: rgba(255, 255, 255, 0.72);
 }

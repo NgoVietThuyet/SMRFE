@@ -51,6 +51,34 @@ export const routes: Routes = [
                 },
             },
             {
+                // Bảng Kanban của một Công việc; /cards/:cardId mở drawer Chi tiết đầu việc trên cùng bảng.
+                path: 'tasks/:workId',
+                loadComponent: () => import('./pages/tasks/board/task-board').then((m) => m.TaskBoard),
+                data: {
+                    showSearch: false,
+                    breadcrumb: [{ label: 'Công việc', route: '/tasks' }, { label: 'Bảng' }],
+                },
+                children: [
+                    { path: '', children: [] },
+                    {
+                        path: 'cards/:cardId',
+                        children: [],
+                        data: {
+                            showSearch: false,
+                            breadcrumb: [{ label: 'Công việc', route: '/tasks' }, { label: 'Bảng' }],
+                        },
+                    },
+                ],
+            },
+            {
+                path: 'profile',
+                loadComponent: () => import('./pages/profile/profile').then((m) => m.Profile),
+                data: {
+                    showSearch: false,
+                    breadcrumb: [{ label: 'Thông tin cá nhân' }],
+                },
+            },
+            {
                 // Công việc trong ngữ cảnh cuộc họp — 1 component dùng chung, đặt trước :id
                 path: 'meetings/:id/tasks',
                 loadComponent: () => import('./pages/tasks/tasks').then((m) => m.Tasks),
@@ -77,7 +105,7 @@ export const routes: Routes = [
                 path: 'catalogs',
                 data: {
                     showSearch: false,
-                    breadcrumb: [{ label: 'Danh mục' }],
+                    breadcrumb: [{ label: 'Tổ chức' }],
                 },
                 children: [
                     { path: '', redirectTo: 'contacts', pathMatch: 'full' },
@@ -86,7 +114,7 @@ export const routes: Routes = [
                         loadComponent: () => import('./pages/catalogs/contacts/contacts').then((m) => m.Contacts),
                         data: {
                             showSearch: false,
-                            breadcrumb: [{ label: 'Danh mục', route: '/catalogs' }, { label: 'Danh bạ' }],
+                            breadcrumb: [{ label: 'Tổ chức', route: '/catalogs' }, { label: 'Danh bạ' }],
                         },
                     },
                     {
@@ -94,7 +122,7 @@ export const routes: Routes = [
                         loadComponent: () => import('./pages/catalogs/titles/titles').then((m) => m.Titles),
                         data: {
                             showSearch: false,
-                            breadcrumb: [{ label: 'Danh mục', route: '/catalogs' }, { label: 'Chức danh' }],
+                            breadcrumb: [{ label: 'Tổ chức', route: '/catalogs' }, { label: 'Chức danh' }],
                         },
                     },
                 ],

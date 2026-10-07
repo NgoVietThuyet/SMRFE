@@ -19,12 +19,19 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { DirectoryService } from '../../../core/services/directory.service';
 import { CustomIconComponent } from '../../../layout/shell/custom-icon/custom-icon.component';
 import type { DirectoryTitle, TitleRequest } from '../../../core/models/directory.models';
+import { SelectA11yDirective } from '../../../shared/a11y/select-a11y.directive';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
+import { friendlyError } from '../../../shared/utils/friendly-error';
 
 @Component({
     selector: 'app-titles',
     templateUrl: './titles.html',
     styleUrl: './titles.scss',
     imports: [
+        NzDropdownModule,
+        NzIconModule,
+        SelectA11yDirective,
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
@@ -130,7 +137,7 @@ export class Titles implements OnInit {
                 },
                 error: (err: Error) => {
                     this.loading.set(false);
-                    this.loadError.set(err.message || 'Không thể tải danh sách chức danh.');
+                    this.loadError.set(friendlyError(err, 'Không thể tải danh sách chức danh.'));
                 },
             });
     }

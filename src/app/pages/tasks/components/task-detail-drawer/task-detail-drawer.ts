@@ -20,6 +20,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { MeetingService } from '../../../../core/services/meeting.service';
 import { TaskService } from '../../../../core/services/task.service';
 import {
+    LEVEL_LABEL,
     TaskDetail,
     TaskListItem,
     TaskPriority,
@@ -30,6 +31,10 @@ import {
 } from '../../../../core/models/task.models';
 import { UserSearchItem } from '../../../../core/models/meeting.models';
 import { TaskCreateModal } from '../task-create-modal/task-create-modal';
+import { SelectA11yDirective } from '../../../../shared/a11y/select-a11y.directive';
+import { Avatar } from '../../../../shared/ui/avatar/avatar';
+import { taskStatus } from '../../../../shared/utils/status-map';
+import { friendlyError } from '../../../../shared/utils/friendly-error';
 
 // =====================================================
 // TaskDetailDrawer — chi tiết công việc (nz-drawer 480px,
@@ -41,6 +46,8 @@ import { TaskCreateModal } from '../task-create-modal/task-create-modal';
     templateUrl: './task-detail-drawer.html',
     styleUrl: './task-detail-drawer.scss',
     imports: [
+        Avatar,
+        SelectA11yDirective,
         CommonModule,
         RouterLink,
         FormsModule,
@@ -231,7 +238,7 @@ export class TaskDetailDrawer {
                 },
                 error: (err: Error) => {
                     this.loading.set(false);
-                    this.loadError.set(err.message || 'Không tải được chi tiết công việc.');
+                    this.loadError.set(friendlyError(err, 'Không tải được chi tiết công việc.'));
                 },
             });
     }
@@ -416,13 +423,13 @@ export class TaskDetailDrawer {
     }
     onSubCreated(): void {
         this.closeSubCreate();
-        this.message.success('Đã tạo công việc con.');
+        this.message.success(`Đã tạo ${this.levelLabel(Math.min(2, (this.task()?.level ?? 0) + 1)).toLowerCase()}.`);
         this.load();
         this.changed.emit();
     }
 
     levelLabel(level: number): string {
-        return level === 0 ? 'Công việc' : level === 1 ? 'Công việc nhỏ' : 'Task';
+        return LEVEL_LABEL[level] ?? LEVEL_LABEL[0];
     }
 
     openDelete(): void {
@@ -459,21 +466,11 @@ export class TaskDetailDrawer {
     // ── Hiển thị ──
 
     statusLabel(status: number): string {
-        const map: Record<number, string> = {
-            [TaskStatus.NotStarted]: 'Chưa bắt đầu',
-            [TaskStatus.InProgress]: 'Đang làm',
-            [TaskStatus.Completed]: 'Hoàn thành',
-        };
-        return map[status] ?? 'Không xác định';
+        return taskStatus(status).label;
     }
 
     statusClass(status: number): string {
-        const map: Record<number, string> = {
-            [TaskStatus.NotStarted]: 'draft',
-            [TaskStatus.InProgress]: 'ongoing',
-            [TaskStatus.Completed]: 'ended',
-        };
-        return map[status] ?? 'draft';
+        return taskStatus(status).tone;
     }
 
     priorityLabel(priority: number): string {

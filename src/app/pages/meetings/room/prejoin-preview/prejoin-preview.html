@@ -1,0 +1,71 @@
+<div class="pjp">
+    <div class="pjp__stage">
+        <video #preview class="pjp__video" [class.is-hidden]="videoMuted() || status() !== 'ready'" autoplay muted
+            playsinline aria-label="Xem trước camera"></video>
+
+        @if (videoMuted() || status() !== 'ready') {
+        <div class="pjp__placeholder">
+            <span class="pjp__initials" aria-hidden="true">{{ initials() }}</span>
+            <span class="pjp__placeholder-text">
+                @switch (status()) {
+                @case ('loading') { {{ t('previewLoading') }} }
+                @case ('denied') { {{ t('deviceDenied') }} }
+                @case ('unsupported') { {{ t('deviceDenied') }} }
+                @default { {{ t('previewOff') }} }
+                }
+            </span>
+        </div>
+        }
+
+        <div class="pjp__toggles">
+            <button type="button" class="pjp__toggle" [class.is-off]="audioMuted()" (click)="toggleMic()"
+                [attr.aria-pressed]="!audioMuted()" [attr.aria-label]="audioMuted() ? t('micOn') : t('micOff')"
+                [title]="audioMuted() ? t('micOn') : t('micOff')">
+                <span nz-icon [nzType]="audioMuted() ? 'audio-muted' : 'audio'" nzTheme="outline"></span>
+            </button>
+            <button type="button" class="pjp__toggle" [class.is-off]="videoMuted()" (click)="toggleCam()"
+                [attr.aria-pressed]="!videoMuted()" [attr.aria-label]="videoMuted() ? t('camOn') : t('camOff')"
+                [title]="videoMuted() ? t('camOn') : t('camOff')">
+                <span nz-icon nzType="video-camera" nzTheme="outline"></span>
+            </button>
+        </div>
+
+        <div class="pjp__meter" role="meter" [attr.aria-label]="t('micLevel')" aria-valuemin="0" aria-valuemax="100"
+            [attr.aria-valuenow]="levelPct()">
+            @for (on of levelBars(); track $index) {
+            <span class="pjp__bar" [class.is-on]="on"></span>
+            }
+        </div>
+    </div>
+
+    @if (status() === 'ready') {
+    <div class="pjp__devices">
+        <label class="pjp__field">
+            <span>{{ t('devMic') }}</span>
+            <nz-select [ngModel]="micId()" (ngModelChange)="selectMic($event)" [attr.aria-label]="t('devMic')">
+                @for (d of mics(); track d.deviceId) {
+                <nz-option [nzValue]="d.deviceId" [nzLabel]="d.label || t('devDefault')" />
+                }
+            </nz-select>
+        </label>
+        <label class="pjp__field">
+            <span>{{ t('devCam') }}</span>
+            <nz-select [ngModel]="camId()" (ngModelChange)="selectCam($event)" [attr.aria-label]="t('devCam')">
+                @for (d of cams(); track d.deviceId) {
+                <nz-option [nzValue]="d.deviceId" [nzLabel]="d.label || t('devDefault')" />
+                }
+            </nz-select>
+        </label>
+        @if (speakers().length) {
+        <label class="pjp__field">
+            <span>{{ t('devSpeaker') }}</span>
+            <nz-select [ngModel]="speakerId()" (ngModelChange)="selectSpeaker($event)" [attr.aria-label]="t('devSpeaker')">
+                @for (d of speakers(); track d.deviceId) {
+                <nz-option [nzValue]="d.deviceId" [nzLabel]="d.label || t('devDefault')" />
+                }
+            </nz-select>
+        </label>
+        }
+    </div>
+    }
+</div>

@@ -17,8 +17,8 @@
 }
 
 :host ::ng-deep .list-page-tab-header .ant-tabs-tab {
-    color: #9eb3c9 !important;
-    font-size: 16px !important;
+    color: var(--color-text-secondary) !important;
+    font-size: var(--text-sm) !important;
     padding: 12px 16px !important;
 
 
@@ -68,11 +68,9 @@
     gap: var(--space-1);
 }
 
-// Đang diễn ra — ưu tiên thị giác (đậm + chữ hoa)
+// Đang diễn ra: nhấn bằng dot nhấp nháy (xem .smr-status--ongoing), giữ cùng cỡ chữ với badge khác (F-14)
 .meetings__status--ongoing {
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: var(--font-size-sm);
+    font-weight: var(--weight-semibold);
 }
 
 @media (max-width: 767px) {
@@ -80,3 +78,8 @@
         width: 100%;
     }
 }
+
+
+.meetings__row { cursor: pointer; }
+.meetings__host { display: inline-flex; align-items: center; gap: var(--space-2); }
+.meetings__join.ant-btn { height: var(--control-sm) !important; line-height: 1 !important; padding: 0 var(--space-3); }

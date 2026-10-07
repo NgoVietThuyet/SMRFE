@@ -106,8 +106,7 @@
                 <dt>Người phụ trách</dt>
                 <dd class="tdd__assignee">
                     @if (t.assigneeUserName) {
-                    <span class="smr-avatar smr-avatar--sm tdd__avatar">{{ initials(t.assigneeFullName ||
-                        t.assigneeUserName) }}</span>
+                    <smr-avatar [name]="t.assigneeFullName || t.assigneeUserName" size="sm" />
                     <span>{{ t.assigneeFullName || t.assigneeUserName }}</span>
                     } @else {
                     <span class="tdd__muted">Chưa gán</span>
@@ -165,8 +164,14 @@
         </dl>
 
         <div class="tdd__actions">
+            @if (t.level === 0) {
+            <a nz-button nzType="primary" [routerLink]="['/tasks', t.id]" (click)="close()">
+                <span nz-icon nzType="project" nzTheme="outline"></span>
+                Mở bảng
+            </a>
+            }
             @if (t.canEdit) {
-            <button nz-button nzType="primary" (click)="startEdit()">
+            <button nz-button [nzType]="t.level === 0 ? 'default' : 'primary'" (click)="startEdit()">
                 <span nz-icon nzType="edit" nzTheme="outline"></span>
                 Sửa
             </button>
@@ -174,7 +179,7 @@
             @if (t.level < 2) {
             <button nz-button nzType="default" (click)="openSubCreate(t)">
                 <span nz-icon nzType="plus" nzTheme="outline"></span>
-                {{ t.level === 0 ? 'Thêm công việc nhỏ' : 'Thêm task' }}
+                {{ t.level === 0 ? 'Thêm đầu việc' : 'Thêm việc nhỏ' }}
             </button>
             }
             @if (t.isCreator) {
@@ -189,7 +194,7 @@
         <div class="tdd__hierarchy">
             <div class="tdd__hierarchy-head">
                 <h3 class="tdd__share-title">
-                    {{ t.level === 0 ? 'Công việc nhỏ' : t.level === 1 ? 'Task con' : 'Cấp dưới' }}
+                    {{ t.level === 0 ? 'Đầu việc' : t.level === 1 ? 'Việc nhỏ' : 'Cấp dưới' }}
                     <span class="tdd__muted">({{ t.childrenCount }} — {{ t.completedChildrenCount }} hoàn thành, {{ t.progress }}%)</span>
                 </h3>
                 <div style="flex:1; height:6px; background:#e2e8f0; border-radius:999px; overflow:hidden; max-width:120px;">
@@ -207,7 +212,7 @@
                             </div>
                             <div class="tdd__hierarchy-meta">
                                 @if (c.assigneeFullName || c.assigneeUserName) {
-                                    <span class="smr-avatar smr-avatar--sm tdd__avatar" style="width:22px; height:22px; font-size:10px;">{{ initials(c.assigneeFullName || c.assigneeUserName) }}</span>
+                                    <smr-avatar [name]="c.assigneeFullName || c.assigneeUserName" size="xs" />
                                     <span style="font-size:13px;">{{ c.assigneeFullName || c.assigneeUserName }}</span>
                                 } @else { <span class="tdd__muted" style="font-size:13px;">Chưa gán</span> }
                                 <span style="font-size:12px; color:#64748b;">{{ formatDateTime(c.dueDate) }}</span>
@@ -218,7 +223,7 @@
                 </ul>
             } @else {
                 <p class="tdd__muted tdd__share-empty">
-                    {{ t.level === 0 ? 'Chưa có công việc nhỏ.' : t.level === 1 ? 'Chưa có task con.' : 'Không có cấp dưới.' }}
+                    {{ t.level === 0 ? 'Chưa có đầu việc.' : t.level === 1 ? 'Chưa có việc nhỏ.' : 'Không có cấp dưới.' }}
                     @if (t.level < 2) { <a (click)="openSubCreate(t)" style="cursor:pointer; color:#075985; margin-left:6px;">+ Thêm ngay</a> }
                 </p>
             }
@@ -242,7 +247,7 @@
             <ul class="tdd__share-list">
                 @for (s of t.shares; track s.userName) {
                 <li class="tdd__share-item">
-                    <span class="smr-avatar smr-avatar--sm tdd__avatar">{{ initials(s.fullName) }}</span>
+                    <smr-avatar [name]="s.fullName" size="sm" />
                     <span class="tdd__share-name">{{ s.fullName }} <span class="tdd__muted">({{ s.userName
                             }})</span></span>
                     <span class="tdd__share-perm">{{ permissionLabel(s.permission) }}</span>
@@ -265,7 +270,7 @@
             <div class="tdd__share-add">
                 <nz-select class="tdd__share-user" [ngModel]="addShareUserName()"
                     (ngModelChange)="onShareUserChange($event)" (nzOnSearch)="onShareUserSearch($event)" nzAllowClear
-                    nzShowSearch nzServerSearch [nzLoading]="addShareSaving()" nzPlaceHolder="Tìm người để chia sẻ...">
+                    nzShowSearch nzServerSearch [nzLoading]="addShareSaving()" nzPlaceHolder="Tìm người để chia sẻ..." aria-label="Người được chia sẻ">
                     @for (u of shareUserOptions(); track u.userName) {
                     <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName + ' (' + u.userName + ')'" />
                     }

@@ -25,6 +25,8 @@ import type {
     DirectoryTitle,
     OrganizationFlat,
 } from '../../../core/models/directory.models';
+import { SelectA11yDirective } from '../../../shared/a11y/select-a11y.directive';
+import { Avatar } from '../../../shared/ui/avatar/avatar';
 
 // Node cây mang thêm số liệu + trạng thái để template hiển thị (không hard-code org nào)
 interface OrgTreeNode extends NzTreeNodeOptions {
@@ -46,6 +48,8 @@ interface OrgTreeNode extends NzTreeNodeOptions {
     templateUrl: './contacts.html',
     styleUrl: './contacts.scss',
     imports: [
+        Avatar,
+        SelectA11yDirective,
         CommonModule,
         FormsModule,
         ReactiveFormsModule,

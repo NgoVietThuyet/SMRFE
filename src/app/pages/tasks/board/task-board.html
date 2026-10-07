@@ -1,0 +1,150 @@
+<!-- =====================================================
+     TaskBoard — bảng Kanban của một Công việc (level 0).
+     header + tab cột (mobile) + 3 cột + drawer chi tiết đầu việc
+===================================================== -->
+<div class="task-board">
+    @if (store.error(); as err) {
+        <div class="task-board__state" role="alert">
+            <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="errContent" [nzNotFoundFooter]="errFooter" />
+            <ng-template #errContent>
+                <p class="task-board__state-title">
+                    {{ err.kind === 'forbidden' ? 'Không có quyền truy cập' : err.kind === 'notfound' ? 'Không tìm thấy công việc' : 'Không thể tải bảng' }}
+                </p>
+                <p>{{ err.message }}</p>
+            </ng-template>
+            <ng-template #errFooter>
+                @if (err.kind === 'error') {
+                    <button nz-button nzType="primary" (click)="retry()">Thử lại</button>
+                }
+                <a nz-button nzType="default" [routerLink]="backLink()">{{ backLabel() }}</a>
+            </ng-template>
+        </div>
+    } @else {
+        <!-- ── Header ─────────────────────────── -->
+        <header class="task-board__header">
+            <div class="task-board__title-row">
+                <a class="task-board__back" [routerLink]="backLink()" [attr.aria-label]="backLabel()">
+                    <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+                </a>
+                @if (board(); as b) {
+                    <div class="task-board__title-wrap">
+                        <p class="task-board__crumb">Công việc</p>
+                        <h1 class="task-board__title">{{ b.title }}</h1>
+                    </div>
+                } @else {
+                    <div class="task-board__title-wrap">
+                        <span class="smr-skeleton task-board__sk-crumb"></span>
+                        <span class="smr-skeleton task-board__sk-title"></span>
+                    </div>
+                }
+
+                <div class="task-board__actions">
+                    @if (headerAssignees().length) {
+                        <div class="task-board__people" aria-label="Người phụ trách các đầu việc">
+                            @for (a of headerAssignees(); track a.userName) {
+                                <smr-avatar [name]="a.fullName" size="sm" />
+                            }
+                            @if (moreAssignees() > 0) {
+                                <span class="task-board__more">+{{ moreAssignees() }}</span>
+                            }
+                        </div>
+                    }
+                    <nz-select class="task-board__filter" [ngModel]="store.assigneeFilter()"
+                        (ngModelChange)="store.assigneeFilter.set($event)" aria-label="Lọc theo người phụ trách">
+                        @for (opt of assigneeOptions(); track opt.value) {
+                            <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                        }
+                    </nz-select>
+                    @if (board()) {
+                        <button nz-button class="task-board__edit" (click)="editOpen.set(true)" aria-label="Sửa thông tin công việc">
+                            <span nz-icon nzType="edit" nzTheme="outline"></span><span class="task-board__btn-text">Sửa thông tin</span>
+                        </button>
+                    }
+                    @if (canAdd()) {
+                        <button nz-button nzType="primary" (click)="addToFirstColumn()">
+                            <span nz-icon nzType="plus" nzTheme="outline"></span><span class="task-board__btn-text">Thêm đầu việc</span>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            @if (board(); as b) {
+                <div class="task-board__meta">
+                    <span class="smr-status" [ngClass]="'smr-status--' + statusView(b.status).tone">
+                        <span class="smr-status__dot"></span>{{ statusView(b.status).label }}
+                    </span>
+                    @if (b.dueDate) { <span>Hạn {{ dueText(b.dueDate) }}</span> }
+                    @if (b.meetingId && b.meetingName) {
+                        <a class="task-board__meeting" [routerLink]="['/meetings', b.meetingId]">{{ b.meetingName }}</a>
+                    }
+                    @if (b.assigneeUserName) {
+                        <span class="task-board__owner">
+                            <smr-avatar [name]="b.assigneeFullName || b.assigneeUserName" size="xs" />
+                            {{ b.assigneeFullName || b.assigneeUserName }}
+                        </span>
+                    }
+                    <span class="task-board__progress" [attr.aria-label]="'Tiến độ: ' + store.progress().done + ' trên ' + store.progress().total + ' đầu việc hoàn thành'">
+                        <span class="task-board__bar"><span class="task-board__bar-fill" [class.is-done]="store.progress().percent === 100" [style.width.%]="store.progress().percent"></span></span>
+                        {{ store.progress().done }}/{{ store.progress().total }} đầu việc
+                    </span>
+                    <span class="task-board__hint">Thẻ sắp theo ưu tiên, rồi đến hạn</span>
+                </div>
+                @if (store.totalCards() > store.cards().length) {
+                    <p class="task-board__warn" role="status">
+                        Bảng đang hiển thị {{ store.cards().length }}/{{ store.totalCards() }} đầu việc (tối đa {{ BOARD_PAGE_SIZE }}).
+                    </p>
+                }
+            }
+        </header>
+
+        <!-- ── Tab cột (mobile) ─────────────────── -->
+        <div class="task-board__tabs" role="tablist" aria-label="Cột trạng thái">
+            @for (col of columns(); track col.key) {
+                <button type="button" role="tab" class="task-board__tab" [class.is-active]="activeStatus() === col.status"
+                    [attr.aria-selected]="activeStatus() === col.status" (click)="activeStatus.set(col.status)">
+                    {{ col.title }} <span class="task-board__tab-count">{{ cardsOf(col).length }}</span>
+                </button>
+            }
+        </div>
+
+        <!-- ── Cột ────────────────────────────── -->
+        @if (store.loading() && !board()) {
+            <div class="task-board__columns" aria-busy="true" aria-label="Đang tải bảng">
+                @for (col of columns(); track col.key) {
+                    <div class="task-board__sk-col" [class.is-active]="activeStatus() === col.status">
+                        <span class="smr-skeleton task-board__sk-head"></span>
+                        <span class="smr-skeleton task-board__sk-card"></span>
+                        <span class="smr-skeleton task-board__sk-card"></span>
+                    </div>
+                }
+            </div>
+        } @else {
+            @if (board() && store.cards().length === 0) {
+                <p class="task-board__empty-hint">
+                    Bảng chưa có đầu việc nào.
+                    @if (canAdd()) { Thêm đầu việc đầu tiên bằng nút “+ Thêm đầu việc” ở cột bất kỳ. }
+                    @else { Bạn chỉ có quyền xem bảng này. }
+                </p>
+            }
+            <div class="task-board__columns" cdkDropListGroup>
+                @for (col of columns(); track col.key) {
+                    <app-board-column [class.is-active]="activeStatus() === col.status" [column]="col"
+                        [columns]="columns()" [cards]="cardsOf(col)" [pendingIds]="store.pending()" [canAdd]="canAdd()"
+                        (dropped)="onDropped($event)" (moveTo)="onDropped($event)" (opened)="openCard($event)"
+                        (moveBy)="onMoveBy($event.card, $event.delta)" (quickAdd)="onQuickAdd($event)" />
+                }
+            </div>
+        }
+    }
+
+    <div class="sr-only" aria-live="polite" role="status">{{ liveMessage() }}</div>
+</div>
+
+@if (cardId() && board()) {
+    <app-card-detail [cardId]="cardId()!" (closed)="closeCard()" (changed)="onCardChanged($event)"
+        (deleted)="onCardDeleted($event)" (moved)="moveCard($event.card, $event.toStatus)" />
+}
+
+@if (editOpen() && board()) {
+    <app-task-detail-drawer [open]="true" [taskId]="board()!.id" (closed)="onEditClosed()" (changed)="onEditChanged()" />
+}

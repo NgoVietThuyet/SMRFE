@@ -1,8 +1,188 @@
-<nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="aiEmpty" />
-<ng-template #aiEmpty>
-    <p>Chưa có bản tóm tắt AI</p>
-    <p>
-        Bản tóm tắt và transcript sẽ xuất hiện sau khi cuộc họp kết thúc và được AI xử lý.
-        Chức năng đang được phát triển ở phía máy chủ.
-    </p>
-</ng-template>
+<div class="ai-tab">
+    <!-- Header: RAG Knowledge Base Status & Sync -->
+    <div class="ai-tab__header">
+        <div class="ai-tab__badge">
+            <span nz-icon nzType="robot" nzTheme="outline" class="ai-tab__badge-icon"></span>
+            <div class="ai-tab__badge-info">
+                <div class="ai-tab__badge-title">
+                    <span>Trợ lý AI Cuộc họp (RAG)</span>
+                    @if (ragStatus()?.indexed) {
+                    <nz-tag nzColor="success">
+                        <span nz-icon nzType="check-circle"></span>
+                        Đã lập chỉ mục ({{ ragStatus()?.chunkCount }} đoạn tri thức)
+                    </nz-tag>
+                    } @else {
+                    <nz-tag nzColor="warning">
+                        <span nz-icon nzType="exclamation-circle"></span>
+                        Chưa đồng bộ
+                    </nz-tag>
+                    }
+                </div>
+                <div class="ai-tab__badge-desc">
+                    {{ ragStatus()?.sourcesSummary || 'Đồng bộ dữ liệu để AI đọc biên bản thoại, thành viên, công việc và tài liệu cuộc họp.' }}
+                </div>
+            </div>
+        </div>
+
+        <button nz-button nzType="default" class="ai-tab__sync-btn" (click)="syncRag()" [nzLoading]="isSyncing()">
+            <span nz-icon nzType="sync" [nzSpin]="isSyncing()"></span>
+            Đồng bộ lại RAG
+        </button>
+    </div>
+
+    <!-- Subtabs: Chat vs Transcripts -->
+    <div class="ai-tab__subtabs">
+        <button [class.active]="activeSubTab() === 'chat'" (click)="activeSubTab.set('chat')">
+            <span nz-icon nzType="message" nzTheme="outline"></span>
+            Hỏi đáp Trợ lý AI
+        </button>
+        <button [class.active]="activeSubTab() === 'transcripts'" (click)="activeSubTab.set('transcripts')">
+            <span nz-icon nzType="file-text" nzTheme="outline"></span>
+            Biên bản Phiên âm thoại ({{ transcripts().length }})
+        </button>
+    </div>
+
+    <!-- View 1: Chat Assistant -->
+    @if (activeSubTab() === 'chat') {
+    <!-- Prompt Suggestions -->
+    <div class="ai-tab__prompts">
+        <div class="ai-tab__prompts-title">Gợi ý câu hỏi nhanh:</div>
+        @for (prompt of promptSuggestions; track prompt) {
+        <button class="ai-tab__prompts-chip" (click)="sendQuestion(prompt)" [disabled]="isAsking()">
+            {{ prompt }}
+        </button>
+        }
+    </div>
+
+    <!-- Chat Box -->
+    <div class="ai-tab__chat">
+        <div class="ai-tab__chat-messages" #chatContainer>
+            @if (messages().length === 0) {
+            <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="chatEmpty" />
+            <ng-template #chatEmpty>
+                <p><strong>Đặt câu hỏi cho Trợ lý AI về cuộc họp này</strong></p>
+                <p style="color: #8c8c8c; font-size: 13px;">
+                    AI sẽ phân tích toàn bộ thông tin cuộc họp, danh sách thành viên, công việc được giao và nội dung phiên âm thoại để trả lời bạn.
+                </p>
+            </ng-template>
+            }
+
+            @for (msg of messages(); track $index) {
+            <div class="ai-tab__chat-msg" [class.ai-tab__chat-msg--user]="msg.sender === 'user'" [class.ai-tab__chat-msg--ai]="msg.sender === 'ai'">
+                <div class="ai-tab__chat-msg-avatar" [class.ai-tab__chat-msg-avatar--user]="msg.sender === 'user'" [class.ai-tab__chat-msg-avatar--ai]="msg.sender === 'ai'">
+                    @if (msg.sender === 'user') {
+                    <span nz-icon nzType="user"></span>
+                    } @else {
+                    <span nz-icon nzType="bulb"></span>
+                    }
+                </div>
+
+                <div class="ai-tab__chat-bubble">
+                    @if (msg.sender === 'ai') {
+                    <div class="ai-tab__chat-text ai-tab__chat-text--ai" [innerHTML]="formatMarkdown(msg.text)"></div>
+                    } @else {
+                    <div class="ai-tab__chat-text ai-tab__chat-text--user">{{ msg.text }}</div>
+                    }
+
+                    <!-- AI Citations (Nguồn trích dẫn) -->
+                    @if (msg.sender === 'ai' && msg.citations && msg.citations.length > 0) {
+                    <div class="ai-tab__chat-citations">
+                        <div class="ai-tab__chat-citations-title">
+                            <span nz-icon nzType="file-search"></span> Căn cứ trích xuất từ cuộc họp:
+                        </div>
+                        <div class="ai-tab__chat-citations-list">
+                            @for (cit of msg.citations; track cit.id) {
+                            <div class="ai-tab__chat-citations-item">
+                                <strong>[{{ cit.sourceTitle }}]</strong>
+                                @if (cit.speakerName) { (Người nói: {{ cit.speakerName }}) }
+                                — {{ cit.content | slice:0:120 }}...
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    }
+
+                    <div class="ai-tab__chat-meta">
+                        <span>{{ msg.time | date:'HH:mm' }}</span>
+                        @if (msg.sender === 'ai') {
+                        <button nz-button nzType="text" nzSize="small" (click)="copyText(msg.text)" nz-tooltip="Sao chép câu trả lời">
+                            <span nz-icon nzType="copy"></span>
+                        </button>
+                        }
+                    </div>
+                </div>
+            </div>
+            }
+
+            @if (isAsking()) {
+            <div class="ai-tab__chat-msg ai-tab__chat-msg--ai">
+                <div class="ai-tab__chat-msg-avatar ai-tab__chat-msg-avatar--ai">
+                    <span nz-icon nzType="bulb"></span>
+                </div>
+                <div class="ai-tab__chat-bubble" style="background: #ffffff; border: 1px solid #e8e8e8;">
+                    <nz-spin nzSimple [nzTip]="'AI đang phân tích dữ liệu cuộc họp...'"></nz-spin>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Chat Input -->
+        <div class="ai-tab__chat-input-box">
+            <input nz-input [ngModel]="chatQuery()" (ngModelChange)="chatQuery.set($event)"
+                   placeholder="Nhập câu hỏi về cuộc họp... (Nhấn Enter để gửi)"
+                   (keyup.enter)="sendQuestion()"
+                   [disabled]="isAsking()" />
+            <button nz-button nzType="primary" (click)="sendQuestion()" [nzLoading]="isAsking()" [disabled]="!chatQuery().trim()">
+                <span nz-icon nzType="send"></span>
+                Gửi
+            </button>
+        </div>
+    </div>
+    }
+
+    <!-- View 2: Transcripts (Biên bản thoại) -->
+    @if (activeSubTab() === 'transcripts') {
+    <div class="ai-tab__transcripts">
+        <div class="ai-tab__transcripts-header">
+            <span style="font-size: 13px; color: #595959;">
+                Toàn bộ nội dung lời thoại được ghi nhận tự động từ phụ đề (Speech-to-Text) trong phòng họp:
+            </span>
+            <button nz-button nzType="default" nzSize="small" (click)="copyAllTranscripts()" [disabled]="transcripts().length === 0">
+                <span nz-icon nzType="copy"></span>
+                Sao chép tất cả
+            </button>
+        </div>
+
+        @if (isLoadingTranscripts()) {
+        <div style="text-align: center; padding: 40px;">
+            <nz-spin nzSize="large"></nz-spin>
+        </div>
+        } @else if (transcripts().length === 0) {
+        <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="transcriptEmpty" />
+        <ng-template #transcriptEmpty>
+            <p><strong>Chưa có biên bản thoại</strong></p>
+            <p style="color: #8c8c8c; font-size: 13px;">
+                Phụ đề trực tiếp được kích hoạt bằng nút [CC] trong phòng họp trực tuyến. Khi cuộc họp diễn ra, các câu thoại sẽ tự động xuất hiện tại đây.
+            </p>
+        </ng-template>
+        } @else {
+        <div class="ai-tab__transcripts-list">
+            @for (item of transcripts(); track $index) {
+            <div class="ai-tab__transcripts-item">
+                <div class="ai-tab__transcripts-item-meta">
+                    <strong>{{ item.speakerName }}</strong>
+                    <span>• {{ item.timestamp | date:'HH:mm:ss' }}</span>
+                    <nz-tag [nzColor]="item.language === 'en-US' ? 'blue' : 'green'" style="margin-left: auto;">
+                        {{ item.language === 'en-US' ? 'EN' : 'VI' }}
+                    </nz-tag>
+                </div>
+                <div class="ai-tab__transcripts-item-text">
+                    {{ item.text }}
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+    }
+</div>

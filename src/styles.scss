@@ -1,3 +1,5 @@
+@use 'styles/tokens/tokens';
+@use 'styles/workspace';
 // ============================================================
 // SmartMeeting — Global Styles
 // Dựa theo STYLE.md: Enterprise Productivity UI
@@ -170,38 +172,39 @@
 // 1. Design Tokens — Legacy (spec cũ) + SMR compat
 //    Bỏ scale x1.25, giá trị vật lý chuẩn
 // ------------------------------------------------------------
-:root {
+// Khai báo lại trong .theme-dark/.theme-light để alias cũ (var(--color-*))
+// được tính theo theme của vùng đó, không bị "đóng băng" ở giá trị :root.
+:root,
+.theme-dark,
+.theme-light {
     // --- Legacy palette (Nguồn duy nhất) ---
     --bs-white: #ffffff;
     --bs-black: #000000;
     --bs-sky-light: #7dd3fc;
-    --bs-cyan-deep: #075985;
+    --bs-cyan-deep: var(--color-primary);
     --bs-teal-dark: #082f49;
     --bs-ice-blue: #f1fbfe;
     --bs-gray-night: #1f2937;
-    --bs-sky-primary: #0284c7;
+    --bs-sky-primary: var(--color-primary);
     --bs-green-forest: #042f2e;
     --bs-gray-dark: #27272a;
     --bs-sky-pale: #e0f2fe;
-    --bs-blue-ocean: #005993;
+    --bs-blue-ocean: var(--color-primary);
     --bs-sky-bright: #38bdf8;
-    --bs-blue-ocean-2: #005994;
-    --bs-blue-link: #337ab7;
+    --bs-blue-ocean-2: var(--color-primary);
+    --bs-blue-link: var(--color-primary);
     --bs-blue-ocean-bold: #16315e;
     --bs-pale-grey: #dadada;
-    --bs-medium-grey: #666666;
+    --bs-medium-grey: var(--color-text-muted);
     --bs-blue-grey: #607d8b;
-    --bs-red: #dc2626;
-    --bs-dark: #1f2937;
-    --app-font-family: 'SVN-Gilroy', sans-serif;
-    --bs-border: #C9D9EA;
+    --bs-red: var(--color-danger);
+    --bs-dark: var(--color-text);
+    --app-font-family: var(--font-family);
+    --bs-border: var(--color-border);
 
     // --- Radius legacy (NGUỒN DUY NHẤT) ---
     --radius-none: 0;
-    --radius-sm: 5px;
-    --radius-md: 6px;
     --radius-pill: 9999px;
-    --radius-full: 50%;
     --bs-border-radius: var(--radius-sm);
     --bs-border-radius-sm: var(--radius-sm);
     --bs-border-radius-lg: var(--radius-md);
@@ -211,47 +214,37 @@
 
     // --- Compat SMR tokens → map về legacy ---
     --primary-600: var(--bs-cyan-deep);
-    --primary-500: #0369a1;
-    --primary-100: #e6f0fa;
-    --primary-50: #eff6ff;
-    --bg-page: #f5fafd;
-    --bg-surface: #ffffff;
-    --bg-subtle: #f1f5f9;
+    --primary-500: var(--color-primary-hover);
+    --primary-100: var(--color-primary-subtle);
+    --primary-50: var(--color-primary-subtle);
+    --bg-page: var(--color-bg-page);
+    --bg-surface: var(--color-bg-surface);
+    --bg-subtle: var(--color-bg-subtle);
     --border-default: var(--bs-border);
     --border-strong: var(--bs-border);
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    --text-primary: var(--color-text);
+    --text-secondary: var(--color-text-secondary);
+    --text-muted: var(--color-text-muted);
 
     // --- Semantic ---
-    --success: #16a34a;
-    --success-bg: #f0fdf4;
+    --success: var(--color-success-text);
+    --success-bg: var(--color-success-bg);
     --success-border: #bbf7d0;
-    --warning: #d97706;
-    --warning-bg: #fffbeb;
+    --warning: var(--color-warning-text);
+    --warning-bg: var(--color-warning-bg);
     --warning-border: #fde68a;
-    --danger: #dc2626;
-    --danger-bg: #fef2f2;
+    --danger: var(--color-danger);
+    --danger-bg: var(--color-danger-bg);
     --danger-border: #fecaca;
     --info: var(--bs-cyan-deep);
-    --info-bg: #eff6ff;
-    --info-border: #bfdbfe;
+    --info-bg: var(--color-primary-subtle);
+    --info-border: var(--color-primary-subtle-hover);
     --disabled: #94a3b8;
 
     // --- Shadow ---
-    --shadow-float: 0 4px 12px rgba(15, 23, 42, 0.08);
-    --shadow-modal: 0 10px 30px rgba(15, 23, 42, 0.12);
+    --shadow-float: var(--shadow-2);
+    --shadow-modal: var(--shadow-3);
 
-    // --- Spacing (chuẩn 4/8/12/16/20/24/32) ---
-    --space-1: 4px;
-    --space-2: 8px;
-    --space-3: 12px;
-    --space-4: 16px;
-    --space-5: 20px;
-    --space-6: 24px;
-    --space-8: 32px;
-    --space-10: 40px;
-    --space-12: 48px;
 
     // --- Layout legacy ---
     --sidebar-width: 240px;
@@ -259,19 +252,18 @@
     --sidebar-transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --app-sider-width: 240px;
 
-    // --- Control legacy 48px ---
-    --control-height: 48px;
-    --control-height-sm: 35px;
-    --control-height-lg: 48px;
+    // --- Control legacy var(--control-height) ---
+    --control-height: var(--control-md);
+    --control-height-sm: var(--control-sm);
+    --control-height-lg: var(--control-lg);
 
     // --- Typography legacy ---
-    --font-family: var(--app-font-family);
-    --font-size-xs: 15px;
-    --font-size-sm: 16px;
-    --font-size-base: 16px;
-    --font-size-md: 20px;
-    --font-size-lg: 23px;
-    --font-size-xl: 24px;
+    --font-size-xs: var(--text-xs);
+    --font-size-sm: var(--text-sm);
+    --font-size-base: var(--text-sm);
+    --font-size-md: var(--text-md);
+    --font-size-lg: var(--text-lg);
+    --font-size-xl: var(--text-xl);
     --line-height: 1.5;
 
     // --- Z-index ---
@@ -334,7 +326,7 @@ html {
 
 body {
     font-family: var(--app-font-family) !important;
-    font-size: 16px;
+    font-size: var(--font-size-base);
     line-height: var(--line-height);
     color: var(--text-primary);
     background: #ffffff !important;
@@ -487,8 +479,8 @@ a {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: var(--bg-surface);
-    border-right: 1px solid var(--border-default);
+    background-color: var(--color-bg-surface);
+    border-right: 1px solid var(--color-border-subtle);
     transition: var(--sidebar-transition);
     overflow: hidden;
     position: relative;
@@ -557,61 +549,41 @@ a {
 // 7. Sidebar Brand — legacy 90px gradient
 // ------------------------------------------------------------
 .smr-brand {
+    // Brand trên nền trắng: logo màu brand, chữ màu text (bỏ gradient/khối xanh — F-01, F-02)
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    height: 64px;
+    height: var(--topbar-height);
     padding: 0 var(--space-4);
-    background: #0f4c81;
-    border-bottom: none;
+    background: var(--color-bg-surface);
+    border-bottom: 1px solid var(--color-border-subtle);
     flex-shrink: 0;
     overflow: hidden;
-    position: relative;
-
-    &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        width: 18%;
-        background: rgba(255, 255, 255, 0.08);
-        clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
-        pointer-events: none;
-    }
-
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        width: 16%;
-        border-right: 1px solid rgba(255, 255, 255, 0.15);
-        pointer-events: none;
-    }
 
     &__logo {
-        width: 36px;
-        height: 36px;
-        border-radius: var(--radius-md);
-        background-color: rgba(255, 255, 255, 0.18);
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-primary);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #ffffff;
+        color: var(--color-on-primary);
         font-size: 18px;
-        font-weight: 700;
         flex-shrink: 0;
-        position: relative;
-        z-index: 1;
+
+        .anticon {
+            color: inherit;
+        }
     }
 
     &__name {
-        font-size: 19px;
-        font-weight: 600;
-        color: #ffffff;
+        font-size: var(--text-md);
+        font-weight: var(--weight-bold);
+        color: var(--color-text);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        position: relative;
-        z-index: 1;
     }
 }
 
@@ -627,8 +599,8 @@ a {
     justify-content: space-between;
     gap: var(--space-4);
     padding: 0 var(--space-6);
-    background-color: var(--bg-surface);
-    border-bottom: 1px solid var(--border-default);
+    background-color: var(--color-bg-surface);
+    border-bottom: 1px solid var(--color-border-subtle);
 
     &__left {
         display: flex;
@@ -714,10 +686,6 @@ a {
         border-radius: 50%;
         cursor: pointer;
         display: inline-flex;
-
-        .smr-avatar {
-            background-color: var(--primary-600);
-        }
     }
 }
 
@@ -828,16 +796,40 @@ a {
     white-space: nowrap;
 }
 
+.ant-btn .anticon,
+.ant-btn app-custom-icon,
+.ant-btn svg {
+    // Icon trong nút luôn theo màu chữ của nút (F-02: icon vô hình trên nền primary)
+    color: inherit !important;
+}
+
+// Icon ant không bị co lại trong flex (rule "span > svg {width:100%}" của custom-icon làm icon còn 4px)
+.anticon {
+    flex-shrink: 0;
+
+    > svg {
+        width: 1em;
+        height: 1em;
+    }
+}
+
+.ant-btn:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring) !important;
+}
+
 .ant-btn-primary {
     background-color: var(--primary-600);
     border-color: var(--primary-600);
-    color: #ffffff;
+    color: var(--color-on-primary);
 
     &:hover,
     &:focus {
-        background-color: #1d4ed8;
-        border-color: #1d4ed8;
-        color: #ffffff;
+        background-color: var(--color-primary-hover);
+        border-color: var(--color-primary-hover);
+        color: var(--color-on-primary);
     }
 }
 
@@ -1677,23 +1669,40 @@ textarea.ant-input {
 }
 
 @media (max-width: 767px) {
+    app-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: visible;
+        pointer-events: none;
+        z-index: var(--z-sidebar);
+    }
+
     .smr-sidebar {
         position: fixed;
         top: 0;
         left: 0;
         height: 100%;
+        width: 280px !important;
+        max-width: 85vw;
         transform: translateX(-100%);
         z-index: var(--z-sidebar);
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: auto;
+        box-shadow: none;
 
         &.smr-sidebar--open {
             transform: translateX(0);
-            width: var(--sidebar-width);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
         }
     }
 
     .smr-content {
-        width: 100%;
+        width: 100% !important;
+        min-width: 100% !important;
+        margin-left: 0 !important;
     }
 
     .smr-sidebar-backdrop {
@@ -1703,7 +1712,8 @@ textarea.ant-input {
         z-index: calc(var(--z-sidebar) - 1);
         padding: 0;
         border: 0;
-        background: rgba(15, 23, 42, 0.42);
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(2px);
     }
 
     .smr-page {
@@ -2046,9 +2056,9 @@ $spacing-unit: 0.25rem;
 
 // ── NG-ZORRO legacy overrides ──
 %btn-vtb-base {
-    height: 48px !important;
+    height: var(--control-height) !important;
     padding: 0 20px !important;
-    font-size: 16px !important;
+    font-size: var(--font-size-base) !important;
     font-weight: 500 !important;
     border-radius: var(--radius-sm) !important;
     display: inline-flex !important;
@@ -2061,7 +2071,7 @@ $spacing-unit: 0.25rem;
     box-shadow: none !important;
 
     i {
-        font-size: 16px !important;
+        font-size: var(--font-size-base) !important;
     }
 
     app-custom-icon .icon-white {
@@ -2089,15 +2099,28 @@ $spacing-unit: 0.25rem;
     }
 }
 
+// Nút "Tạo …" của page header: luôn là nút primary đặc (F-17)
+.list-page-header-btn-primary.ant-btn {
+    background: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: var(--color-on-primary) !important;
+
+    &:hover,
+    &:focus-visible {
+        background: var(--color-primary-hover) !important;
+        border-color: var(--color-primary-hover) !important;
+    }
+}
+
 .list-page-header-btn-default {
     @extend %btn-vtb-gray;
 }
 
 .list-page-header-icon-btn {
     @extend %btn-vtb-gray;
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
+    width: var(--control-height) !important;
+    height: var(--control-height) !important;
+    min-width: var(--control-height) !important;
     padding: 0 !important;
     border-radius: var(--radius-sm) !important;
 }
@@ -2206,7 +2229,7 @@ $spacing-unit: 0.25rem;
 
     .ant-modal-confirm-content {
         margin-top: 8px !important;
-        font-size: 16px;
+        font-size: var(--font-size-base);
         color: #475569;
         text-align: left !important;
     }
@@ -2266,7 +2289,7 @@ $spacing-unit: 0.25rem;
 .ant-table-thead>tr>th {
     font-weight: 400 !important;
     text-transform: uppercase;
-    font-size: 16px !important;
+    font-size: var(--font-size-base) !important;
     background: #ffffff !important;
 }
 
@@ -2275,7 +2298,7 @@ $spacing-unit: 0.25rem;
 }
 
 .ant-table-tbody>tr>td {
-    font-size: 16px !important;
+    font-size: var(--font-size-base) !important;
 }
 
 .ant-table-container {
@@ -2336,7 +2359,7 @@ $spacing-unit: 0.25rem;
         height: 28px !important;
 
         >label {
-            font-size: 16px !important;
+            font-size: var(--font-size-base) !important;
             font-weight: 500 !important;
             color: #334155 !important;
             height: 22px !important;
@@ -2358,7 +2381,7 @@ $spacing-unit: 0.25rem;
                 &::after {
                     content: '*' !important;
                     color: #ef4444 !important;
-                    font-size: 16px !important;
+                    font-size: var(--font-size-base) !important;
                     margin-left: 4px !important;
                     display: inline-block !important;
                     font-family: SimSun, sans-serif !important;
@@ -2383,10 +2406,10 @@ $spacing-unit: 0.25rem;
     .ant-input-number {
         border: 1px solid var(--bs-border) !important;
         border-radius: 0 !important;
-        height: 48px !important;
-        line-height: 48px !important;
+        height: var(--control-height) !important;
+        line-height: var(--control-height) !important;
         padding: 0 11px !important;
-        font-size: 16px !important;
+        font-size: var(--font-size-base) !important;
         color: #0f172a !important;
         background-color: #ffffff !important;
         transition: all 0.2s ease-in-out !important;
@@ -2429,7 +2452,7 @@ $spacing-unit: 0.25rem;
     .custom-select,
     nz-select:not(.paging-select) {
         width: 100% !important;
-        height: 48px !important;
+        height: var(--control-height) !important;
         border: none !important;
         padding: 0 !important;
         background: transparent !important;
@@ -2439,10 +2462,10 @@ $spacing-unit: 0.25rem;
         .ant-select-selector {
             border: 1px solid var(--bs-border) !important;
             border-radius: 0 !important;
-            min-height: 48px !important;
-            line-height: 48px !important;
+            min-height: var(--control-height) !important;
+            line-height: var(--control-height) !important;
             padding: 0 11px !important;
-            font-size: 16px !important;
+            font-size: var(--font-size-base) !important;
             color: #0f172a !important;
             background-color: #ffffff !important;
             transition: all 0.2s ease-in-out !important;
@@ -2457,7 +2480,7 @@ $spacing-unit: 0.25rem;
     nz-date-picker,
     .ant-picker {
         width: 100% !important;
-        height: 48px !important;
+        height: var(--control-height) !important;
         border: 1px solid var(--bs-border) !important;
         border-radius: 0 !important;
         padding: 0 11px !important;
@@ -2485,8 +2508,8 @@ $spacing-unit: 0.25rem;
 .drawer-btn-save {
     @extend %btn-vtb-blue;
     font-weight: 500 !important;
-    font-size: 16px !important;
-    height: 48px !important;
+    font-size: var(--font-size-base) !important;
+    height: var(--control-height) !important;
     padding: 0 20px !important;
     gap: 4px !important;
     margin: 0 !important;
@@ -2495,10 +2518,10 @@ $spacing-unit: 0.25rem;
 .drawer-btn-close {
     @extend %btn-vtb-gray;
     font-weight: 500 !important;
-    font-size: 16px !important;
-    height: 48px !important;
-    width: 48px !important;
-    min-width: 48px !important;
+    font-size: var(--font-size-base) !important;
+    height: var(--control-height) !important;
+    width: var(--control-height) !important;
+    min-width: var(--control-height) !important;
     padding: 0 !important;
     margin: 0 !important;
 
@@ -2581,9 +2604,10 @@ $spacing-unit: 0.25rem;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: #ffffff;
-    border: 1px solid var(--bs-border);
-    border-radius: 5px 5px 0 0;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--card-radius) var(--card-radius) 0 0;
+    box-shadow: var(--shadow-1);
     overflow: hidden;
     box-sizing: border-box;
 }
@@ -2593,7 +2617,7 @@ $spacing-unit: 0.25rem;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    padding: 32px 32px 0;
+    padding: var(--space-5) var(--space-6) 0;
     box-sizing: border-box;
 }
 
@@ -2613,9 +2637,9 @@ $spacing-unit: 0.25rem;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm) !important;
-    color: #45566e;
+    color: var(--color-text-secondary);
     cursor: pointer;
-    font-size: 22px !important;
+    font-size: 20px !important;
     line-height: 1 !important;
     margin: 0;
     padding: 0 !important;
@@ -2624,15 +2648,15 @@ $spacing-unit: 0.25rem;
     box-shadow: none !important;
 
     &:hover {
-        background: #f1f5f9 !important;
-        color: var(--bs-cyan-deep, #075985) !important;
+        background: var(--color-bg-hover) !important;
+        color: var(--color-primary) !important;
     }
 }
 
 .list-page-header-heading {
-    font-size: 24px;
-    font-weight: 500;
-    color: var(--bs-cyan-deep, #075985);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    color: var(--color-text);
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -2641,8 +2665,9 @@ $spacing-unit: 0.25rem;
 }
 
 .list-page-header-subtitle {
-    font-size: 16px;
-    color: #94a3b8;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-top: 2px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2665,8 +2690,8 @@ $spacing-unit: 0.25rem;
     }
 
     .ant-btn {
-        height: 48px !important;
-        line-height: 48px !important;
+        height: var(--control-height) !important;
+        line-height: var(--control-height) !important;
         box-sizing: border-box !important;
     }
 }
@@ -2711,7 +2736,7 @@ $spacing-unit: 0.25rem;
 .list-page .ant-table-tbody>tr.ant-table-row>td,
 .list-page-tab-body .ant-table-tbody>tr.ant-table-row>td,
 .list-page-body .ant-table-tbody>tr.ant-table-row>td {
-    height: 76px !important;
+    height: var(--table-row-height) !important;
     box-sizing: border-box;
 }
 
@@ -2721,12 +2746,12 @@ $spacing-unit: 0.25rem;
     justify-content: flex-end;
     gap: 14px;
     flex-shrink: 0;
-    height: 62.31px;
+    height: var(--paging-height);
     box-sizing: border-box;
     margin-top: auto;
     padding: 6px 16px;
     border-top: 1px solid var(--bs-border);
-    font-size: 16px;
+    font-size: var(--font-size-base);
     color: #64748b;
     background: #ffffff;
     z-index: 2;
@@ -2784,7 +2809,7 @@ $spacing-unit: 0.25rem;
 }
 
 .list-page-filter-bar-label {
-    font-size: 16px;
+    font-size: var(--font-size-base);
     color: #64748b;
 }
 
@@ -2803,8 +2828,8 @@ $spacing-unit: 0.25rem;
     }
 
     .ant-btn {
-        height: 48px !important;
-        line-height: 48px !important;
+        height: var(--control-height) !important;
+        line-height: var(--control-height) !important;
         box-sizing: border-box !important;
         flex-shrink: 0;
     }
@@ -2838,12 +2863,12 @@ $spacing-unit: 0.25rem;
     flex: 1 1 auto !important;
     min-width: 0 !important;
     width: 100% !important;
-    height: 34px !important;
-    border: 1px solid var(--bs-border) !important;
-    border-radius: 0 !important;
+    height: var(--control-height) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-sm) !important;
     padding: 0 68px 0 12px !important;
-    font-size: 16px !important;
-    background: #fff !important;
+    font-size: var(--font-size-base) !important;
+    background: var(--color-bg-surface) !important;
 }
 
 .list-page-filter-bar-search:has(.list-page-filter-bar-search-reset-btn) input {
@@ -2917,7 +2942,7 @@ $spacing-unit: 0.25rem;
     .list-page-tabset {
         flex: 1 1 auto;
         min-width: 0;
-        height: 48px;
+        height: var(--control-height);
         width: 100%;
     }
 }
@@ -2961,11 +2986,11 @@ $spacing-unit: 0.25rem;
     background: #ffffff !important;
     font-weight: 400 !important;
     text-transform: uppercase;
-    font-size: 16px !important;
+    font-size: var(--font-size-base) !important;
 }
 
 .ant-table .ant-table-tbody>tr>td {
-    font-size: 16px !important;
+    font-size: var(--font-size-base) !important;
 }
 
 .ant-table .ant-table-tbody>tr:nth-child(even)>td {
@@ -2989,32 +3014,49 @@ $spacing-unit: 0.25rem;
 }
 
 .smr-page {
-    background: #f5fafd;
+    background: var(--color-bg-page);
 }
 
-// ── Chiều cao chuẩn 48px toàn cục ──
+// ── Chiều cao control chuẩn toàn cục (token --control-height) ──
 .ant-btn.ant-btn,
 .ant-input.ant-input,
 .ant-input-affix-wrapper.ant-input-affix-wrapper,
 .ant-select-selector.ant-select-selector {
-    height: 48px !important;
-    font-size: 16px !important;
-    line-height: 38px !important;
+    height: var(--control-height) !important;
+    font-size: var(--font-size-base) !important;
+    line-height: calc(var(--control-height) - 10px) !important;
 }
 
 .ant-select-selector.ant-select-selector {
-    min-height: 48px !important;
+    min-height: var(--control-height) !important;
 }
 
 .ant-select-single.ant-select {
-    height: 48px !important;
+    height: var(--control-height) !important;
 }
 
 .ant-select-multiple .ant-select-selector.ant-select-selector {
     height: auto !important;
-    min-height: 48px !important;
+    min-height: var(--control-height) !important;
     line-height: normal !important;
 }
+
+// Input nằm trong affix-wrapper (có icon/prefix/suffix) không ép chiều cao riêng —
+// nếu không placeholder bị lệch xuống (F-21: ô mật khẩu, ô "Tìm phòng ban").
+.ant-input-affix-wrapper.ant-input-affix-wrapper {
+    display: inline-flex;
+    align-items: center;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+
+    > input.ant-input.ant-input {
+        height: 100% !important;
+        min-height: 0 !important;
+        line-height: normal !important;
+        padding: 0 !important;
+    }
+}
+
 
 .list-page-filter-bar-search-btn.ant-btn,
 .list-page-filter-bar-refresh-btn.ant-btn {
@@ -3077,6 +3119,8 @@ $spacing-unit: 0.25rem;
 .ant-tree-checkbox-checked::after {
     border-radius: 0 !important;
 }
+
+
 
 // ============================================================
 // CLEAN RESPONSIVE LAYER — danh sách, drawer và modal dùng chung
@@ -3352,7 +3396,7 @@ $spacing-unit: 0.25rem;
     .responsive-card__title {
         margin: 0;
         color: var(--text-primary);
-        font-size: 16px;
+        font-size: var(--font-size-base);
         font-weight: 600;
         line-height: 1.35;
     }
@@ -3443,4 +3487,25 @@ $spacing-unit: 0.25rem;
     .ant-modal-body {
         max-height: calc(100vh - 156px);
     }
+}
+
+// Shared workspace visual language (dashboard reference, September 2026).
+@include workspace.styles;
+
+
+// ── Kanban (TaskBoard) — phần tử CDK render ngoài component ──
+.cdk-drag-preview.task-card {
+    box-shadow: var(--shadow-3);
+    transform: rotate(2deg);
+    cursor: grabbing;
+}
+.cdk-drag-animating {
+    transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+.board-column__list.cdk-drop-list-dragging app-task-card:not(.cdk-drag-placeholder) {
+    transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+    .cdk-drag-preview.task-card { transform: none; }
+    .cdk-drag-animating { transition: none; }
 }

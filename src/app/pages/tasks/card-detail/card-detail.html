@@ -1,0 +1,206 @@
+<!-- =====================================================
+     CardDetail — chi tiết Đầu việc (drawer phải, 720px).
+===================================================== -->
+<nz-drawer [nzVisible]="true" [nzWidth]="720" nzPlacement="right" nzWrapClassName="smr-entity-drawer card-detail-drawer"
+    [nzTitle]="titleTpl" (nzOnClose)="close()">
+    <ng-template #titleTpl>
+        @if (task(); as t) {
+            @if (editingTitle()) {
+                <input #titleInput class="cd__title-input" maxlength="300" aria-label="Tiêu đề đầu việc"
+                    [ngModel]="titleDraft()" (ngModelChange)="titleDraft.set($event)" (keydown.enter)="commitTitle()"
+                    (keydown.escape)="editingTitle.set(false)" (blur)="commitTitle()" />
+            } @else if (t.canEdit) {
+                <button type="button" class="cd__title" (click)="startTitleEdit()" [attr.aria-label]="'Sửa tiêu đề: ' + t.title">{{ t.title }}</button>
+            } @else {
+                <span class="cd__title">{{ t.title }}</span>
+            }
+        } @else {
+            <span>Chi tiết đầu việc</span>
+        }
+    </ng-template>
+
+    <div *nzDrawerContent class="cd">
+        @if (loading() && !task()) {
+            <div class="cd__skeleton" aria-busy="true" aria-label="Đang tải chi tiết">
+                <span class="cd__sk cd__sk--sm"></span>
+                <span class="cd__sk"></span>
+                <span class="cd__sk"></span>
+                <span class="cd__sk"></span>
+            </div>
+        } @else if (loadError()) {
+            <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="errTpl" [nzNotFoundFooter]="errFooter" />
+            <ng-template #errTpl><p>Không tải được đầu việc</p><p>{{ loadError() }}</p></ng-template>
+            <ng-template #errFooter>
+                <button nz-button nzType="default" (click)="load()">Thử lại</button>
+                <button nz-button nzType="text" (click)="close()">Đóng</button>
+            </ng-template>
+        } @else if (task(); as t) {
+            <p class="cd__context">
+                trong bảng “{{ store.board()?.title }}” · tạo bởi {{ t.createBy }}
+                @if (t.createDate) { · {{ formatDateTime(t.createDate) }} }
+            </p>
+
+            <div class="cd__grid">
+                <!-- ── Cột trái ───────────────────── -->
+                <div class="cd__main">
+                    @if (suggestComplete()) {
+                        <div class="cd__banner" role="status">
+                            <span nz-icon nzType="check-circle" nzTheme="outline"></span>
+                            <span>Tất cả việc nhỏ đã xong. Chuyển đầu việc sang Hoàn thành?</span>
+                            <button nz-button nzType="primary" nzSize="small" (click)="onStatus(TaskStatus.Completed)"
+                                [nzLoading]="statusPending()">Chuyển</button>
+                        </div>
+                    }
+
+                    <section class="cd__section" aria-labelledby="cd-desc-h">
+                        <div class="cd__section-head">
+                            <h3 id="cd-desc-h" class="cd__h">Mô tả</h3>
+                            @if (t.canEdit && !editingDesc()) {
+                                <button nz-button nzType="text" nzSize="small" (click)="startDescEdit()">Sửa</button>
+                            }
+                        </div>
+                        @if (editingDesc()) {
+                            <textarea nz-input rows="4" maxlength="4000" aria-label="Mô tả đầu việc"
+                                [ngModel]="descDraft()" (ngModelChange)="descDraft.set($event)"></textarea>
+                            <div class="cd__row-actions">
+                                <button nz-button nzType="primary" nzSize="small" (click)="saveDesc()" [nzLoading]="saving()">Lưu</button>
+                                <button nz-button nzType="text" nzSize="small" (click)="editingDesc.set(false)" [disabled]="saving()">Hủy</button>
+                            </div>
+                        } @else if (t.description) {
+                            <p class="cd__desc">{{ t.description }}</p>
+                        } @else {
+                            <p class="cd__muted">Chưa có mô tả.</p>
+                        }
+                    </section>
+
+                    <section class="cd__section" aria-labelledby="cd-sub-h">
+                        <div class="cd__section-head">
+                            <h3 id="cd-sub-h" class="cd__h">Việc nhỏ</h3>
+                            <span class="cd__count">{{ doneCount() }}/{{ subtasks().length }}</span>
+                            <span class="cd__bar" aria-hidden="true"><span class="cd__bar-fill" [class.is-done]="percent() === 100" [style.width.%]="percent()"></span></span>
+                            <span class="cd__muted cd__pct">{{ percent() }}%</span>
+                        </div>
+                        @if (subtasks().length) {
+                            <div role="list" class="cd__subs">
+                                @for (s of subtasks(); track s.id) {
+                                    <app-subtask-row [subtask]="s" [pending]="pendingSubs().has(s.id)"
+                                        (toggled)="toggleSubtask(s, $event)" (renamed)="updateSubtask(s, { title: $event })"
+                                        (assigned)="updateSubtask(s, { assigneeUserName: $event })"
+                                        (dueChanged)="onSubDue(s, $event)" (removed)="removeSubtask(s)" />
+                                }
+                            </div>
+                        } @else {
+                            <p class="cd__muted">Chưa có việc nhỏ.</p>
+                        }
+                        @if (t.canEdit) {
+                            <div class="cd__add-sub">
+                                <input nz-input placeholder="+ Thêm việc nhỏ… (Enter để thêm)" aria-label="Tiêu đề việc nhỏ mới"
+                                    maxlength="300" [ngModel]="newSubTitle()" (ngModelChange)="newSubTitle.set($event)"
+                                    (keydown.enter)="addSubtask()" [disabled]="addingSub()" />
+                                <button nz-button (click)="addSubtask()" [nzLoading]="addingSub()" [disabled]="!newSubTitle().trim()">Thêm</button>
+                            </div>
+                        }
+                    </section>
+
+                    <section class="cd__section" aria-labelledby="cd-act-h">
+                        <h3 id="cd-act-h" class="cd__h">Hoạt động</h3>
+                        <ul class="cd__activity">
+                            @if (t.updateDate && t.updateDate !== t.createDate) {
+                                <li>Cập nhật lần cuối · {{ formatDateTime(t.updateDate) }}</li>
+                            }
+                            <li>{{ t.createBy }} tạo đầu việc · {{ formatDateTime(t.createDate) }}</li>
+                        </ul>
+                    </section>
+                </div>
+
+                <!-- ── Cột phải ───────────────────── -->
+                <aside class="cd__side" aria-label="Thuộc tính đầu việc">
+                    <div class="cd__field">
+                        <label class="cd__label" for="cd-status">Cột</label>
+                        <nz-select id="cd-status" [ngModel]="status()" (ngModelChange)="onStatus($event)"
+                            [nzDisabled]="!t.canEdit || statusPending()" [nzLoading]="statusPending()">
+                            @for (col of store.columns(); track col.key) {
+                                <nz-option [nzValue]="col.status" [nzLabel]="col.title" />
+                            }
+                        </nz-select>
+                    </div>
+                    <div class="cd__field">
+                        <label class="cd__label" for="cd-assignee">Phụ trách</label>
+                        @if (t.canEdit) {
+                            <nz-select id="cd-assignee" nzShowSearch nzServerSearch nzAllowClear nzPlaceHolder="Chưa gán"
+                                [nzLoading]="searchingUsers()" [ngModel]="t.assigneeUserName" (ngModelChange)="onAssignee($event)"
+                                (nzOnSearch)="onAssigneeSearch($event)" [nzDisabled]="saving()">
+                                @for (u of assigneeOptions(); track u.userName) {
+                                    <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName" />
+                                }
+                            </nz-select>
+                        } @else {
+                            <span class="cd__value">
+                                @if (t.assigneeUserName) {
+                                    <smr-avatar [name]="t.assigneeFullName || t.assigneeUserName" size="xs" />
+                                    {{ t.assigneeFullName || t.assigneeUserName }}
+                                } @else { <span class="cd__muted">Chưa gán</span> }
+                            </span>
+                        }
+                    </div>
+                    <div class="cd__field">
+                        <label class="cd__label" for="cd-due">Hạn</label>
+                        <nz-date-picker id="cd-due" class="cd__due" [class.is-overdue]="dueTone() === 'is-overdue'" [class.is-due-soon]="dueTone() === 'is-due-soon'" nzShowTime nzFormat="dd/MM/yyyy HH:mm"
+                            nzPlaceHolder="Chưa đặt hạn" [ngModel]="dueValue()" (ngModelChange)="onDue($event)"
+                            [nzDisabled]="!t.canEdit || saving()" />
+                        @if (dueTone() === 'is-overdue') { <span class="cd__due-note">Đã quá hạn</span> }
+                    </div>
+                    <div class="cd__field">
+                        <label class="cd__label" for="cd-priority">Ưu tiên</label>
+                        <nz-select id="cd-priority" [ngModel]="t.priority" (ngModelChange)="onPriority($event)"
+                            [nzDisabled]="!t.canEdit || saving()">
+                            @for (opt of priorityOptions; track opt.value) {
+                                <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                            }
+                        </nz-select>
+                    </div>
+                    @if (t.meetingId && t.meetingName) {
+                        <div class="cd__field">
+                            <span class="cd__label">Cuộc họp</span>
+                            <a class="cd__link" [routerLink]="['/meetings', t.meetingId]">{{ t.meetingName }}</a>
+                        </div>
+                    }
+                    @if (t.sourceRef) {
+                        <div class="cd__field">
+                            <span class="cd__label">Nguồn</span>
+                            <span class="cd__value cd__desc">{{ t.sourceRef }}</span>
+                        </div>
+                    }
+                    @if (!t.canEdit) {
+                        <p class="cd__muted cd__readonly"><span nz-icon nzType="lock" nzTheme="outline"></span> Bạn chỉ có quyền xem đầu việc này.</p>
+                    }
+                    @if (t.isCreator) {
+                        <button nz-button nzDanger class="cd__delete" (click)="openDelete()">
+                            <span nz-icon nzType="delete" nzTheme="outline"></span> Xóa đầu việc
+                        </button>
+                    }
+                </aside>
+            </div>
+        }
+    </div>
+</nz-drawer>
+
+<nz-modal [nzVisible]="deleteOpen()" nzTitle="Xóa đầu việc" [nzFooter]="deleteFooter" [nzMaskClosable]="false"
+    (nzOnCancel)="deleteOpen.set(false)">
+    <ng-container *nzModalContent>
+        @if (subtasks().length) {
+            <p>Đầu việc còn {{ subtasks().length }} việc nhỏ. Hãy xóa các việc nhỏ trước khi xóa đầu việc.</p>
+        } @else {
+            <p>Bạn có chắc muốn xóa “{{ task()?.title }}”?</p>
+            <p class="cd__muted">Hành động này không thể hoàn tác.</p>
+        }
+    </ng-container>
+    <ng-template #deleteFooter>
+        <button nz-button nzType="default" (click)="deleteOpen.set(false)" [disabled]="deleting()">
+            {{ subtasks().length ? 'Đã hiểu' : 'Không' }}
+        </button>
+        @if (!subtasks().length) {
+            <button nz-button nzType="primary" nzDanger (click)="confirmDelete()" [nzLoading]="deleting()">Xóa</button>
+        }
+    </ng-template>
+</nz-modal>

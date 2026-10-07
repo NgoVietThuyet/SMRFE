@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { AuthService } from '../../core/services/auth.service';
@@ -19,7 +20,7 @@ import { AuthService } from '../../core/services/auth.service';
     selector: 'app-login',
     templateUrl: './login.html',
     styleUrl: './login.scss',
-    imports: [ReactiveFormsModule, NzButtonModule, NzIconModule, NzInputModule],
+    imports: [ReactiveFormsModule, NzButtonModule, NzCheckboxModule, NzIconModule, NzInputModule],
 })
 export class Login {
     private readonly fb = inject(FormBuilder);
@@ -30,7 +31,19 @@ export class Login {
     readonly form = this.fb.group({
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required]],
+        rememberMe: [true],
     });
+
+    constructor() {
+        try {
+            const savedEmail = localStorage.getItem('smr_remembered_email');
+            if (savedEmail) {
+                this.form.patchValue({ email: savedEmail, rememberMe: true });
+            }
+        } catch {
+            // ignore localStorage unavailable
+        }
+    }
 
     // Trạng thái submit email/password
     readonly loading = signal(false);
@@ -64,11 +77,25 @@ export class Login {
         this.loading.set(true);
         this.form.disable();
 
+        const email = this.emailCtrl.value ?? '';
+        const rememberMe = this.form.get('rememberMe')?.value ?? false;
+
         this.auth
-            .login(this.emailCtrl.value ?? '', this.passwordCtrl.value ?? '')
+            .login(email, this.passwordCtrl.value ?? '')
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-                next: () => void this.router.navigate(['/']),
+                next: () => {
+                    try {
+                        if (rememberMe) {
+                            localStorage.setItem('smr_remembered_email', email);
+                        } else {
+                            localStorage.removeItem('smr_remembered_email');
+                        }
+                    } catch {
+                        // ignore
+                    }
+                    void this.router.navigate(['/']);
+                },
                 error: (err: unknown) => {
                     this.loading.set(false);
                     this.form.enable();

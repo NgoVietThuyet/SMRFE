@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
-import { ChatMessage } from '../models/meeting.models';
+import { ChatMessage, MeetingCaptionDto } from '../models/meeting.models';
 import { AuthService } from './auth.service';
+
 
 // Payload TaskChanged — BE TaskController broadcast vào nhóm cuộc họp.
 export interface TaskChangedEvent {
@@ -56,12 +57,23 @@ export class MeetingHubService {
     readonly presenceChanged = new Subject<PresenceChangedEvent>();
     readonly filesChanged = new Subject<FilesChangedEvent>();
     readonly meetingStatusChanged = new Subject<MeetingStatusChangedEvent>();
+    readonly captionReceived = new Subject<MeetingCaptionDto>();
+    readonly connectionState = new BehaviorSubject<'connected' | 'reconnecting' | 'disconnected'>('disconnected');
+
 
     async joinRoom(meetingId: string): Promise<void> {
+        if (this.currentMeetingId === meetingId && this.refCount > 0) return;
         await this.ensureConnection();
-        this.refCount++;
-        this.currentMeetingId = meetingId;
-        await this.connection!.invoke('JoinMeeting', meetingId);
+        const connection = this.connection;
+        if (!connection) throw new Error('Không thể kết nối realtime.');
+        try {
+            await connection.invoke('JoinMeeting', meetingId);
+            this.refCount++;
+            this.currentMeetingId = meetingId;
+        } catch (error) {
+            if (this.refCount === 0) await this.stop();
+            throw error;
+        }
     }
 
     async leaveRoom(meetingId: string): Promise<void> {
@@ -84,13 +96,18 @@ export class MeetingHubService {
         await this.connection.invoke('SendMessage', meetingId, message);
     }
 
+    async broadcastCaption(meetingId: string, caption: MeetingCaptionDto): Promise<void> {
+        if (!this.connection) return;
+        await this.connection.invoke('SendCaption', meetingId, caption);
+    }
+
     get hubConnection(): HubConnection | null {
         return this.connection;
     }
 
     private async ensureConnection(): Promise<void> {
         if (this.connection) {
-            if (this.connection.state === 'Disconnected') await this.connection.start();
+            if (this.connection.state === 'Disconnected') await this.startExistingConnection(this.connection);
             return;
         }
         const connection = new HubConnectionBuilder()
@@ -100,8 +117,14 @@ export class MeetingHubService {
             .withAutomaticReconnect()
             .configureLogging(LogLevel.Warning)
             .build();
+        connection.onreconnecting(() => this.connectionState.next('reconnecting'));
+        connection.onreconnected(() => this.connectionState.next('connected'));
+        connection.onclose(() => this.connectionState.next('disconnected'));
         connection.on('ReceiveMessage', (envelope: unknown) => {
             this.messageReceived.next(envelope as ChatMessage);
+        });
+        connection.on('ReceiveCaption', (envelope: unknown) => {
+            this.captionReceived.next(envelope as MeetingCaptionDto);
         });
         connection.on('ParticipantJoined', () => this.participantChanged.next());
         connection.on('ParticipantLeft', () => this.participantChanged.next());
@@ -123,7 +146,18 @@ export class MeetingHubService {
             }
         });
         this.connection = connection;
-        await connection.start();
+        await this.startExistingConnection(connection);
+    }
+
+    private async startExistingConnection(connection: HubConnection): Promise<void> {
+        this.connectionState.next('reconnecting');
+        try {
+            await connection.start();
+            this.connectionState.next('connected');
+        } catch (error) {
+            this.connectionState.next('disconnected');
+            throw error;
+        }
     }
 
     private async stop(): Promise<void> {
@@ -131,6 +165,7 @@ export class MeetingHubService {
             await this.connection?.stop();
         } finally {
             this.connection = null;
+            this.connectionState.next('disconnected');
         }
     }
 }

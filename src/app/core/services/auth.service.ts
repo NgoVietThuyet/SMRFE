@@ -11,6 +11,8 @@ import {
     LoginRequest,
     LogoutRequest,
     RefreshRequest,
+    UpdateProfileRequest,
+    UserProfile,
 } from '../models/auth.models';
 
 const ACCESS_TOKEN_KEY = 'smr.access_token';
@@ -76,6 +78,31 @@ export class AuthService {
             );
     }
 
+    getProfile(): Observable<UserProfile> {
+        return this.http.get<ApiResponse<UserProfile>>(`${API_BASE_URL}/api/Auth/Profile`).pipe(
+            map((res) => {
+                if (!res.status || !res.data) {
+                    throw new Error(res.message || 'Không thể tải thông tin cá nhân.');
+                }
+                return res.data;
+            })
+        );
+    }
+
+    updateProfile(payload: UpdateProfileRequest): Observable<UserProfile> {
+        return this.http
+            .put<ApiResponse<UserProfile>>(`${API_BASE_URL}/api/Auth/Profile`, payload)
+            .pipe(
+                map((res) => {
+                    if (!res.status || !res.data) {
+                        throw new Error(res.message || 'Cập nhật thông tin cá nhân thất bại.');
+                    }
+                    return res.data;
+                }),
+                tap((profile) => this.setCurrentUser(profile))
+            );
+    }
+
     logout(logoutAllDevices = false): Observable<void> {
         const body: LogoutRequest = { logoutAllDevices };
         return this.http.post<ApiResponse<null>>(`${API_BASE_URL}/api/Auth/Logout`, body).pipe(
@@ -121,6 +148,16 @@ export class AuthService {
         this.accessToken.set(null);
         this.refreshTokenValue.set(null);
         this.user.set(null);
+    }
+
+    private setCurrentUser(profile: UserProfile): void {
+        const user: AuthUser = {
+            userName: profile.userName,
+            fullName: profile.fullName,
+            email: profile.email,
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        this.user.set(user);
     }
 
     private toUser(result: AuthResult): AuthUser {

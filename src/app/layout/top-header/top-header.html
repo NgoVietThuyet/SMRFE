@@ -67,7 +67,7 @@
 
         <button class="smr-top-header__avatar" nz-dropdown [nzDropdownMenu]="userMenu" nzTrigger="click"
             nzPlacement="bottomRight" aria-label="Tài khoản">
-            <span class="smr-avatar smr-avatar--sm">{{ initials() }}</span>
+            <smr-avatar [name]="user()?.fullName || user()?.userName" size="md" />
         </button>
         <nz-dropdown-menu #userMenu="nzDropdownMenu">
             <ul nz-menu>
@@ -76,6 +76,10 @@
                     <span class="smr-top-header__user-email">{{ user()?.email }}</span>
                 </li>
                 <li nz-menu-divider></li>
+                <li nz-menu-item routerLink="/profile">
+                    <span nz-icon nzType="user" nzTheme="outline"></span>
+                    <span>Thông tin cá nhân</span>
+                </li>
                 <li nz-menu-item nzDanger (click)="logout()">
                     <span nz-icon nzType="logout" nzTheme="outline"></span>
                     <span>Đăng xuất</span>

@@ -14,6 +14,7 @@ import { TaskService } from '../../../../core/services/task.service';
 import { CreateTaskRequest, TaskPriority, TaskStatus } from '../../../../core/models/task.models';
 import { MeetingListItemDto } from '../../../../core/models/dashboard.models';
 import { UserSearchItem } from '../../../../core/models/meeting.models';
+import { SelectA11yDirective } from '../../../../shared/a11y/select-a11y.directive';
 
 // =====================================================
 // TaskCreateModal — popup tạo công việc (nhanh, ít field).
@@ -27,6 +28,7 @@ import { UserSearchItem } from '../../../../core/models/meeting.models';
     templateUrl: './task-create-modal.html',
     styleUrl: './task-create-modal.scss',
     imports: [
+        SelectA11yDirective,
         ReactiveFormsModule,
         NzModalModule,
         NzInputModule,

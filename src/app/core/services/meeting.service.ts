@@ -10,9 +10,13 @@ import {
     CreateMeetingRequest,
     CreateMeetingResponse,
     FileDownloadDto,
+    MeetingCaptionDto,
     MeetingDetailDto,
     MeetingFileDto,
     MeetingJoinInfo,
+    MeetingRagStatus,
+    MeetingAiChatRequest,
+    MeetingAiChatResponse,
     MeetingSearchRequest,
     PagedMeetings,
     UpdateMeetingRequest,
@@ -247,5 +251,81 @@ export class MeetingService {
         return this.http
             .get<UserSearchItem[]>(`${API_BASE_URL}/api/User/Search`, { params })
             .pipe(map((users) => users ?? []));
+    }
+
+    // GET /api/Meeting/{id}/transcripts — lấy danh sách phụ đề/phiên âm cuộc họp
+    getTranscripts(id: string): Observable<MeetingCaptionDto[]> {
+        return this.http
+            .get<ApiResponse<MeetingCaptionDto[]>>(`${API_BASE_URL}/api/Meeting/${id}/transcripts`)
+            .pipe(
+                map((res) => {
+                    if (!res.status || !res.data) {
+                        return [];
+                    }
+                    return res.data;
+                })
+            );
+    }
+
+    // POST /api/Meeting/{id}/transcripts — lưu câu phụ đề chốt
+    saveTranscript(id: string, caption: MeetingCaptionDto): Observable<MeetingCaptionDto> {
+        return this.http
+            .post<ApiResponse<MeetingCaptionDto>>(`${API_BASE_URL}/api/Meeting/${id}/transcripts`, caption)
+            .pipe(
+                map((res) => {
+                    if (!res.status || !res.data) {
+                        throw new Error(res.message || 'Lưu phụ đề thất bại.');
+                    }
+                    return res.data;
+                })
+            );
+    }
+
+    // GET /api/Meeting/{id}/ai/status — kiểm tra trạng thái RAG của cuộc họp
+    getMeetingRagStatus(id: string): Observable<MeetingRagStatus> {
+        return this.http
+            .get<ApiResponse<MeetingRagStatus>>(`${API_BASE_URL}/api/Meeting/${id}/ai/status`)
+            .pipe(
+                map((res) => {
+                    if (!res.status || !res.data) {
+                        return {
+                            meetingId: id,
+                            indexed: false,
+                            chunkCount: 0,
+                            sourcesSummary: 'Chưa đồng bộ'
+                        };
+                    }
+                    return res.data;
+                })
+            );
+    }
+
+    // POST /api/Meeting/{id}/ai/sync — đồng bộ cơ sở tri thức RAG cuộc họp
+    syncMeetingRag(id: string): Observable<MeetingRagStatus> {
+        return this.http
+            .post<ApiResponse<MeetingRagStatus>>(`${API_BASE_URL}/api/Meeting/${id}/ai/sync`, {})
+            .pipe(
+                map((res) => {
+                    if (!res.status || !res.data) {
+                        throw new Error(res.message || 'Đồng bộ cơ sở tri thức thất bại.');
+                    }
+                    return res.data;
+                })
+            );
+    }
+
+    // POST /api/Meeting/{id}/ai/chat — hỏi AI về cuộc họp
+    askMeetingAi(id: string, query: string): Observable<MeetingAiChatResponse> {
+        const payload: MeetingAiChatRequest = { query };
+        return this.http
+            .post<ApiResponse<MeetingAiChatResponse>>(`${API_BASE_URL}/api/Meeting/${id}/ai/chat`, payload)
+            .pipe(
+                map((res) => {
+                    if (!res.status || !res.data) {
+                        throw new Error(res.message || 'Không nhận được phản hồi từ AI.');
+                    }
+                    return res.data;
+                })
+            );
     }
 }

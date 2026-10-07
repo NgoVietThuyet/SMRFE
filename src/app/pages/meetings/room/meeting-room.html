@@ -3,7 +3,7 @@
      Header 64px + Stage + Side 380px + Dock 72px.
      PreJoin → Live → Error phases.
 ===================================================== -->
-<div class="room room--dark">
+<div class="room theme-dark">
     <!-- ── Header 64px ─────────────────────────────── -->
     <header class="room__top">
         <button class="room__icon-btn" (click)="backToDetail()" [title]="t('back')" [attr.aria-label]="t('back')">
@@ -24,14 +24,10 @@
                 <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
                 {{ formatElapsed(elapsed()) }}
             </span>
-            <span class="room__count" [title]="t('participants')">
+            <span class="room__count" [title]="t('inRoom')">
                 <span nz-icon nzType="team" nzTheme="outline"></span>
-                {{ liveCount() }}
+                {{ liveCount() }} {{ t('inRoom').toLowerCase() }}
             </span>
-            <button class="room__pill" [class.room__pill--on]="captionsOn()" (click)="toggleCaptions()"
-                [attr.aria-pressed]="captionsOn()" [title]="t('cc')">
-                CC
-            </button>
         } @else if (phase() === 'prejoin') {
             <span class="room__timer room__timer--pre" aria-label="Trạng thái">
                 <span nz-icon nzType="info-circle" nzTheme="outline"></span>
@@ -39,10 +35,17 @@
             </span>
         }
         <button class="room__icon-btn" nz-dropdown [nzDropdownMenu]="settingsMenu" nzTrigger="click"
-            nzPlacement="bottomRight" [nzOverlayClassName]="'room-menu-dark'" [title]="t('settings')"
+            nzPlacement="bottomRight" [title]="t('settings')"
             [attr.aria-label]="t('settings')">
             <span nz-icon nzType="setting" nzTheme="outline"></span>
         </button>
+        @if (phase() === 'live' && connectionState() !== 'connected') {
+            <span class="room__connection" [class.room__connection--error]="connectionState() === 'disconnected'"
+                role="status">
+                <span class="room__connection-dot"></span>
+                {{ connectionState() === 'reconnecting' ? t('reconnecting') : t('disconnected') }}
+            </span>
+        }
         <nz-dropdown-menu #settingsMenu="nzDropdownMenu">
             <ul nz-menu>
                 <li nz-menu-item (click)="toggleTileView()">
@@ -93,17 +96,31 @@
 
             @if (phase() === 'prejoin') {
                 <div class="room__prejoin" role="region" aria-label="Chuẩn bị tham gia">
+                    <div class="room__prejoin-preview">
+                        <app-prejoin-preview [lang]="lang()" [displayName]="joinInfo()?.displayName || ''"
+                            [(audioMuted)]="audioMuted" [(videoMuted)]="videoMuted"
+                            (devicesChange)="preferredDevices.set($event)" />
+                        <p class="room__prejoin-hint room__prejoin-shortcut">{{ t('shortcutHint') }}</p>
+                    </div>
                     <div class="room__prejoin-card">
-                        <span class="room__prejoin-icon"><span nz-icon nzType="video-camera" nzTheme="outline"></span></span>
-                        <h2 class="room__prejoin-title">{{ t('prejoinTitle') }}</h2>
-                        <p class="room__prejoin-name">{{ meeting()?.name }}</p>
-                        <p class="room__prejoin-sub">{{ t('prejoinDesc') }}</p>
+                        <h2 class="room__prejoin-title">{{ meeting()?.name }}</h2>
                         <p class="room__prejoin-meta">
                             <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
-                            {{ formatStartTime(meeting()?.expectedStartTime) }} · {{ filteredParticipants().length }} {{ t('people') }}
+                            {{ t('startsAt') }} {{ formatStartTime(meeting()?.expectedStartTime) }}
                         </p>
+                        <p class="room__prejoin-meta">
+                            <span nz-icon nzType="team" nzTheme="outline"></span>
+                            {{ joinedParticipants().length }} {{ t('inRoom').toLowerCase() }} · {{ filteredParticipants().length }} {{ t('people') }}
+                        </p>
+                        @if (joinedParticipants().length) {
+                            <div class="room__prejoin-people">
+                                @for (p of joinedParticipants().slice(0, 5); track p.userName) {
+                                    <smr-avatar [name]="p.fullName" size="sm" />
+                                }
+                            </div>
+                        }
                         @if (isWaiting()) {
-                            <div class="room__prejoin-wait">
+                            <div class="room__prejoin-wait" role="status">
                                 <nz-spin nzSize="small"></nz-spin>
                                 <span>{{ t('prejoinWaiting') }}</span>
                             </div>
@@ -111,47 +128,64 @@
                         }
                         <div class="room__prejoin-actions">
                             @if (canStart()) {
-                                <button nz-button nzType="primary" nzSize="large" (click)="startMeeting()" [nzLoading]="isStarting()">
+                                <p class="room__prejoin-hint">{{ t('youAreHost') }}</p>
+                                <button nz-button nzType="primary" nzSize="large" nzBlock (click)="startMeeting()" [nzLoading]="isStarting()">
                                     <span nz-icon nzType="caret-right" nzTheme="outline"></span>
                                     {{ t('startMeeting') }}
                                 </button>
-                                <button nz-button nzType="default" nzSize="large" (click)="proceedToLive()">
-                                    {{ t('joinNow') }}
-                                </button>
                             } @else {
-                                <button nz-button nzType="primary" nzSize="large" (click)="proceedToLive()" [disabled]="isEnded()">
+                                <button nz-button nzType="primary" nzSize="large" nzBlock (click)="proceedToLive()" [disabled]="isEnded()">
                                     <span nz-icon nzType="video-camera" nzTheme="outline"></span>
                                     {{ t('joinNow') }}
                                 </button>
                             }
-                            <button nz-button nzType="text" (click)="copyInvite()">
+                            <button nz-button nzType="text" nzBlock class="room__prejoin-copy" (click)="copyInvite()">
                                 <span nz-icon nzType="copy" nzTheme="outline"></span>
                                 {{ t('copyInviteBtn') }}
                             </button>
                         </div>
-                        <p class="room__prejoin-hint">{{ t('prejoinMicCamHint') }}</p>
-                        <p class="room__prejoin-hint room__prejoin-shortcut">{{ t('shortcutHint') }}</p>
                     </div>
                 </div>
             }
 
             @if (phase() === 'error') {
-                <div class="room__overlay room__overlay--error">
-                    <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="roomError" [nzNotFoundFooter]="roomErrorFooter" />
-                    <ng-template #roomError>
-                        <p class="room__overlay-text">{{ t('joinErrorTitle') }}</p>
-                        <p class="room__overlay-text room__overlay-msg">{{ errorMessage() }}</p>
-                    </ng-template>
-                    <ng-template #roomErrorFooter>
-                        <span class="room__overlay-actions">
-                            <button nz-button nzType="default" (click)="backToDetail()">{{ t('toDetail') }}</button>
-                            <button nz-button nzType="primary" (click)="retry()">{{ t('retry') }}</button>
-                        </span>
-                    </ng-template>
+                <div class="room__overlay room__overlay--error" role="alert">
+                    <span class="room__error-icon"><span nz-icon nzType="warning" nzTheme="outline"></span></span>
+                    <p class="room__overlay-text">{{ t('joinErrorTitle') }}</p>
+                    <p class="room__overlay-msg">{{ errorMessage() }}</p>
+                    <span class="room__overlay-actions">
+                        <button nz-button nzType="default" (click)="backToDetail()">{{ t('toDetail') }}</button>
+                        <button nz-button nzType="primary" (click)="retry()">
+                            <span nz-icon nzType="reload" nzTheme="outline"></span> {{ t('retry') }}
+                        </button>
+                    </span>
                 </div>
             }
 
-            @if (!whiteboardOpen() && captionsOn() && speakerName() && phase() === 'live') {
+            @if (phase() === 'ended') {
+                <div class="room__overlay room__overlay--ended" role="status" aria-live="polite">
+                    <span class="room__ended-icon"><span nz-icon nzType="check-circle" nzTheme="outline"></span></span>
+                    <p class="room__overlay-text">{{ t('endedTitle') }}</p>
+                    <p class="room__overlay-msg">{{ t('endedDesc') }}</p>
+                </div>
+            }
+
+            <!-- Live Caption Overlay (Google Meet style) -->
+            @if (!whiteboardOpen() && captionsOn() && phase() === 'live' && activeCaption()) {
+                <div class="room__caption-overlay" role="status" aria-live="polite">
+                    <div class="room__caption-card">
+                        <div class="room__caption-header">
+                            <span class="room__caption-speaker">{{ activeCaption()!.speakerName }}</span>
+                            <span class="room__caption-tag" [class.room__caption-tag--en]="activeCaption()!.language === 'en-US'">
+                                {{ activeCaption()!.language === 'vi-VN' ? 'VI' : 'EN' }}
+                            </span>
+                        </div>
+                        <div class="room__caption-content" [class.room__caption-content--interim]="!activeCaption()!.isFinal">
+                            {{ activeCaption()!.text }}
+                        </div>
+                    </div>
+                </div>
+            } @else if (!whiteboardOpen() && captionsOn() && speakerName() && phase() === 'live') {
                 <div class="room__speaker" role="status" aria-live="polite">
                     <span class="room__live-badge">{{ t('live') }}</span>
                     <span class="room__speaker-name">{{ speakerName() }}</span>
@@ -161,8 +195,9 @@
         </div>
 
         @if (panel(); as side) {
-            <aside class="room__side" aria-label="Bảng bên">
-                <div class="room__tabs" role="tablist">
+            <aside class="room__side theme-light" aria-label="Bảng bên">
+                <div class="room__tabs-bar">
+                <div class="room__tabs" role="tablist" aria-label="Bảng bên">
                     <button class="room__tab" role="tab" [class.room__tab--active]="side === 'participants'"
                         (click)="togglePanel('participants')" [attr.aria-selected]="side === 'participants'" [title]="t('participants')">
                         <span nz-icon nzType="team" nzTheme="outline"></span>
@@ -186,11 +221,17 @@
                         <span nz-icon nzType="check-square" nzTheme="outline"></span>
                         <span class="room__tab-label">{{ t('tasks') }}</span>
                     </button>
+                    <button class="room__tab" role="tab" [class.room__tab--active]="side === 'transcript'"
+                        (click)="togglePanel('transcript')" [attr.aria-selected]="side === 'transcript'" [title]="t('transcript')">
+                        <span nz-icon nzType="translation" nzTheme="outline"></span>
+                        <span class="room__tab-label">{{ t('transcript') }}</span>
+                    </button>
                     <button class="room__tab" role="tab" [class.room__tab--active]="side === 'ai'"
                         (click)="togglePanel('ai')" [attr.aria-selected]="side === 'ai'" [title]="t('ai')">
                         <span nz-icon nzType="robot" nzTheme="outline"></span>
                         <span class="room__tab-label">AI</span>
                     </button>
+                </div>
                     <button class="room__icon-btn room__tab-close" (click)="panel.set(null)" [title]="t('closePanel')"
                         [attr.aria-label]="t('closePanel')">
                         <span nz-icon nzType="close" nzTheme="outline"></span>
@@ -206,11 +247,12 @@
                             <span nzInputPrefix><span nz-icon nzType="search" nzTheme="outline"></span></span>
                         </nz-input-wrapper>
                     </div>
-                    <p class="room__group-title">{{ t('inMeeting') }} ({{ filteredParticipants().length }})</p>
+                    @for (group of participantGroups(); track group.key) {
+                    <p class="room__group-title">{{ t(group.key) }} ({{ group.items.length }})</p>
                     <ul class="room__list">
-                        @for (p of filteredParticipants(); track p.userName) {
-                            <li class="room__user">
-                                <span class="smr-avatar smr-avatar--sm room__avatar">{{ initials(p.fullName) }}</span>
+                        @for (p of group.items; track p.userName) {
+                            <li class="room__user" [class.room__user--away]="!p.isJoined">
+                                <smr-avatar [name]="p.fullName" size="md" />
                                 <span class="room__user-info">
                                     <span class="room__user-name">
                                         {{ p.fullName }}
@@ -226,12 +268,12 @@
                                     </span>
                                 </span>
                                 @if (p.isJoined) {
-                                    <span class="room__joined-dot" title="Trong phòng" aria-label="Trong phòng"></span>
+                                    <span class="room__joined-dot" role="img" [attr.aria-label]="t('inRoom')" [title]="t('inRoom')"></span>
                                 }
                                 @if (canEnd()) {
                                     <button class="room__icon-btn room__kick" nz-dropdown [nzDropdownMenu]="kickMenu"
-                                        nzTrigger="click" nzPlacement="bottomRight" [nzOverlayClassName]="'room-menu-dark'"
-                                        [title]="t('kick')" [attr.aria-label]="t('kick')">
+                                        nzTrigger="click" nzPlacement="bottomRight"
+                                        [title]="t('kick')" [attr.aria-label]="t('kick') + ' ' + p.fullName">
                                         <span nz-icon nzType="more" nzTheme="outline"></span>
                                     </button>
                                     <nz-dropdown-menu #kickMenu="nzDropdownMenu">
@@ -248,10 +290,11 @@
                                     </nz-dropdown-menu>
                                 }
                             </li>
-                        } @empty {
-                            <li class="room__empty">{{ t('noParticipantFound') }}</li>
                         }
                     </ul>
+                    } @empty {
+                    <ul class="room__list"><li class="room__empty">{{ t('noParticipantFound') }}</li></ul>
+                    }
                     <div class="room__side-foot">
                         <button nz-button nzType="default" nzBlock (click)="copyInvite()">
                             <span nz-icon nzType="copy" nzTheme="outline"></span>
@@ -287,6 +330,42 @@
                     <div class="room__panel-body">
                         <app-room-tasks-panel [meetingId]="meetingId()" [lang]="lang()" />
                     </div>
+                } @else if (side === 'transcript') {
+                    <div class="room__search">
+                        <nz-input-wrapper>
+                            <input nz-input type="search" autocomplete="off" [placeholder]="t('searchTranscript')"
+                                aria-label="Tìm kiếm phiên âm" [ngModel]="transcriptSearch()"
+                                (ngModelChange)="transcriptSearch.set($event)" />
+                            <span nzInputPrefix><span nz-icon nzType="search" nzTheme="outline"></span></span>
+                        </nz-input-wrapper>
+                    </div>
+                    <div class="room__transcript-toolbar">
+                        <span class="room__transcript-count">{{ filteredTranscripts().length }} câu</span>
+                        @if (transcripts().length > 0) {
+                            <button class="room__btn-copy-transcript" (click)="copyAllTranscripts()" [title]="t('copyTranscript')">
+                                <span nz-icon nzType="copy" nzTheme="outline"></span>
+                                <span>{{ t('copyTranscript') }}</span>
+                            </button>
+                        }
+                    </div>
+                    <div class="room__transcript-scroll">
+                        @for (item of filteredTranscripts(); track item.id || $index) {
+                            <div class="room__transcript-bubble">
+                                <div class="room__transcript-bubble-top">
+                                    <span class="room__transcript-bubble-speaker">{{ item.speakerName }}</span>
+                                    <span class="room__transcript-bubble-tag" [class.room__transcript-bubble-tag--en]="item.language === 'en-US'">
+                                        {{ item.language === 'vi-VN' ? 'VI' : 'EN' }}
+                                    </span>
+                                    <span class="room__transcript-bubble-time">{{ item.timestamp | date:'HH:mm:ss' }}</span>
+                                </div>
+                                <div class="room__transcript-bubble-text">{{ item.text }}</div>
+                            </div>
+                        } @empty {
+                            <div class="room__transcript-empty">
+                                <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="t('noTranscript')" />
+                            </div>
+                        }
+                    </div>
                 } @else {
                     <div class="room__panel-body room__ai">
                         <span nz-icon nzType="robot" nzTheme="outline" class="room__ai-icon"></span>
@@ -300,67 +379,142 @@
 
     @if (phase() === 'live') {
     <!-- ── Dock 72px ─────────────────────────────── -->
-    <footer class="room__controls" role="toolbar" aria-label="Điều khiển phòng họp">
-        <button class="room__ctl" [class.room__ctl--off]="audioMuted()" (click)="toggleAudio()"
-            [title]="audioMuted() ? t('micOn') + ' (M)' : t('micOff') + ' (M)'"
-            [attr.aria-label]="audioMuted() ? t('micOn') : t('micOff')" [attr.aria-pressed]="!audioMuted()">
-            <span nz-icon [nzType]="audioMuted() ? 'audio-muted' : 'audio'" nzTheme="outline"></span>
-        </button>
-        <button class="room__ctl" [class.room__ctl--off]="videoMuted()" (click)="toggleVideo()"
-            [title]="videoMuted() ? t('camOn') + ' (V)' : t('camOff') + ' (V)'"
-            [attr.aria-label]="videoMuted() ? t('camOn') : t('camOff')" [attr.aria-pressed]="!videoMuted()">
-            <span nz-icon nzType="video-camera" nzTheme="outline"></span>
-        </button>
-        <button class="room__ctl" [class.room__ctl--on]="handRaised()" (click)="toggleHand()" [title]="t('raiseHand') + ' (H)'"
-            [attr.aria-label]="t('raiseHand')" [attr.aria-pressed]="handRaised()">
-            <span nz-icon nzType="flag" nzTheme="outline"></span>
-        </button>
-        <button class="room__ctl" [class.room__ctl--on]="sharing()" (click)="toggleShare()" [title]="t('share') + ' (D)'"
-            [attr.aria-label]="t('share')" [attr.aria-pressed]="sharing()">
-            <span nz-icon nzType="desktop" nzTheme="outline"></span>
-        </button>
-        <button class="room__ctl" [class.room__ctl--on]="whiteboardOpen()" (click)="toggleWhiteboard()"
-            [title]="t('whiteboard')" [attr.aria-label]="t('whiteboard')" [attr.aria-pressed]="whiteboardOpen()">
-            <span nz-icon nzType="edit" nzTheme="outline"></span>
-        </button>
-        <button class="room__ctl" [class.room__ctl--on]="panel() === 'ai'" (click)="togglePanel('ai')"
-            [title]="t('ai')" [attr.aria-label]="t('ai')">
-            <span nz-icon nzType="robot" nzTheme="outline"></span>
-        </button>
-        <button class="room__lang" (click)="toggleLang()" [title]="t('langToggle')" aria-label="Ngôn ngữ">
-            {{ lang() === 'vi' ? 'VI|EN' : 'EN|VI' }}
-        </button>
-        <span class="room__ctl-sep" aria-hidden="true"></span>
-        <button class="room__ctl room__ctl--badge" [class.room__ctl--on]="panel() === 'participants'"
-            (click)="togglePanel('participants')" [title]="t('participants') + ' (P)'" [attr.aria-label]="t('participants')">
-            <span nz-icon nzType="team" nzTheme="outline"></span>
-            <span class="room__count-badge" aria-hidden="true">{{ filteredParticipants().length }}</span>
-        </button>
-        <button class="room__ctl room__ctl--badge" [class.room__ctl--on]="panel() === 'chat'"
-            (click)="togglePanel('chat')" [title]="t('chat') + ' (C)'" [attr.aria-label]="t('chat')">
-            <span nz-icon nzType="message" nzTheme="outline"></span>
-            @if (unread() > 0) {
-                <span class="room__count-badge room__count-badge--danger" aria-label="Tin nhắn chưa đọc">{{ unread() }}</span>
-            }
-        </button>
-        <span class="room__ctl-sep" aria-hidden="true"></span>
-        @if (canEnd()) {
-            <button class="room__end" (click)="openEnd()" [title]="t('endMeeting')" [attr.aria-label]="t('endMeeting')">
-                <span nz-icon nzType="poweroff" nzTheme="outline"></span>
-                <span>{{ t('endMeeting') }}</span>
+    <footer class="room__dock room__controls" role="toolbar" aria-label="Điều khiển phòng họp">
+        <!-- Nhóm 1: media -->
+        <div class="room__ctl-group-main">
+            <button class="room__ctl" [class.room__ctl--off]="audioMuted()" (click)="toggleAudio()"
+                [title]="(audioMuted() ? t('micOn') : t('micOff')) + ' (M)'"
+                [attr.aria-label]="audioMuted() ? t('micOn') : t('micOff')" [attr.aria-pressed]="!audioMuted()">
+                <span class="room__ctl-icon"><span nz-icon [nzType]="audioMuted() ? 'audio-muted' : 'audio'" nzTheme="outline"></span></span>
+                <span class="room__ctl-label">{{ t('lblMic') }}</span>
             </button>
-        }
-        <button class="room__leave" (click)="leave()" [title]="t('leave')" [attr.aria-label]="t('leave')">
-            <span nz-icon nzType="phone" nzTheme="outline"></span>
-            <span>{{ t('leave') }}</span>
-        </button>
+            <button class="room__ctl" [class.room__ctl--off]="videoMuted()" (click)="toggleVideo()"
+                [title]="(videoMuted() ? t('camOn') : t('camOff')) + ' (V)'"
+                [attr.aria-label]="videoMuted() ? t('camOn') : t('camOff')" [attr.aria-pressed]="!videoMuted()">
+                <span class="room__ctl-icon"><span nz-icon nzType="video-camera" nzTheme="outline"></span></span>
+                <span class="room__ctl-label">{{ t('lblCam') }}</span>
+            </button>
+            <button class="room__ctl room__ctl--hide-sm" [class.room__ctl--on]="sharing()" (click)="toggleShare()" [title]="t('share') + ' (D)'"
+                [attr.aria-label]="t('share')" [attr.aria-pressed]="sharing()">
+                <span class="room__ctl-icon"><span nz-icon nzType="desktop" nzTheme="outline"></span></span>
+                <span class="room__ctl-label">{{ t('lblShare') }}</span>
+            </button>
+        </div>
+
+        <!-- Nhóm 2: cộng tác -->
+        <div class="room__ctl-group-main room__ctl--hide-sm">
+            <button class="room__ctl" [class.room__ctl--on]="handRaised()" (click)="toggleHand()" [title]="t('raiseHand') + ' (H)'"
+                [attr.aria-label]="t('raiseHand')" [attr.aria-pressed]="handRaised()">
+                <span class="room__ctl-icon"><span nz-icon nzType="flag" nzTheme="outline"></span></span>
+                <span class="room__ctl-label">{{ t('lblHand') }}</span>
+            </button>
+            <div class="room__ctl-split">
+                <button class="room__ctl" [class.room__ctl--on]="captionsOn()" (click)="toggleCaptions()"
+                    [title]="captionsOn() ? t('captionsOff') : t('captionsOn')" [attr.aria-label]="t('captions')" [attr.aria-pressed]="captionsOn()">
+                    <span class="room__ctl-icon"><span nz-icon nzType="font-size" nzTheme="outline"></span></span>
+                    <span class="room__ctl-label">{{ t('lblCaptions') }} · {{ captionLang() === 'vi-VN' ? 'VI' : 'EN' }}</span>
+                </button>
+                <button class="room__ctl-caret" nz-dropdown [nzDropdownMenu]="captionLangDropdown" nzTrigger="click"
+                    nzPlacement="topCenter" [title]="t('captionLang')" [attr.aria-label]="t('captionLang')">
+                    <span nz-icon nzType="up" nzTheme="outline"></span>
+                </button>
+            </div>
+            <nz-dropdown-menu #captionLangDropdown="nzDropdownMenu">
+                <ul nz-menu>
+                    <li nz-menu-item (click)="setCaptionLanguage('vi-VN')" [nzSelected]="captionLang() === 'vi-VN'">
+                        {{ t('vietnamese') }} (vi-VN)
+                    </li>
+                    <li nz-menu-item (click)="setCaptionLanguage('en-US')" [nzSelected]="captionLang() === 'en-US'">
+                        {{ t('english') }} (en-US)
+                    </li>
+                </ul>
+            </nz-dropdown-menu>
+            <button class="room__ctl" [class.room__ctl--on]="whiteboardOpen()" (click)="toggleWhiteboard()"
+                [title]="t('whiteboard')" [attr.aria-label]="t('whiteboard')" [attr.aria-pressed]="whiteboardOpen()">
+                <span class="room__ctl-icon"><span nz-icon nzType="edit" nzTheme="outline"></span></span>
+                <span class="room__ctl-label">{{ t('lblBoard') }}</span>
+            </button>
+            <button class="room__ctl" [class.room__ctl--rec]="recording()" (click)="toggleRecording()"
+                [title]="recording() ? t('recStop') : t('recStart')" [attr.aria-label]="recording() ? t('recStop') : t('recStart')"
+                [attr.aria-pressed]="recording()">
+                <span class="room__ctl-icon"><span nz-icon nzType="video-camera-add" nzTheme="outline"></span></span>
+                <span class="room__ctl-label">{{ t('lblRec') }}</span>
+            </button>
+        </div>
+
+        <!-- Nhóm 3: bảng bên -->
+        <div class="room__ctl-group-main">
+            <button class="room__ctl room__ctl--badge" [class.room__ctl--on]="panel() === 'participants'"
+                (click)="togglePanel('participants')" [title]="t('participants') + ' (P)'" [attr.aria-label]="t('participants')">
+                <span class="room__ctl-icon">
+                    <span nz-icon nzType="team" nzTheme="outline"></span>
+                    <span class="room__count-badge" aria-hidden="true">{{ liveCount() }}</span>
+                </span>
+                <span class="room__ctl-label">{{ t('lblPeople') }}</span>
+            </button>
+            <button class="room__ctl room__ctl--badge" [class.room__ctl--on]="panel() === 'chat'"
+                (click)="togglePanel('chat')" [title]="t('chat') + ' (C)'" [attr.aria-label]="t('chat')">
+                <span class="room__ctl-icon">
+                    <span nz-icon nzType="message" nzTheme="outline"></span>
+                    @if (unread() > 0) {
+                        <span class="room__count-badge room__count-badge--danger" aria-label="Tin nhắn chưa đọc">{{ unread() }}</span>
+                    }
+                </span>
+                <span class="room__ctl-label">{{ t('lblChat') }}</span>
+            </button>
+            <button class="room__ctl room__ctl--hide-sm" [class.room__ctl--on]="panel() === 'ai'" (click)="togglePanel('ai')"
+                [title]="t('ai')" [attr.aria-label]="t('ai')">
+                <span class="room__ctl-icon"><span nz-icon nzType="robot" nzTheme="outline"></span></span>
+                <span class="room__ctl-label">{{ t('lblAi') }}</span>
+            </button>
+            <button class="room__ctl room__ctl--show-sm" nz-dropdown [nzDropdownMenu]="moreMenu" nzTrigger="click"
+                nzPlacement="topRight" [attr.aria-label]="t('lblMore')">
+                <span class="room__ctl-icon"><span nz-icon nzType="more" nzTheme="outline"></span></span>
+                <span class="room__ctl-label">{{ t('lblMore') }}</span>
+            </button>
+            <nz-dropdown-menu #moreMenu="nzDropdownMenu">
+                <ul nz-menu>
+                    <li nz-menu-item (click)="toggleShare()">{{ t('share') }}</li>
+                    <li nz-menu-item (click)="toggleHand()">{{ t('raiseHand') }}</li>
+                    <li nz-menu-item (click)="toggleCaptions()">{{ captionsOn() ? t('captionsOff') : t('captionsOn') }}</li>
+                    <li nz-menu-item (click)="toggleWhiteboard()">{{ t('whiteboard') }}</li>
+                    <li nz-menu-item (click)="toggleRecording()">{{ recording() ? t('recStop') : t('recStart') }}</li>
+                    <li nz-menu-item (click)="togglePanel('transcript')">{{ t('transcript') }}</li>
+                    <li nz-menu-item (click)="togglePanel('ai')">{{ t('ai') }}</li>
+                </ul>
+            </nz-dropdown-menu>
+        </div>
+
+        <!-- Nhóm 4: rời phòng — chỉ 1 nút đỏ; "Kết thúc cho mọi người" nằm trong menu của host -->
+        <div class="room__leave-split">
+            <button class="room__leave" (click)="leave()" [title]="t('leave')" [attr.aria-label]="t('leave')">
+                <span nz-icon nzType="phone" nzTheme="outline"></span>
+                <span class="room__leave-label">{{ t('leave') }}</span>
+            </button>
+            @if (canEnd()) {
+                <button class="room__leave room__leave-caret" nz-dropdown [nzDropdownMenu]="leaveMenu" nzTrigger="click"
+                    nzPlacement="topRight" [attr.aria-label]="t('leaveMenu')" [title]="t('leaveMenu')">
+                    <span nz-icon nzType="up" nzTheme="outline"></span>
+                </button>
+                <nz-dropdown-menu #leaveMenu="nzDropdownMenu">
+                    <ul nz-menu>
+                        <li nz-menu-item (click)="leave()">
+                            <span nz-icon nzType="logout" nzTheme="outline"></span> {{ t('leave') }}
+                        </li>
+                        <li nz-menu-item nzDanger (click)="openEnd()">
+                            <span nz-icon nzType="poweroff" nzTheme="outline"></span> {{ t('endForAll') }}
+                        </li>
+                    </ul>
+                </nz-dropdown-menu>
+            }
+        </div>
     </footer>
     }
 
     <!-- Confirm kết thúc -->
     <nz-modal [nzVisible]="endOpen()" [nzTitle]="t('endTitle')" [nzOkText]="t('confirmEnd')"
         [nzOkDanger]="true" [nzCancelText]="t('cancel')" [nzOkLoading]="ending()"
-        nzWrapClassName="room-modal-dark" (nzOnOk)="confirmEnd()" (nzOnCancel)="closeEnd()">
+        (nzOnOk)="confirmEnd()" (nzOnCancel)="closeEnd()">
         <ng-container *nzModalContent>
             <p class="room__modal-text">{{ t('endBody') }}</p>
         </ng-container>

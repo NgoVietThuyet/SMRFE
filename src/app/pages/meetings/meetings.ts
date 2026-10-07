@@ -20,6 +20,11 @@ import { MeetingStatus, MeetingListItemDto } from '../../core/models/dashboard.m
 import { MeetingService } from '../../core/services/meeting.service';
 import { CreateMeetingModal } from './components/create-meeting-modal/create-meeting-modal';
 import { CustomIconComponent } from '../../layout/shell/custom-icon/custom-icon.component';
+import { SelectA11yDirective } from '../../shared/a11y/select-a11y.directive';
+import { meetingStatus } from '../../shared/utils/status-map';
+import { NzIconModule } from 'ng-zorro-antd/icon';
+import { Avatar } from '../../shared/ui/avatar/avatar';
+import { friendlyError } from '../../shared/utils/friendly-error';
 
 type DatePreset = 'all' | 'today' | 'next7' | 'past' | 'custom';
 
@@ -33,6 +38,9 @@ type DatePreset = 'all' | 'today' | 'next7' | 'past' | 'custom';
     templateUrl: './meetings.html',
     styleUrl: './meetings.scss',
     imports: [
+        Avatar,
+        NzIconModule,
+        SelectA11yDirective,
         CommonModule,
         FormsModule,
         NzTableModule,
@@ -234,7 +242,7 @@ export class Meetings implements OnInit {
                 },
                 error: (err: Error) => {
                     this.loading.set(false);
-                    this.loadError.set(err.message || 'Không thể tải danh sách cuộc họp.');
+                    this.loadError.set(friendlyError(err, 'Không thể tải danh sách cuộc họp.'));
                 },
             });
     }
@@ -292,27 +300,11 @@ export class Meetings implements OnInit {
     }
 
     statusLabel(status: number): string {
-        const map: Record<number, string> = {
-            [MeetingStatus.Draft]: 'Bản nháp',
-            [MeetingStatus.Scheduled]: 'Sắp diễn ra',
-            [MeetingStatus.Ongoing]: 'Đang diễn ra',
-            [MeetingStatus.Ended]: 'Đã kết thúc',
-            [MeetingStatus.Cancelled]: 'Đã hủy',
-            [MeetingStatus.Archived]: 'Lưu trữ',
-        };
-        return map[status] ?? 'Không xác định';
+        return meetingStatus(status).label;
     }
 
     statusClass(status: number): string {
-        const map: Record<number, string> = {
-            [MeetingStatus.Draft]: 'pending',
-            [MeetingStatus.Scheduled]: 'upcoming',
-            [MeetingStatus.Ongoing]: 'ongoing',
-            [MeetingStatus.Ended]: 'ended',
-            [MeetingStatus.Cancelled]: 'cancelled',
-            [MeetingStatus.Archived]: 'ended',
-        };
-        return map[status] ?? 'upcoming';
+        return meetingStatus(status).tone;
     }
 
     isOngoing(item: MeetingListItemDto): boolean {

@@ -129,17 +129,27 @@ describe('MeetingDetail', () => {
         const text = fixture.nativeElement.textContent as string;
         expect(text).toContain('Họp dự án A');
         expect(text).toContain('Sắp diễn ra');
-        for (const tab of ['Thông tin chung', 'Tài liệu', 'Người tham gia', 'AI tóm tắt', 'Ghi hình']) {
+        for (const tab of ['Tổng quan', 'Người tham gia', 'Tài liệu', 'Biên bản & ghi hình', 'Công việc']) {
             expect(text).toContain(tab);
         }
     });
 
-    it('should show join button only when joinable', () => {
-        expect(fixture.nativeElement.querySelector('#btn-join')).toBeNull();
+    it('should show the primary action matching meeting status', () => {
+        // Sắp diễn ra (> 5 phút nữa): vẫn có CTA vào phòng chờ
+        const cta = () => fixture.nativeElement.querySelector('#btn-join') as HTMLElement | null;
+        expect(cta()?.textContent).toContain('Vào phòng chờ');
 
         component.meeting.set({ ...DETAIL, status: MeetingStatus.Ongoing });
         fixture.detectChanges();
-        expect(fixture.nativeElement.querySelector('#btn-join')).not.toBeNull();
+        expect(cta()?.textContent).toContain('Tham gia');
+
+        component.meeting.set({ ...DETAIL, status: MeetingStatus.Ended });
+        fixture.detectChanges();
+        expect(cta()?.textContent).toContain('Xem biên bản');
+
+        component.meeting.set({ ...DETAIL, status: MeetingStatus.Cancelled });
+        fixture.detectChanges();
+        expect(cta()).toBeNull();
     });
 
     it('should cancel meeting with reason and reload', async () => {

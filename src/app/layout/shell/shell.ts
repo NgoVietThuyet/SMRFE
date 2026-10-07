@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 import { filter } from 'rxjs';
 import { Sidebar } from '../sidebar/sidebar';
 import { BreadcrumbItem, TopHeader } from '../top-header/top-header';
@@ -12,7 +13,7 @@ const ROUTE_LABELS: Record<string, string> = {
   tasks: 'Công việc',
   whiteboard: 'Bảng trắng',
   records: 'Bản ghi',
-  catalogs: 'Danh mục',
+  catalogs: 'Tổ chức',
   contacts: 'Danh bạ',
   titles: 'Chức danh',
   settings: 'Cài đặt',
@@ -22,7 +23,7 @@ const ROUTE_LABELS: Record<string, string> = {
   selector: 'app-shell',
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
-  imports: [RouterOutlet, Sidebar, TopHeader],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NzIconModule, Sidebar, TopHeader],
 })
 export class Shell {
   private readonly router = inject(Router);
@@ -90,6 +91,11 @@ export class Shell {
     }
     this.collapsed.set(value);
     this.syncSiderWidth();
+  }
+
+  /** Bottom nav (mobile): mục "Thêm" mở drawer menu đầy đủ. */
+  openMobileNavigation(): void {
+    this.mobileOpen.set(true);
   }
 
   closeMobileNavigation(): void {

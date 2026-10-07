@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, map, Observable } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 import {
     DashboardResponse,
@@ -9,6 +9,15 @@ import {
     MeetingStatus,
 } from '../models/dashboard.models';
 import { ApiResponse } from '../models/auth.models';
+import { MeetingService } from './meeting.service';
+import { TaskService } from './task.service';
+import { PagedMeetings } from '../models/meeting.models';
+import { TaskListItem, TaskStatus } from '../models/task.models';
+
+export interface DashboardTasks {
+    items: TaskListItem[];
+    total: number;
+}
 
 // Kết quả bổ sung: recent meetings (đã kết thúc gần đây)
 export interface RecentMeetingsResponse {
@@ -19,11 +28,16 @@ export interface RecentMeetingsResponse {
 export interface DashboardPageData {
     dashboard: MeetingDashboardDto;
     recentMeetings: MeetingListItemDto[];
+    today: PagedMeetings | null;
+    tasks: DashboardTasks | null;
+    recentError: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
     private readonly http = inject(HttpClient);
+    private readonly meetings = inject(MeetingService);
+    private readonly tasks = inject(TaskService);
 
     // GET /api/Meeting/dashboard
     getDashboard(): Observable<MeetingDashboardDto> {
@@ -48,7 +62,7 @@ export class DashboardService {
             )
             .pipe(
                 map((res) => {
-                    if (!res.status || !res.data) return [];
+                    if (!res.status || !res.data) throw new Error(res.message || 'Không thể tải cuộc họp gần đây.');
                     return res.data.items ?? [];
                 })
             );
@@ -58,8 +72,45 @@ export class DashboardService {
     getAll(): Observable<DashboardPageData> {
         return forkJoin({
             dashboard: this.getDashboard(),
-            recentMeetings: this.getRecentEndedMeetings(),
+            recent: this.getRecentEndedMeetings(3).pipe(
+                map(items => ({ items, error: false })),
+                catchError(() => of({ items: [] as MeetingListItemDto[], error: true })),
+            ),
+            today: this.getToday().pipe(catchError(() => of(null))),
+            tasks: this.getActionableTasks().pipe(catchError(() => of(null))),
+        }).pipe(map(({ recent, ...data }) => ({
+            ...data, recentMeetings: recent.items, recentError: recent.error,
+        })));
+    }
+
+    getToday(now = new Date()): Observable<PagedMeetings> {
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        end.setMilliseconds(-1);
+        return this.meetings.query({
+            tab: 'all', keyword: '', status: null, page: 1, pageSize: 100,
+            startDate: start.toISOString(), endDate: end.toISOString(),
+        }).pipe(map(result => ({
+            ...result,
+            items: [...result.items].sort((a, b) => Date.parse(a.expectedStartTime) - Date.parse(b.expectedStartTime)),
+        })));
+    }
+
+    getActionableTasks(): Observable<DashboardTasks> {
+        // Query both unfinished statuses so completed rows never distort the total.
+        const query = (status: TaskStatus) => this.tasks.query({
+            shortcut: 'mine', keyword: '', meetingId: null, assignee: null,
+            status, priority: null, page: 1, pageSize: 50,
         });
+        return forkJoin([query(TaskStatus.NotStarted), query(TaskStatus.InProgress)]).pipe(
+            map(results => ({
+                total: results.reduce((sum, result) => sum + result.totalItems, 0),
+                items: results.flatMap(result => result.items)
+                    .sort((a, b) => (a.dueDate ? Date.parse(a.dueDate) : Infinity)
+                        - (b.dueDate ? Date.parse(b.dueDate) : Infinity) || b.priority - a.priority)
+                    .slice(0, 4),
+            })),
+        );
     }
 
     // Helper: phân loại meeting thành canJoin (đang diễn ra, hoặc sắp diễn ra ≤ 5 phút nữa)

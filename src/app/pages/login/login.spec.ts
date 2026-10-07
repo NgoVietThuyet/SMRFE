@@ -62,7 +62,7 @@ describe('Login', () => {
     });
 
     it('should show email format error', () => {
-        component.form.setValue({ email: 'not-an-email', password: 'secret' });
+        component.form.setValue({ email: 'not-an-email', password: 'secret', rememberMe: true });
         component.emailCtrl.markAsTouched();
         fixture.detectChanges();
 
@@ -70,7 +70,7 @@ describe('Login', () => {
     });
 
     it('should disable submit while loading and navigate on success', () => {
-        component.form.setValue({ email: 'user@company.vn', password: 'secret' });
+        component.form.setValue({ email: 'user@company.vn', password: 'secret', rememberMe: true });
         fixture.detectChanges();
 
         const submitBtn = fixture.debugElement.query(
@@ -90,7 +90,7 @@ describe('Login', () => {
     });
 
     it('should show generic auth error on login failure', () => {
-        component.form.setValue({ email: 'user@company.vn', password: 'wrong' });
+        component.form.setValue({ email: 'user@company.vn', password: 'wrong', rememberMe: true });
         fixture.detectChanges();
 
         fixture.debugElement.query(By.css('button[type="submit"]')).nativeElement.click();

@@ -1,6 +1,6 @@
 // ============================================================
 // SmartMeeting — NG-ZORRO Theme Override
-// Đồng bộ với legacy design tokens (cyan-deep #075985)
+// Đồng bộ với design tokens: src/styles/tokens/_tokens.scss (giữ 2 nơi khớp nhau)
 // Bỏ scale x1.25 — giá trị vật lý chuẩn theo spec cũ
 // ============================================================
 @import '../node_modules/ng-zorro-antd/ng-zorro-antd.less';
@@ -9,14 +9,14 @@
 // 1. Primary Color — legacy #075985 (cyan-deep)
 // ------------------------------------------------------------
 @primary-color: #075985;
-@primary-color-hover: #0369a1;
-@primary-color-active: #08385c;
+@primary-color-hover: #0a4a6e;
+@primary-color-active: #0c3d5a;
 @primary-color-outline: rgba(7, 89, 133, 0.15);
 
 // ------------------------------------------------------------
 // 2. Background
 // ------------------------------------------------------------
-@body-background: #f5fafd;
+@body-background: #f8fafc;
 @component-background: #ffffff;
 @background-color-light: #f4f8fb; // drawer grey, zebra even
 @background-color-base: #f1f5f9; // hover subtle
@@ -33,9 +33,9 @@
 // 4. Typography — legacy 16px base
 // ------------------------------------------------------------
 @font-family: 'SVN-Gilroy', 'Segoe UI', Arial, sans-serif;
-@font-size-base: 16px;
-@font-size-sm: 16px;
-@font-size-lg: 20px;
+@font-size-base: 14px;
+@font-size-sm: 12px;
+@font-size-lg: 16px;
 @line-height-base: 1.5;
 @text-color: #0f172a;
 @text-color-secondary: #475569;
@@ -49,9 +49,9 @@
 // ------------------------------------------------------------
 // 5. Border Radius — legacy duy nhất 5/6/9999/50%
 // ------------------------------------------------------------
-@border-radius-base: 5px;
-@border-radius-sm: 5px;
-@border-radius-lg: 6px;
+@border-radius-base: 6px;
+@border-radius-sm: 4px;
+@border-radius-lg: 10px;
 
 // ------------------------------------------------------------
 // 6. Shadow — chỉ floating
@@ -66,19 +66,19 @@
 // ------------------------------------------------------------
 // 7. Control — legacy 48px chuẩn
 // ------------------------------------------------------------
-@height-base: 48px;
+@height-base: 40px;
 @height-lg: 48px;
-@height-sm: 35px;
+@height-sm: 32px;
 @control-padding-horizontal: 11px;
 @control-padding-horizontal-sm: 10px;
 
 // ------------------------------------------------------------
 // 8. Button
 // ------------------------------------------------------------
-@btn-height-base: 48px;
+@btn-height-base: 40px;
 @btn-height-lg: 48px;
-@btn-height-sm: 35px;
-@btn-font-size-base: 16px;
+@btn-height-sm: 32px;
+@btn-font-size-base: 14px;
 @btn-font-size-lg: 16px;
 @btn-padding-horizontal-base: 20px;
 @btn-border-radius-base: 5px;
@@ -100,7 +100,7 @@
 // ------------------------------------------------------------
 // 9. Input / Select — legacy 48px radius 0
 // ------------------------------------------------------------
-@input-height-base: 48px;
+@input-height-base: 40px;
 @input-height-sm: 32px;
 @input-height-lg: 48px;
 @input-padding-horizontal: 11px;
@@ -126,7 +126,7 @@
 @table-bg: #ffffff;
 @table-header-bg: #ffffff;
 @table-header-color: #475569;
-@table-font-size: 16px;
+@table-font-size: 14px;
 @table-row-hover-bg: #f4f8fb;
 @table-padding-vertical: 12px;
 @table-padding-horizontal: 16px;
@@ -143,7 +143,7 @@
 @tabs-horizontal-padding: 0 0 15px;
 @tabs-vertical-padding: 10px 30px;
 @tabs-card-head-background: #f8fafc;
-@tabs-title-font-size: 16px;
+@tabs-title-font-size: 14px;
 
 // ------------------------------------------------------------
 // 12. Modal
@@ -163,8 +163,8 @@
 @menu-highlight-color: #075985;
 @menu-item-active-bg: #e3f0fb;
 @menu-item-active-border-width: 0;
-@menu-item-height: 59px;
-@menu-item-font-size: 18px;
+@menu-item-height: 44px;
+@menu-item-font-size: 14px;
 @menu-inline-submenu-bg: #f8fafc;
 @menu-popup-bg: #ffffff;
 @menu-item-color: #475569;
@@ -178,13 +178,13 @@
 @layout-sider-background-light: #ffffff;
 @layout-body-background: #f5fafd;
 @layout-header-background: #ffffff;
-@layout-header-height: 70px;
+@layout-header-height: 56px;
 
 // ------------------------------------------------------------
 // 14. Notification / Tag / Badge
 // ------------------------------------------------------------
 @tag-border-radius: 5px;
-@tag-font-size: 15px;
+@tag-font-size: 12px;
 @badge-font-size: 12px;
 
 // ------------------------------------------------------------

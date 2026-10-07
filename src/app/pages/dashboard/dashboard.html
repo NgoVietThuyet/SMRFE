@@ -1,273 +1,176 @@
-<!-- =====================================================
-     Dashboard — SmartMeeting
-     Kết nối: GET /api/Meeting/dashboard (nextMeetings + stats)
-              POST /api/Meeting/query (ended, 5 gần nhất)
-===================================================== -->
-<div class="dashboard">
-
-    <!-- ══════════════════════════════════════════════
-         Page Header
-    ══════════════════════════════════════════════════ -->
-    <div class="smr-page-header">
-        <div class="smr-page-header__meta">
-            <h2 class="smr-page-header__title">Tổng quan</h2>
-            <p class="smr-page-header__desc">Chào mừng trở lại. Đây là tình trạng cuộc họp của bạn.</p>
+<div class="dashboard smr-compact-controls">
+    <header class="dashboard__header">
+        <div>
+            <h1>Tổng quan</h1>
+            <p>Chào {{ greetingName }}, đây là lịch làm việc hôm nay.</p>
         </div>
-        <div class="smr-page-header__actions">
+        <div class="dashboard__header-actions">
+            <span class="dashboard__date">{{ dateLabel }}</span>
             <button nz-button nzType="primary" (click)="createMeeting()" id="btn-create-meeting">
-                <span nz-icon nzType="plus" nzTheme="outline"></span>
-                Tạo cuộc họp
+                <span nz-icon nzType="plus"></span> Tạo cuộc họp
+            </button>
+            <button nz-button (click)="openJoinModal()" id="btn-join-by-code">
+                <span nz-icon nzType="key"></span> Tham gia bằng mã
             </button>
         </div>
-    </div>
+    </header>
 
-    <!-- ══════════════════════════════════════════════
-         LOADING STATE
-    ══════════════════════════════════════════════════ -->
     @if (state() === 'loading') {
-    <div class="smr-loading">
-        <nz-spin nzSize="large"></nz-spin>
-    </div>
-    }
-
-    <!-- ══════════════════════════════════════════════
-         ERROR STATE
-    ══════════════════════════════════════════════════ -->
-    @if (state() === 'error') {
-    <div class="smr-section">
-        <div class="dashboard__error">
-            <span nz-icon nzType="warning" nzTheme="outline" class="dashboard__error-icon"></span>
-            <p class="dashboard__error-title">Không thể tải dữ liệu</p>
-            <p class="dashboard__error-desc">{{ errorMessage() }}</p>
-            <button nz-button nzType="default" (click)="loadData()" id="btn-retry">
-                <span nz-icon nzType="reload" nzTheme="outline"></span>
-                Thử lại
+        <div class="dashboard__loading" role="status" aria-label="Đang tải tổng quan">
+            <div class="dashboard__stats">
+                @for (item of [1, 2, 3, 4]; track item) { <div class="smr-panel dashboard__skeleton"></div> }
+            </div>
+            <div class="smr-panel dashboard__loading-body"><nz-spin nzSize="large" /><p>Đang tải lịch làm việc…</p></div>
+        </div>
+    } @else if (state() === 'error') {
+        <div class="smr-panel dashboard__empty" role="alert">
+            <span nz-icon nzType="warning"></span><h2>Không thể tải dữ liệu</h2>
+            <p>{{ errorMessage() }}</p><button nz-button nzType="primary" (click)="loadData()"><span nz-icon nzType="reload"></span> Thử lại</button>
+        </div>
+    } @else {
+        <section class="dashboard__stats" aria-label="Thống kê hôm nay">
+            <button class="smr-panel dashboard__stat" (click)="navigateTo('/meetings')">
+                <span class="dashboard__stat-icon dashboard__stat-icon--blue"><span nz-icon nzType="calendar"></span></span>
+                <span><span class="dashboard__stat-label">Họp hôm nay</span><strong>{{ today()?.totalItems ?? '—' }}</strong></span>
             </button>
-        </div>
-    </div>
-    }
-
-    <!-- ══════════════════════════════════════════════
-         NORMAL STATE
-    ══════════════════════════════════════════════════ -->
-    @if (state() === 'normal') {
-    <div class="dashboard__content">
-
-        <!-- ── 1. Stats Bar ────────────────────────────── -->
-        <div class="dashboard__stats" role="region" aria-label="Thống kê cuộc họp">
-
-            <div class="dashboard__stat-item dashboard__stat-item--upcoming" (click)="navigateTo('/meetings')"
-                role="button" tabindex="0" (keyup.enter)="navigateTo('/meetings')" id="stat-upcoming">
-                <span class="dashboard__stat-icon">
-                    <span nz-icon nzType="calendar" nzTheme="outline"></span>
-                </span>
-                <div class="dashboard__stat-body">
-                    <span class="dashboard__stat-value">{{ stats.upcoming }}</span>
-                    <span class="dashboard__stat-label">Sắp diễn ra</span>
-                </div>
+            <button class="smr-panel dashboard__stat" (click)="navigateTo('/meetings')">
+                <span class="dashboard__stat-icon dashboard__stat-icon--green"><span nz-icon nzType="play-circle"></span></span>
+                <span><span class="dashboard__stat-label">Đang diễn ra</span><strong>{{ data()?.dashboard?.ongoing ?? 0 }} @if (data()?.dashboard?.ongoing) { <i class="smr-live-dot"></i> }</strong></span>
+            </button>
+            <button class="smr-panel dashboard__stat" (click)="navigateTo('/tasks')">
+                <span class="dashboard__stat-icon dashboard__stat-icon--amber"><span nz-icon nzType="check-square"></span></span>
+                <span><span class="dashboard__stat-label">Việc cần làm</span><strong>{{ tasks()?.total ?? '—' }}</strong></span>
+            </button>
+            <div class="smr-panel dashboard__stat dashboard__stat--unavailable" tabindex="0" nz-tooltip nzTooltipTitle="Chưa có dữ liệu duyệt biên bản trong hệ thống.">
+                <span class="dashboard__stat-icon dashboard__stat-icon--purple"><span nz-icon nzType="file-text"></span></span>
+                <span><span class="dashboard__stat-label">Biên bản chờ duyệt <span nz-icon nzType="info-circle"></span></span><strong class="dashboard__stat-na">Chưa hỗ trợ</strong></span>
             </div>
+        </section>
 
-            <div class="dashboard__stat-item dashboard__stat-item--ongoing" (click)="navigateTo('/meetings')"
-                role="button" tabindex="0" (keyup.enter)="navigateTo('/meetings')" id="stat-ongoing">
-                <span class="dashboard__stat-icon">
-                    <span nz-icon nzType="play-circle" nzTheme="outline"></span>
-                </span>
-                <div class="dashboard__stat-body">
-                    <span class="dashboard__stat-value">{{ stats.ongoing }}</span>
-                    <span class="dashboard__stat-label">Đang diễn ra</span>
-                </div>
-            </div>
-
-            <div class="dashboard__stat-item dashboard__stat-item--ended" (click)="navigateTo('/meetings')"
-                role="button" tabindex="0" (keyup.enter)="navigateTo('/meetings')" id="stat-ended">
-                <span class="dashboard__stat-icon">
-                    <span nz-icon nzType="check-circle" nzTheme="outline"></span>
-                </span>
-                <div class="dashboard__stat-body">
-                    <span class="dashboard__stat-value">{{ stats.ended }}</span>
-                    <span class="dashboard__stat-label">Đã kết thúc</span>
-                </div>
-            </div>
-
-            <div class="dashboard__stat-item dashboard__stat-item--cancelled" (click)="navigateTo('/meetings')"
-                role="button" tabindex="0" (keyup.enter)="navigateTo('/meetings')" id="stat-cancelled">
-                <span class="dashboard__stat-icon">
-                    <span nz-icon nzType="close-circle" nzTheme="outline"></span>
-                </span>
-                <div class="dashboard__stat-body">
-                    <span class="dashboard__stat-value">{{ stats.cancelled }}</span>
-                    <span class="dashboard__stat-label">Đã hủy</span>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ── 2. Upcoming + Ongoing ─────────────────── -->
-        <section class="smr-section" aria-labelledby="section-next">
-
-            <div class="smr-section__header">
-                <h3 class="smr-section__title" id="section-next">Cuộc họp sắp &amp; đang diễn ra</h3>
-                <button class="smr-text-btn" role="link" (click)="navigateTo('/meetings')"
-                    id="btn-view-all-meetings">Xem tất cả</button>
-            </div>
-
-            @if (nextMeetings.length === 0) {
-            <!-- Empty -->
-            <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="upcomingEmpty"
-                [nzNotFoundFooter]="upcomingEmptyFooter" />
-            <ng-template #upcomingEmpty>
-                <p>Không có cuộc họp sắp diễn ra</p>
-                <p>Tạo cuộc họp mới để bắt đầu làm việc nhóm.</p>
-            </ng-template>
-            <ng-template #upcomingEmptyFooter>
-                <button nz-button nzType="primary" (click)="createMeeting()"
-                    id="btn-create-meeting-from-empty">
-                    <span nz-icon nzType="plus" nzTheme="outline"></span>
-                    Tạo cuộc họp
-                </button>
-            </ng-template>
-            } @else {
-
-            <!-- ── Desktop/Tablet: DataTable ─────────── -->
-            <div class="dashboard__table-wrap">
-                <nz-table [nzData]="nextMeetings" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="middle"
-                    class="dashboard__meeting-table">
-                    <thead>
-                        <tr>
-                            <th nzWidth="175px">Thời gian</th>
-                            <th>Tên cuộc họp</th>
-                            <th nzWidth="200px" class="dashboard__col-hide-sm">Chủ trì</th>
-                            <th nzWidth="112px" nzAlign="center" class="dashboard__col-hide-sm">Thành viên</th>
-                            <th nzWidth="188px">Trạng thái</th>
-                            <th nzWidth="125px" nzAlign="right"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (m of nextMeetings; track m.id) {
-                        <tr class="dashboard__meeting-row" (click)="openMeeting(m.id)" role="button" tabindex="0"
-                            [attr.aria-label]="'Mở cuộc họp ' + m.name" (keyup.enter)="openMeeting(m.id)">
-                            <td>
-                                <span class="dashboard__time">
-                                    {{ isToday(m.expectedStartTime) ? formatTime(m.expectedStartTime) :
-                                    formatDate(m.expectedStartTime) }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="dashboard__meeting-name">{{ m.name }}</span>
-                                @if (m.description) {
-                                <span class="dashboard__meeting-desc">{{ m.description }}</span>
-                                }
-                            </td>
-                            <td class="dashboard__col-hide-sm">
-                                <span class="text-secondary">{{ m.hostName || '—' }}</span>
-                            </td>
-                            <td nzAlign="center" class="dashboard__col-hide-sm">
-                                <span class="text-secondary">{{ m.participantCount }}</span>
-                            </td>
-                            <td>
-                                <span class="smr-status" [ngClass]="'smr-status--' + statusClass(m.status)">
-                                    <span class="smr-status__dot"></span>
-                                    {{ statusLabel(m.status) }}
-                                </span>
-                            </td>
-                            <td nzAlign="right">
-                                @if (canJoin(m)) {
-                                <button nz-button nzType="primary" nzSize="small" (click)="joinMeeting(m, $event)"
-                                    [id]="'btn-join-' + m.id" aria-label="Tham gia cuộc họp">
-                                    Tham gia
-                                </button>
-                                }
-                            </td>
-                        </tr>
-                        }
-                    </tbody>
-                </nz-table>
-            </div>
-
-            <!-- ── Mobile: card list ─────────────────── -->
-            <div class="dashboard__mobile-list" aria-label="Cuộc họp sắp và đang diễn ra">
-                @for (m of nextMeetings; track m.id) {
-                <div class="dashboard__mobile-item" (click)="openMeeting(m.id)" role="button" tabindex="0"
-                    (keyup.enter)="openMeeting(m.id)">
-                    <div class="dashboard__mobile-top">
-                        <span class="dashboard__time">
-                            {{ isToday(m.expectedStartTime) ? formatTime(m.expectedStartTime) :
-                            formatDate(m.expectedStartTime) }}
-                        </span>
-                        <span class="smr-status" [ngClass]="'smr-status--' + statusClass(m.status)">
-                            <span class="smr-status__dot"></span>
-                            {{ statusLabel(m.status) }}
-                        </span>
+        <div class="dashboard__grid">
+            <section class="smr-panel dashboard__featured" aria-labelledby="next-title">
+                <div class="dashboard__eyebrow" id="next-title">Cuộc họp tiếp theo</div>
+                @if (upcoming; as meeting) {
+                    <div class="dashboard__featured-body">
+                        <div class="dashboard__meeting-info">
+                            <h2>{{ meeting.name }}</h2>
+                            <p class="dashboard__meta"><span nz-icon nzType="clock-circle"></span>{{ timeRange(meeting) }} <span>·</span> {{ isToday(meeting.expectedStartTime) ? 'Hôm nay' : formatDate(meeting.expectedStartTime) }}</p>
+                            <p class="dashboard__meta"><span nz-icon nzType="team"></span>{{ meeting.isHost ? 'Bạn chủ trì' : (meeting.hostName || 'Chưa có chủ trì') }} <span>·</span> {{ meeting.participantCount }} người tham gia</p>
+                            <ng-container *ngTemplateOutlet="avatars; context: { $implicit: meeting, limit: 6 }" />
+                        </div>
+                        <div class="dashboard__featured-actions">
+                            <button nz-button nzType="primary" (click)="openMeeting(meeting.id)">Xem chi tiết <span nz-icon nzType="right"></span></button>
+                            <button class="smr-link" (click)="copyInvitation(meeting)"><span nz-icon nzType="copy"></span>Sao chép lời mời</button>
+                        </div>
                     </div>
-                    <p class="dashboard__mobile-name">{{ m.name }}</p>
-                    <div class="dashboard__mobile-meta">
-                        <span>{{ m.hostName || 'Không xác định' }}</span>
-                        <span>&middot;</span>
-                        <span>{{ m.participantCount }} thành viên</span>
-                    </div>
-                    @if (canJoin(m)) {
-                    <button nz-button nzType="primary" nzSize="small" (click)="joinMeeting(m, $event)"
-                        class="dashboard__mobile-join" [id]="'btn-join-mobile-' + m.id">
-                        Tham gia
-                    </button>
-                    }
-                </div>
+                    <div class="dashboard__agenda"><span nz-icon nzType="file-text"></span><span><b>Nội dung chính:</b> {{ agenda(meeting) }}</span></div>
+                } @else {
+                    <div class="dashboard__empty dashboard__empty--compact"><h2>Chưa có cuộc họp sắp tới</h2><p>Tạo cuộc họp để lên lịch làm việc cùng nhóm.</p><button class="smr-link" (click)="createMeeting()">Tạo cuộc họp <span nz-icon nzType="plus"></span></button></div>
                 }
-            </div>
+            </section>
 
-            }
-        </section>
-
-        <!-- ── 3. Recent Meetings (đã kết thúc) ─────── -->
-        <section class="smr-section" aria-labelledby="section-recent">
-
-            <div class="smr-section__header">
-                <h3 class="smr-section__title" id="section-recent">Cuộc họp gần đây</h3>
-                <button class="smr-text-btn" role="link" (click)="navigateTo('/meetings')" id="btn-view-recent-all">Xem
-                    tất cả</button>
-            </div>
-
-            @if (recentMeetings().length === 0) {
-            <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có cuộc họp nào kết thúc" />
-            } @else {
-            <nz-table [nzData]="recentMeetings()" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="middle"
-                class="dashboard__meeting-table">
-                <thead>
-                    <tr>
-                        <th>Tên cuộc họp</th>
-                        <th nzWidth="188px">Thời gian</th>
-                        <th nzWidth="200px" class="dashboard__col-hide-sm">Chủ trì</th>
-                        <th nzWidth="112px" nzAlign="center" class="dashboard__col-hide-sm">Thành viên</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (m of recentMeetings(); track m.id) {
-                    <tr class="dashboard__meeting-row" (click)="openMeeting(m.id)" role="button" tabindex="0"
-                        (keyup.enter)="openMeeting(m.id)">
-                        <td>
-                            <span class="dashboard__meeting-name">{{ m.name }}</span>
-                        </td>
-                        <td>
-                            <span class="text-secondary text-sm">{{ formatDate(m.expectedStartTime) }}</span>
-                        </td>
-                        <td class="dashboard__col-hide-sm">
-                            <span class="text-secondary">{{ m.hostName || '—' }}</span>
-                        </td>
-                        <td nzAlign="center" class="dashboard__col-hide-sm">
-                            <span class="text-secondary">{{ m.participantCount }}</span>
-                        </td>
-                    </tr>
+            <section class="smr-panel dashboard__live" aria-labelledby="live-title">
+                @if (ongoing; as meeting) {
+                    <div class="dashboard__live-label" id="live-title"><i class="smr-live-dot"></i> Đang diễn ra</div>
+                    <h2>{{ meeting.name }}</h2>
+                    <p class="dashboard__meta"><span nz-icon nzType="clock-circle"></span>{{ timeRange(meeting) }} <span>·</span> {{ liveParticipants(meeting) }}</p>
+                    <div class="dashboard__live-footer">
+                        <ng-container *ngTemplateOutlet="avatars; context: { $implicit: meeting, limit: 4 }" />
+                        <button nz-button nzType="primary" (click)="joinMeeting(meeting)"><span nz-icon nzType="video-camera"></span>Tham gia</button>
+                    </div>
+                    @if ((data()?.dashboard?.ongoing ?? 0) > 1) {
+                        <button class="smr-link" (click)="navigateTo('/meetings')">Xem {{ data()?.dashboard?.ongoing }} cuộc họp đang diễn ra <span nz-icon nzType="right"></span></button>
                     }
-                </tbody>
-            </nz-table>
-            }
-        </section>
+                } @else {
+                    <div class="dashboard__live-label" id="live-title"><span nz-icon nzType="video-camera"></span> Phòng họp</div>
+                    <h2>Không có cuộc họp đang diễn ra</h2><p class="dashboard__meta">Bạn có thể tham gia bằng mã được mời.</p>
+                    <button class="smr-link" (click)="openJoinModal()">Tham gia bằng mã <span nz-icon nzType="right"></span></button>
+                }
+            </section>
 
-    </div><!-- /.dashboard__content -->
+            <section class="smr-panel dashboard__schedule" aria-labelledby="schedule-title">
+                <div class="smr-panel__header"><h2 id="schedule-title">Lịch họp hôm nay</h2><button class="smr-link" (click)="navigateTo('/meetings')">Xem tất cả <span nz-icon nzType="right"></span></button></div>
+                @if (!today()) {
+                    <div class="dashboard__empty dashboard__empty--compact"><p>Không thể tải lịch họp hôm nay.</p><button class="smr-link" (click)="loadData()">Thử lại</button></div>
+                } @else {
+                    <ul class="dashboard__list">
+                        @for (meeting of todayMeetings; track meeting.id) {
+                            <li><button class="dashboard__schedule-row" (click)="openMeeting(meeting.id)">
+                                <span class="dashboard__time"><strong>{{ formatTime(meeting.expectedStartTime) }}</strong><span>{{ meeting.expectedEndTime ? formatTime(meeting.expectedEndTime) : '—' }}</span></span>
+                                <span class="dashboard__schedule-name" [class.dashboard__schedule-name--live]="meeting.status === MeetingStatus.Ongoing">{{ meeting.name }}</span>
+                                <span class="dashboard__schedule-avatars"><ng-container *ngTemplateOutlet="avatars; context: { $implicit: meeting, limit: 3 }" /></span>
+                                <span class="smr-status" [ngClass]="'smr-status--' + statusClass(meeting.status)">{{ statusLabel(meeting.status) }}</span>
+                                <span nz-icon nzType="right" class="dashboard__chevron"></span>
+                            </button></li>
+                        } @empty { <li class="dashboard__empty dashboard__empty--compact"><p>Hôm nay chưa có lịch họp.</p><button class="smr-link" (click)="createMeeting()">Lên lịch cuộc họp</button></li> }
+                    </ul>
+                }
+            </section>
+
+            <section class="smr-panel dashboard__tasks" aria-labelledby="tasks-title">
+                <div class="smr-panel__header"><h2 id="tasks-title">Công việc cần xử lý</h2><button class="smr-link" (click)="navigateTo('/tasks')">Mở bảng công việc <span nz-icon nzType="right"></span></button></div>
+                @if (!tasks()) {
+                    <div class="dashboard__empty"><p>Không thể tải công việc.</p><button class="smr-link" (click)="refreshTasks()">Thử lại</button></div>
+                } @else {
+                    <ul class="dashboard__list">
+                        @for (task of tasks()?.items; track task.id) {
+                            <li class="dashboard__task-row">
+                                <input type="checkbox" class="dashboard__task-check" [disabled]="!task.canEdit || savingTasks().includes(task.id)" [attr.aria-label]="'Hoàn thành: ' + task.title" [title]="task.canEdit ? 'Đánh dấu hoàn thành' : 'Bạn chỉ có quyền xem công việc này'" (change)="completeTask(task, $event)" />
+                                <button class="dashboard__task-content" (click)="selectedTask.set(task.id)"><strong>{{ task.title }}</strong><span><span nz-icon nzType="file-text"></span>{{ task.meetingName || 'Công việc độc lập' }}</span></button>
+                                <span class="smr-flag" [ngClass]="'smr-flag--' + dueTone(task.dueDate)" [title]="task.dueDate ? formatDate(task.dueDate) : 'Chưa có hạn hoàn thành'">{{ dueLabel(task.dueDate) }}</span>
+                                <span class="smr-avatar" [ngClass]="'smr-avatar--' + avatarTone(task.assigneeFullName || task.assigneeUserName || '')" nz-tooltip [nzTooltipTitle]="task.assigneeFullName || task.assigneeUserName || 'Chưa phân công'">{{ initials(task.assigneeFullName || task.assigneeUserName || '') }}</span>
+                            </li>
+                        } @empty { <li class="dashboard__empty"><span nz-icon nzType="check-circle"></span><h3>Bạn đã xử lý xong công việc</h3><p>Hiện không có công việc cần làm.</p></li> }
+                    </ul>
+                    <div class="dashboard__tasks-footer"><button class="smr-link" (click)="navigateTo('/tasks')">{{ tasks()?.total ? 'Xem tất cả ' + tasks()?.total + ' công việc' : 'Mở bảng công việc' }} <span nz-icon nzType="right"></span></button></div>
+                }
+            </section>
+
+            <section class="smr-panel dashboard__recent" aria-labelledby="recent-title">
+                <div class="smr-panel__header"><h2 id="recent-title">Sau cuộc họp</h2></div>
+                @if (data()?.recentError) {
+                    <div class="dashboard__empty dashboard__empty--compact"><p>Không thể tải cuộc họp gần đây.</p><button class="smr-link" (click)="loadData()">Thử lại</button></div>
+                } @else {
+                    <ul class="dashboard__list">
+                        @for (meeting of data()?.recentMeetings; track meeting.id) {
+                            <li class="dashboard__recent-row">
+                                <span class="dashboard__file-icon"><span nz-icon nzType="file-text"></span></span>
+                                <button class="dashboard__recent-content" (click)="openMeeting(meeting.id)"><strong>{{ meeting.name }}</strong><span>{{ formatDate(meeting.expectedStartTime) }} · {{ duration(meeting) }}</span></button>
+                                <span class="smr-flag">Đã kết thúc</span>
+                                <button class="smr-link" (click)="openMeeting(meeting.id)">Xem kết quả <span nz-icon nzType="right"></span></button>
+                            </li>
+                        } @empty { <li class="dashboard__empty dashboard__empty--compact"><p>Chưa có cuộc họp đã kết thúc.</p><span>Kết quả và tài liệu sẽ xuất hiện tại đây.</span></li> }
+                    </ul>
+                }
+            </section>
+        </div>
     }
+</div>
 
-    <!-- ── Popup tạo cuộc họp ─────────────────────── -->
-    <app-create-meeting-modal [open]="showCreateModal()" (closed)="closeCreateModal()"
-        (created)="onMeetingCreated()" />
+<ng-template #avatars let-meeting let-limit="limit">
+    <span class="smr-avatar-group" [attr.aria-label]="meeting.participantCount + ' người tham gia'">
+        @for (person of participants(meeting, limit); track $index) {
+            <span class="smr-avatar" [ngClass]="'smr-avatar--' + person.tone" nz-tooltip [nzTooltipTitle]="person.name">{{ person.initials }}</span>
+        }
+        @if (remainingParticipants(meeting, limit) > 0) { <span class="smr-avatar smr-avatar--more" [title]="remainingParticipants(meeting, limit) + ' người khác'">+{{ remainingParticipants(meeting, limit) }}</span> }
+    </span>
+</ng-template>
 
-</div><!-- /.dashboard -->
+@if (showCreateModal()) {
+    <app-create-meeting-modal [open]="showCreateModal()" (closed)="showCreateModal.set(false)" (created)="onMeetingCreated()" />
+}
+@if (selectedTask()) {
+    <app-task-detail-drawer [open]="true" [taskId]="selectedTask()" (closed)="selectedTask.set(null)" (changed)="refreshTasks()" />
+}
+<nz-modal [nzVisible]="showJoinModal()" nzTitle="Tham gia bằng mã" [nzFooter]="joinFooter" [nzWidth]="460" [nzMaskClosable]="!joining()" [nzClosable]="!joining()" (nzOnCancel)="showJoinModal.set(false)">
+    <ng-container *nzModalContent>
+        <form id="join-code-form" (ngSubmit)="submitJoinCode()" class="dashboard__join-form">
+            <label for="meeting-code">Mã phòng họp</label>
+            <input nz-input id="meeting-code" name="meetingCode" [(ngModel)]="joinCode" placeholder="Nhập mã trong lời mời" autocomplete="off" maxlength="64" [disabled]="joining()" aria-describedby="join-code-help join-code-error" [attr.aria-invalid]="!!joinError()" />
+            <p id="join-code-help">Sử dụng mã của cuộc họp bạn được mời. Phòng mở trước giờ bắt đầu 5 phút.</p>
+            <p id="join-code-error" role="alert" class="dashboard__join-error">{{ joinError() }}</p>
+        </form>
+    </ng-container>
+    <ng-template #joinFooter><button nz-button [disabled]="joining()" (click)="showJoinModal.set(false)">Đóng</button><button nz-button nzType="primary" type="submit" form="join-code-form" [nzLoading]="joining()">Tham gia</button></ng-template>
+</nz-modal>
+

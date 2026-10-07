@@ -23,6 +23,10 @@ import { TaskListItem, TaskPriority, TaskStatus } from '../../core/models/task.m
 import { TaskCreateModal } from './components/task-create-modal/task-create-modal';
 import { TaskDetailDrawer } from './components/task-detail-drawer/task-detail-drawer';
 import { CustomIconComponent } from '../../layout/shell/custom-icon/custom-icon.component';
+import { SelectA11yDirective } from '../../shared/a11y/select-a11y.directive';
+import { taskStatus } from '../../shared/utils/status-map';
+import { Avatar } from '../../shared/ui/avatar/avatar';
+import { friendlyError } from '../../shared/utils/friendly-error';
 
 type DuePreset = 'all' | 'overdue' | 'today' | 'upcoming';
 
@@ -37,6 +41,8 @@ type DuePreset = 'all' | 'overdue' | 'today' | 'upcoming';
     templateUrl: './tasks.html',
     styleUrl: './tasks.scss',
     imports: [
+        Avatar,
+        SelectA11yDirective,
         CommonModule,
         FormsModule,
         NzButtonModule,
@@ -142,9 +148,6 @@ export class Tasks implements OnInit {
     detailOpen = signal<boolean>(false);
     createOpen = signal<boolean>(false);
 
-    // progress helper
-    progressPercent = (t: TaskListItem): number => t.progress ?? 0;
-
     constructor() {
         this.keyword$
             .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
@@ -171,7 +174,7 @@ export class Tasks implements OnInit {
                     void this.hub.joinRoom(id).catch(() => undefined);
                 },
                 error: (err: Error) => {
-                    this.meetingLoadError.set(err instanceof Error ? err.message : 'Không thể tải thông tin cuộc họp.');
+                    this.meetingLoadError.set(friendlyError(err, 'Không thể tải thông tin cuộc họp.'));
                 },
             });
     }
@@ -264,7 +267,7 @@ export class Tasks implements OnInit {
                 },
                 error: (err: Error) => {
                     this.loading.set(false);
-                    this.loadError.set(err.message || 'Không thể tải danh sách công việc.');
+                    this.loadError.set(friendlyError(err, 'Không thể tải danh sách công việc.'));
                 },
             });
     }
@@ -273,7 +276,15 @@ export class Tasks implements OnInit {
     closeCreate(): void { this.createOpen.set(false); }
     onTaskCreated(): void { this.createOpen.set(false); this.message.success('Tạo công việc thành công.'); this.reload(); }
 
+    // Bấm dòng → bảng Kanban; drawer cũ chỉ còn cho "Sửa thông tin".
+    openBoard(task: TaskListItem): void {
+        const queryParams = this.meetingContextId ? { meeting: this.meetingContextId } : undefined;
+        void this.router.navigate(['/tasks', task.id], { queryParams });
+    }
     openDetail(task: TaskListItem): void { this.detailTaskId.set(task.id); this.detailOpen.set(true); }
+    cardProgress(t: TaskListItem): number {
+        return t.childrenCount ? Math.round((t.completedChildrenCount / t.childrenCount) * 100) : 0;
+    }
     closeDetail(): void { this.detailOpen.set(false); }
     onDetailChanged(): void { this.load(); }
 
@@ -281,20 +292,10 @@ export class Tasks implements OnInit {
     viewMeeting(meetingId: string | null): void { if (meetingId) void this.router.navigate(['/meetings', meetingId]); }
 
     statusLabel(status: number): string {
-        const map: Record<number, string> = {
-            [TaskStatus.NotStarted]: 'Chưa bắt đầu',
-            [TaskStatus.InProgress]: 'Đang thực hiện',
-            [TaskStatus.Completed]: 'Hoàn thành',
-        };
-        return map[status] ?? 'Không xác định';
+        return taskStatus(status).label;
     }
     statusClass(status: number): string {
-        const map: Record<number, string> = {
-            [TaskStatus.NotStarted]: 'draft',
-            [TaskStatus.InProgress]: 'ongoing',
-            [TaskStatus.Completed]: 'ended',
-        };
-        return map[status] ?? 'draft';
+        return taskStatus(status).tone;
     }
     priorityLabel(priority: number): string {
         const map: Record<number, string> = {

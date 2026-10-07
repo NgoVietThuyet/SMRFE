@@ -5,3 +5,5 @@
 .list-page {
     // kế thừa global styles.scss
 }
+
+.titles__actions { display: inline-flex; align-items: center; gap: var(--space-1); }

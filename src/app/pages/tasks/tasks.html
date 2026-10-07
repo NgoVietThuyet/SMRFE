@@ -21,8 +21,8 @@
             }
         </div>
         <div class="list-page-header-actions">
-            <button nz-button class="list-page-header-btn-primary" (click)="openCreate()" id="btn-create-task">
-                <span nz-icon nzType="plus" nzTheme="outline"></span> Công việc
+            <button nz-button nzType="primary" class="list-page-header-btn-primary" (click)="openCreate()" id="btn-create-task">
+                <span nz-icon nzType="plus" nzTheme="outline"></span> Tạo công việc
             </button>
         </div>
     </div>
@@ -34,10 +34,7 @@
                 <div class="list-page-filter-bar-row">
                     <div class="list-page-filter-bar-search">
                         <input nz-input type="search" autocomplete="off" placeholder="Tìm kiếm công việc..." aria-label="Tìm kiếm công việc" [ngModel]="keyword()" (ngModelChange)="onKeywordInput($event)" />
-                        <button type="button" class="list-page-filter-bar-search-btn" aria-label="Tìm kiếm" (click)="load()">
-                            <span nz-icon nzType="search" nzTheme="outline"></span>
-                        </button>
-                        <button type="button" class="list-page-filter-bar-refresh-btn" aria-label="Làm mới" (click)="reload()">
+                        <button type="button" class="list-page-filter-bar-search-reset-btn" aria-label="Làm mới" (click)="reload()">
                             <span nz-icon nzType="reload" nzTheme="outline"></span>
                         </button>
                     </div>
@@ -48,15 +45,6 @@
 
                     <nz-select class="list-page-header-select" [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" nzPlaceHolder="Trạng thái" aria-label="Trạng thái">
                         @for (opt of statusOptions; track opt.label) { <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" /> }
-                    </nz-select>
-
-                    <nz-select class="list-page-header-select" [ngModel]="duePreset()" (ngModelChange)="onDueChange($event)" nzPlaceHolder="Hạn" aria-label="Hạn">
-                        @for (opt of dueOptions; track opt.value) { <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" /> }
-                    </nz-select>
-
-                    <nz-select class="list-page-header-select" style="min-width: 180px;" [ngModel]="meetingFilter()" (ngModelChange)="onMeetingChange($event)" nzPlaceHolder="Cuộc họp" nzShowSearch nzAllowClear (nzOnSearch)="loadMeetingOptions($event)" aria-label="Cuộc họp">
-                        <nz-option nzValue="" nzLabel="Mọi cuộc họp"></nz-option>
-                        @for (m of meetingOptions(); track m.id) { <nz-option [nzValue]="m.id" [nzLabel]="m.name" /> }
                     </nz-select>
 
                     <div class="list-filter-trigger">
@@ -76,22 +64,22 @@
                     </div>
                     <div class="list-filter-body">
                         <div class="list-filter-field"><span>Trạng thái</span>
-                            <nz-select style="width:100%" [ngModel]="draftStatus()" (ngModelChange)="draftStatus.set($event)" nzPlaceHolder="Mọi trạng thái">
+                            <nz-select style="width:100%" [ngModel]="draftStatus()" (ngModelChange)="draftStatus.set($event)" nzPlaceHolder="Mọi trạng thái" aria-label="Trạng thái">
                                 @for (opt of statusOptions; track opt.label) { <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" /> }
                             </nz-select>
                         </div>
                         <div class="list-filter-field"><span>Người phụ trách</span>
-                            <nz-select style="width:100%" [ngModel]="draftAssignee()" (ngModelChange)="draftAssignee.set($event)" nzPlaceHolder="Mọi người">
+                            <nz-select style="width:100%" [ngModel]="draftAssignee()" (ngModelChange)="draftAssignee.set($event)" nzPlaceHolder="Mọi người" aria-label="Người phụ trách">
                                 @for (opt of assigneeOptions; track opt.label) { <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" /> }
                             </nz-select>
                         </div>
                         <div class="list-filter-field"><span>Hạn</span>
-                            <nz-select style="width:100%" [ngModel]="draftDue()" (ngModelChange)="draftDue.set($event)">
+                            <nz-select style="width:100%" [ngModel]="draftDue()" (ngModelChange)="draftDue.set($event)" aria-label="Hạn">
                                 @for (opt of dueOptions; track opt.value) { <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" /> }
                             </nz-select>
                         </div>
                         <div class="list-filter-field is-full"><span>Cuộc họp</span>
-                            <nz-select style="width:100%" [ngModel]="draftMeeting()" (ngModelChange)="draftMeeting.set($event)" nzPlaceHolder="Mọi cuộc họp" nzShowSearch nzAllowClear (nzOnSearch)="loadMeetingOptions($event)">
+                            <nz-select style="width:100%" [ngModel]="draftMeeting()" (ngModelChange)="draftMeeting.set($event)" nzPlaceHolder="Mọi cuộc họp" aria-label="Cuộc họp" nzShowSearch nzAllowClear (nzOnSearch)="loadMeetingOptions($event)">
                                 @for (m of meetingOptions(); track m.id) { <nz-option [nzValue]="m.id" [nzLabel]="m.name" /> }
                             </nz-select>
                         </div>
@@ -116,8 +104,8 @@
                             <div class="smr-loading"><nz-spin></nz-spin></div>
                         } @else {
                             @for (t of items(); track t.id) {
-                                <article class="responsive-card" (click)="openDetail(t)" tabindex="0"
-                                    (keydown.enter)="openDetail(t)">
+                                <article class="responsive-card" (click)="openBoard(t)" tabindex="0"
+                                    (keydown.enter)="openBoard(t)" [attr.aria-label]="'Mở bảng ' + t.title">
                                     <div class="responsive-card__head">
                                         <div class="responsive-card__title-wrap">
                                             <h3 class="responsive-card__title">{{ t.title }}</h3>
@@ -130,7 +118,7 @@
                                     <dl class="responsive-card__meta">
                                         <div><dt>Phụ trách</dt><dd>{{ t.assigneeFullName || t.assigneeUserName || 'Chưa gán' }}</dd></div>
                                         <div><dt>Thời hạn</dt><dd [ngClass]="dueClass(t)">{{ formatDue(t.dueDate) }}</dd></div>
-                                        <div><dt>Tiến độ</dt><dd>{{ t.progress }}% · {{ t.completedChildrenCount }}/{{ t.childrenCount }} việc con</dd></div>
+                                        <div><dt>Tiến độ</dt><dd>{{ t.completedChildrenCount }}/{{ t.childrenCount }} đầu việc</dd></div>
                                     </dl>
                                 </article>
                             } @empty {
@@ -138,53 +126,56 @@
                             }
                         }
                     </div>
-                    <nz-table [nzData]="items()" [nzFrontPagination]="false" [nzLoading]="loading()" [nzTotal]="total()" [nzPageIndex]="page()" [nzPageSize]="pageSize()" [nzShowPagination]="false" [nzNoResult]="noTasks" [nzScroll]="{ y: 'calc(100vh - var(--lp-scroll-tab))' }" nzSize="small" class="bid-list-table responsive-table">
+                    <nz-table [nzData]="items()" [nzFrontPagination]="false" [nzLoading]="loading()" [nzTotal]="total()" [nzPageIndex]="page()" [nzPageSize]="pageSize()" [nzShowPagination]="false" [nzNoResult]="noTasks" [nzScroll]="{ x: '900px', y: 'calc(100vh - var(--lp-scroll-tab))' }" nzSize="small" class="bid-list-table responsive-table">
                         <ng-template #noTasks><nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="noTasksContent" [nzNotFoundFooter]="noTasksFooter" />
                             <ng-template #noTasksContent><p>Không có công việc</p><p>Tạo công việc lớn đầu tiên hoặc đổi bộ lọc.</p></ng-template>
                             <ng-template #noTasksFooter><button nz-button nzType="primary" (click)="openCreate()">Tạo công việc</button></ng-template>
                         </ng-template>
                         <thead>
                             <tr>
-                                <th nzWidth="380px">CÔNG VIỆC</th>
-                                <th nzWidth="180px">PHỤ TRÁCH</th>
-                                <th nzWidth="160px">HẠN</th>
-                                <th nzWidth="160px">TRẠNG THÁI</th>
-                                <th nzWidth="140px">TIẾN ĐỘ</th>
-                                <th nzWidth="100px" nzAlign="center">THAO TÁC</th>
+                                <th>Công việc</th>
+                                <th nzWidth="200px">Phụ trách</th>
+                                <th nzWidth="130px">Hạn</th>
+                                <th nzWidth="150px">Trạng thái</th>
+                                <th nzWidth="150px">Tiến độ</th>
+                                <th nzWidth="140px" nzRight nzAlign="right"><span class="sr-only">Thao tác</span></th>
                             </tr>
                         </thead>
                         <tbody>
                             @for (t of items(); track t.id) {
-                                <tr>
+                                <tr class="task-row" (click)="openBoard(t)">
                                     <td>
-                                        <div style="display:flex; flex-direction:column; gap:2px; cursor:pointer;" (click)="openDetail(t)">
-                                            <span style="font-weight:500; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ t.title }}</span>
-                                            @if (t.meetingName) { <span style="font-size:13px; color:#64748b;">{{ t.meetingName }}</span> }
+                                        <div class="task-row__title-wrap">
+                                            <span class="task-row__title">{{ t.title }}</span>
+                                            @if (t.meetingName) { <span class="task-row__meta">{{ t.meetingName }}</span> }
                                         </div>
                                     </td>
                                     <td>
                                         @if (t.assigneeFullName || t.assigneeUserName) {
-                                            <span class="smr-avatar smr-avatar--sm" style="background:#075985; color:#fff; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px;" [nz-tooltip]="t.assigneeFullName || t.assigneeUserName" nzTooltipTitle="{{ t.assigneeFullName || t.assigneeUserName }}" nz-tooltip>{{ initials(t.assigneeFullName || t.assigneeUserName) }}</span>
-                                            <span style="margin-left:6px; font-size:14px; color:#334155;">{{ t.assigneeFullName || t.assigneeUserName }}</span>
-                                        } @else { <span style="color:#94a3b8;">—</span> }
+                                            <span class="task-row__person">
+                                                <smr-avatar [name]="t.assigneeFullName || t.assigneeUserName" size="sm" />
+                                                <span class="task-row__person-name">{{ t.assigneeFullName || t.assigneeUserName }}</span>
+                                            </span>
+                                        } @else { <span class="task-row__meta">Chưa gán</span> }
                                     </td>
-                                    <td><span [ngClass]="dueClass(t)" style="font-size:14px; color:#64748b;">{{ formatDue(t.dueDate) }}</span></td>
+                                    <td><span class="task-row__due" [ngClass]="dueClass(t)">{{ formatDue(t.dueDate) }}</span></td>
                                     <td>
                                         <span class="smr-status" [ngClass]="'smr-status--' + statusClass(t.status)">
-                                            <span class="smr-status__dot"></span> {{ statusLabel(t.status) }}
+                                            <span class="smr-status__dot"></span>{{ statusLabel(t.status) }}
                                         </span>
                                     </td>
                                     <td>
-                                        <div style="display:flex; align-items:center; gap:8px;">
-                                            <div style="flex:1; height:6px; background:#e2e8f0; border-radius:999px; overflow:hidden;">
-                                                <div [style.width.%]="t.progress" [style.background]="t.progress===100 ? '#16a34a' : '#075985'" style="height:100%;"></div>
-                                            </div>
-                                            <span style="font-size:12px; color:#64748b; min-width:32px;">{{ t.progress }}%</span>
+                                        <div class="task-row__progress" [attr.aria-label]="t.completedChildrenCount + ' trên ' + t.childrenCount + ' đầu việc hoàn thành'">
+                                            <div class="task-row__bar"><div class="task-row__bar-fill" [class.is-done]="t.childrenCount > 0 && cardProgress(t) === 100" [style.width.%]="cardProgress(t)"></div></div>
+                                            <span class="task-row__pct">{{ t.completedChildrenCount }}/{{ t.childrenCount }}</span>
                                         </div>
-                                        <span style="font-size:12px; color:#94a3b8;">{{ t.completedChildrenCount }}/{{ t.childrenCount }}</span>
+                                        <span class="task-row__meta">đầu việc</span>
                                     </td>
-                                    <td nzAlign="center">
-                                        <button nz-button nzType="link" (click)="openDetail(t)">Xem</button>
+                                    <td nzRight nzAlign="right">
+                                        <button nz-button nzType="text" (click)="$event.stopPropagation(); openDetail(t)" [attr.aria-label]="'Sửa thông tin ' + t.title" nz-tooltip nzTooltipTitle="Sửa thông tin">
+                                            <span nz-icon nzType="edit" nzTheme="outline"></span>
+                                        </button>
+                                        <button nz-button nzType="link" (click)="$event.stopPropagation(); openBoard(t)" [attr.aria-label]="'Mở bảng ' + t.title">Mở bảng</button>
                                     </td>
                                 </tr>
                             }

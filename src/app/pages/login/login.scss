@@ -1,7 +1,7 @@
 // Login-specific styles
 // Khung + card riêng màn Login; input/button kế thừa global styles.scss.
 // #64748b là slate theo spec Login (chưa có token — cân nhắc thêm --text-tertiary).
-$login-muted: #64748b;
+$login-muted: var(--color-text-muted);
 
 .login {
     width: 100vw;
@@ -23,6 +23,24 @@ $login-muted: #64748b;
     &__brand {
         text-align: center;
         margin-bottom: var(--space-6);
+    }
+
+    &__brand-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: var(--color-primary);
+        color: var(--color-on-primary);
+        font-size: 26px;
+        margin-bottom: var(--space-3);
+        box-shadow: var(--shadow-2);
+
+        .anticon {
+            color: inherit;
+        }
     }
 
     &__brand-name {
@@ -67,9 +85,9 @@ $login-muted: #64748b;
     // Lỗi xác thực chung (1.15 / 1.16)
     &__auth-error {
         background-color: var(--danger-bg);
-        border: 1px solid var(--danger-border);
-        color: var(--danger);
-        border-radius: var(--radius-md);
+        border: 1px solid var(--color-danger-border);
+        color: var(--color-danger-text);
+        border-radius: var(--radius-sm);
         padding: 12px var(--space-3);
         font-size: var(--font-size-sm);
         margin-bottom: var(--space-4);
@@ -104,9 +122,11 @@ $login-muted: #64748b;
     }
 
     // Input Login cao 50px (global mặc định 45px)
-    &__control.ant-input,
-    &__control-group.ant-input-affix-wrapper {
-        min-height: var(--control-height-lg);
+    &__control.ant-input.ant-input,
+    &__control-group.ant-input-affix-wrapper.ant-input-affix-wrapper {
+        height: var(--control-lg) !important;
+        min-height: var(--control-lg) !important;
+        width: 100%;
     }
 
     &__field-error {
@@ -128,8 +148,15 @@ $login-muted: #64748b;
 
     &__support {
         display: flex;
-        justify-content: flex-end;
-        margin-top: var(--space-2);
+        align-items: center;
+        justify-content: space-between;
+        margin-top: var(--space-3);
+    }
+
+    &__remember-label {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        user-select: none;
     }
 
     // Button Login cao 50px (global .ant-btn mặc định 45px)

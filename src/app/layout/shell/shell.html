@@ -25,6 +25,22 @@
         <main class="smr-page" id="main-content">
             <router-outlet />
         </main>
+
+        <!-- Bottom navigation — chỉ hiện < 768px (F-18) -->
+        <nav class="smr-bottom-nav" aria-label="Điều hướng nhanh">
+            <a class="smr-bottom-nav__item" routerLink="/dashboard" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+                <span nz-icon nzType="dashboard" nzTheme="outline"></span><span>Tổng quan</span>
+            </a>
+            <a class="smr-bottom-nav__item" routerLink="/meetings" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+                <span nz-icon nzType="calendar" nzTheme="outline"></span><span>Cuộc họp</span>
+            </a>
+            <a class="smr-bottom-nav__item" routerLink="/tasks" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+                <span nz-icon nzType="check-square" nzTheme="outline"></span><span>Công việc</span>
+            </a>
+            <button type="button" class="smr-bottom-nav__item" (click)="openMobileNavigation()" [attr.aria-expanded]="mobileOpen()">
+                <span nz-icon nzType="appstore" nzTheme="outline"></span><span>Thêm</span>
+            </button>
+        </nav>
     </div>
 
 </div>

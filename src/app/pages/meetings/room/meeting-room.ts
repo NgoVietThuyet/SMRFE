@@ -25,11 +25,14 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { forkJoin } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AuthService } from '../../../core/services/auth.service';
 import { JitsiApi, JitsiService } from '../../../core/services/jitsi.service';
 import { MeetingHubService } from '../../../core/services/meeting-hub.service';
 import { MeetingService } from '../../../core/services/meeting.service';
+import { SpeechRecognitionService } from '../../../core/services/speech-recognition.service';
 import {
     ChatMessage,
+    MeetingCaptionDto,
     MeetingDetailDto,
     MeetingJoinInfo,
     MeetingParticipantRole,
@@ -38,9 +41,12 @@ import { RoomDocsPanel } from './components/room-docs-panel/room-docs-panel';
 import { RoomTasksPanel } from './components/room-tasks-panel/room-tasks-panel';
 import { WhiteboardCanvas } from './components/whiteboard/whiteboard';
 import { ROOM_I18N, RoomKey, RoomLang } from './room-i18n';
+import { Avatar } from '../../../shared/ui/avatar/avatar';
+import { PrejoinDevices, PrejoinPreview } from './prejoin-preview/prejoin-preview';
 
-type Phase = 'loading' | 'prejoin' | 'connecting' | 'live' | 'error';
-type SidePanel = 'participants' | 'chat' | 'docs' | 'tasks' | 'ai' | null;
+type Phase = 'loading' | 'prejoin' | 'connecting' | 'live' | 'ended' | 'error';
+type SidePanel = 'participants' | 'chat' | 'docs' | 'tasks' | 'transcript' | 'ai' | null;
+
 
 // =====================================================
 // MeetingRoom — phòng họp chính thức realtime (redesign).
@@ -53,6 +59,8 @@ type SidePanel = 'participants' | 'chat' | 'docs' | 'tasks' | 'ai' | null;
     templateUrl: './meeting-room.html',
     styleUrl: './meeting-room.scss',
     imports: [
+        PrejoinPreview,
+        Avatar,
         CommonModule,
         FormsModule,
         NzButtonModule,
@@ -77,6 +85,8 @@ export class MeetingRoom implements OnInit, OnDestroy {
     private readonly hub = inject(MeetingHubService);
     private readonly message = inject(NzMessageService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly speechService = inject(SpeechRecognitionService);
+    private readonly authService = inject(AuthService);
 
     private readonly mount = viewChild.required<ElementRef<HTMLElement>>('jitsiMount');
     private readonly chatScroll = viewChild<ElementRef<HTMLElement>>('chatScroll');
@@ -97,10 +107,27 @@ export class MeetingRoom implements OnInit, OnDestroy {
     recording = signal<boolean>(false);
     speakerName = signal<string | null>(null);
     captionsOn = signal<boolean>(true);
+    captionLang = signal<'vi-VN' | 'en-US'>('vi-VN');
+    activeCaption = signal<MeetingCaptionDto | null>(null);
+    private captionTimer: ReturnType<typeof setTimeout> | null = null;
+    transcripts = signal<MeetingCaptionDto[]>([]);
+    transcriptSearch = signal<string>('');
+    filteredTranscripts = computed(() => {
+        const q = this.transcriptSearch().trim().toLowerCase();
+        const list = this.transcripts();
+        if (!q) return list;
+        return list.filter(
+            (item) =>
+                item.text.toLowerCase().includes(q) ||
+                item.speakerName.toLowerCase().includes(q)
+        );
+    });
+
     liveCount = signal<number>(1);
     elapsed = signal<number>(0);
     isStarting = signal<boolean>(false);
     private timer: ReturnType<typeof setInterval> | null = null;
+    connectionState = signal<'connected' | 'reconnecting' | 'disconnected'>('connected');
 
     participantFilter = signal<string>('');
     filteredParticipants = computed(() => {
@@ -114,6 +141,18 @@ export class MeetingRoom implements OnInit, OnDestroy {
                 p.email.toLowerCase().includes(q)
         );
     });
+
+    /** Người đã thực sự vào phòng / đã mời chưa vào — một nguồn đếm duy nhất (F-10). */
+    joinedParticipants = computed(() => (this.meeting()?.participants ?? []).filter((p) => p.isJoined));
+    participantGroups = computed(() => {
+        const list = this.filteredParticipants();
+        return [
+            { key: 'inRoom' as const, items: list.filter((p) => p.isJoined) },
+            { key: 'notJoined' as const, items: list.filter((p) => !p.isJoined) },
+        ].filter((g) => g.items.length > 0);
+    });
+    /** Thiết bị chọn ở phòng chờ, chuyển cho Jitsi khi vào phòng. */
+    preferredDevices = signal<PrejoinDevices | null>(null);
 
     panel = signal<SidePanel>(null);
     chat = signal<ChatMessage[]>([]);
@@ -148,6 +187,9 @@ export class MeetingRoom implements OnInit, OnDestroy {
     }
 
     constructor() {
+        this.hub.connectionState.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((state) => {
+            this.connectionState.set(state);
+        });
         this.hub.messageReceived.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((msg) => {
             this.appendMessage(msg);
             if (this.panel() !== 'chat') this.unread.update((n) => n + 1);
@@ -170,9 +212,10 @@ export class MeetingRoom implements OnInit, OnDestroy {
                 this.meeting.update((m) => (m ? { ...m, status: 3 } : m));
                 this.stopTimer();
                 if (this.phase() === 'live') {
-                    setTimeout(() => void this.leave(), 1500);
+                    this.phase.set('ended');
+                    setTimeout(() => void this.leave(), 1800);
                 } else {
-                    this.phase.set('error');
+                    this.phase.set('ended');
                     this.errorMessage.set(this.lang() === 'vi' ? 'Cuộc họp đã kết thúc.' : 'Meeting has ended.');
                 }
             }
@@ -182,6 +225,35 @@ export class MeetingRoom implements OnInit, OnDestroy {
                 // RoomDocsPanel will reload via its own subscription; trigger via presence refresh count
                 this.refreshCount();
             }
+        });
+        this.hub.captionReceived.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((caption) => {
+            if (this.captionsOn()) {
+                this.displayCaption(caption);
+            }
+            if (caption.isFinal) {
+                this.transcripts.update((list) => [...list, caption]);
+            }
+        });
+        this.speechService.captionResult.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((res) => {
+            const user = this.authService.currentUser();
+            const speakerName = user?.fullName || this.joinInfo()?.displayName || 'Tôi';
+            const speakerUserName = user?.userName || '';
+            const caption: MeetingCaptionDto = {
+                meetingId: this.meetingId(),
+                speakerUserName,
+                speakerName,
+                text: res.text,
+                language: res.language,
+                isFinal: res.isFinal,
+                timestamp: new Date().toISOString(),
+            };
+            if (this.captionsOn()) {
+                this.displayCaption(caption);
+            }
+            if (caption.isFinal) {
+                this.transcripts.update((list) => [...list, caption]);
+            }
+            void this.hub.broadcastCaption(this.meetingId(), caption);
         });
     }
 
@@ -227,6 +299,8 @@ export class MeetingRoom implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        this.speechService.stopListening();
+        if (this.captionTimer) clearTimeout(this.captionTimer);
         this.stopTimer();
         this.clearJoinTimeout();
         this.api?.dispose();
@@ -352,21 +426,25 @@ export class MeetingRoom implements OnInit, OnDestroy {
 
         try {
             const api = await this.jitsi.createRoom({
-                domain: jInfo.domain,
-                roomName: jInfo.roomName,
-                displayName: jInfo.displayName,
+                domain: jInfo.domain || (jInfo as any).jitsiDomain || 'meet.d2s.vn',
+                externalApiUrl: jInfo.externalApiUrl,
+                roomName: jInfo.roomName || (jInfo as any).roomCode || id,
+                displayName: jInfo.displayName || 'Người tham gia',
                 subject: detail.name,
-                startWithAudioMuted: jInfo.startWithAudioMuted,
-                startWithVideoMuted: jInfo.startWithVideoMuted,
+                // Chính sách BE bắt tắt → luôn tắt; nếu không theo lựa chọn ở phòng chờ
+                startWithAudioMuted: !!jInfo.startWithAudioMuted || this.audioMuted(),
+                startWithVideoMuted: !!jInfo.startWithVideoMuted || this.videoMuted(),
                 parentNode: this.mount().nativeElement,
+                devices: this.preferredDevices() ?? undefined,
             });
             this.api = api;
             api.addEventListener('videoConferenceJoined', () => void this.onJoined());
             api.addEventListener('participantJoined', () => this.refreshCount());
             api.addEventListener('participantLeft', () => this.refreshCount());
-            api.addEventListener('audioMuteStatusChanged', (p) =>
-                this.audioMuted.set((p?.['muted'] as boolean) ?? true)
-            );
+            api.addEventListener('audioMuteStatusChanged', (p) => {
+                this.audioMuted.set((p?.['muted'] as boolean) ?? true);
+                this.syncSpeechRecognition();
+            });
             api.addEventListener('videoMuteStatusChanged', (p) =>
                 this.videoMuted.set((p?.['muted'] as boolean) ?? true)
             );
@@ -379,6 +457,12 @@ export class MeetingRoom implements OnInit, OnDestroy {
             api.addEventListener('recordingStatusChanged', (p) =>
                 this.recording.set((p?.['on'] as boolean) ?? false)
             );
+            api.addEventListener('connectionStatusChanged', (p) => {
+                const status = String(p?.['status'] ?? '').toLowerCase();
+                if (status.includes('reconnect')) this.connectionState.set('reconnecting');
+                else if (status.includes('disconnect') || status.includes('failed')) this.connectionState.set('disconnected');
+                else if (status.includes('connect')) this.connectionState.set('connected');
+            });
             api.addEventListener('raiseHandUpdated', (p) => {
                 if (typeof p?.['handRaised'] === 'boolean') {
                     this.handRaised.set(p['handRaised'] as boolean);
@@ -431,6 +515,8 @@ export class MeetingRoom implements OnInit, OnDestroy {
         }
         this.refreshCount();
         this.startTimer();
+        this.loadTranscripts();
+        this.syncSpeechRecognition();
     }
 
     private refreshCount(): void {
@@ -487,6 +573,80 @@ export class MeetingRoom implements OnInit, OnDestroy {
 
     toggleCaptions(): void {
         this.captionsOn.update((v) => !v);
+        this.syncSpeechRecognition();
+        if (!this.captionsOn()) {
+            this.activeCaption.set(null);
+        }
+    }
+
+    setCaptionLanguage(lang: 'vi-VN' | 'en-US'): void {
+        this.captionLang.set(lang);
+        this.speechService.setLanguage(lang);
+        const name = lang === 'vi-VN' ? this.t('vietnamese') : this.t('english');
+        this.message.info(`${this.t('captionLang')}: ${name}`);
+    }
+
+    syncSpeechRecognition(): void {
+        if (this.phase() === 'live' && this.captionsOn() && !this.audioMuted()) {
+            this.speechService.startListening(this.captionLang());
+        } else {
+            this.speechService.stopListening();
+        }
+    }
+
+    displayCaption(caption: MeetingCaptionDto): void {
+        this.activeCaption.set(caption);
+        if (this.captionTimer) clearTimeout(this.captionTimer);
+        this.captionTimer = setTimeout(() => {
+            this.activeCaption.set(null);
+        }, 5500);
+    }
+
+    loadTranscripts(): void {
+        const id = this.meetingId();
+        if (!id) return;
+        this.meetingService
+            .getTranscripts(id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+                next: (items) => {
+                    if (items && items.length > 0) {
+                        this.transcripts.set(items);
+                    }
+                },
+            });
+    }
+
+    copyAllTranscripts(): void {
+        const list = this.transcripts();
+        if (!list.length) return;
+        const text = list
+            .map((c) => {
+                const time = c.timestamp ? new Date(c.timestamp).toLocaleTimeString() : '';
+                const langLabel = c.language === 'en-US' ? 'EN' : 'VI';
+                return `[${time}] [${langLabel}] ${c.speakerName}: ${c.text}`;
+            })
+            .join('\n');
+
+        try {
+            const done = navigator.clipboard?.writeText(text);
+            if (done && typeof done.then === 'function') {
+                void done.then(() => this.message.success(this.t('transcriptCopied')));
+            } else {
+                this.message.success(this.t('transcriptCopied'));
+            }
+        } catch {
+            this.message.error('Không thể sao chép văn bản.');
+        }
+    }
+
+
+    toggleRecording(): void {
+        if (this.recording()) {
+            this.api?.executeCommand('stopRecording');
+        } else {
+            this.api?.executeCommand('startRecording', { mode: 'file' });
+        }
     }
 
     copyInvite(): void {
@@ -596,7 +756,7 @@ export class MeetingRoom implements OnInit, OnDestroy {
     }
 
     canEnd(): boolean {
-        return this.meeting()?.canManage ?? false;
+        return this.meeting()?.isHost ?? false;
     }
 
     openEnd(): void {
@@ -620,7 +780,10 @@ export class MeetingRoom implements OnInit, OnDestroy {
                 next: () => {
                     this.ending.set(false);
                     this.endOpen.set(false);
-                    void this.leave();
+                    this.meeting.update((m) => (m ? { ...m, status: 3 } : m));
+                    this.stopTimer();
+                    this.phase.set('ended');
+                    setTimeout(() => void this.leave(), 1800);
                 },
                 error: (err: Error) => {
                     this.ending.set(false);
@@ -690,6 +853,8 @@ export class MeetingRoom implements OnInit, OnDestroy {
     async leave(): Promise<void> {
         if (this.leaving) return;
         this.leaving = true;
+        this.speechService.stopListening();
+        if (this.captionTimer) clearTimeout(this.captionTimer);
         this.stopTimer();
         const id = this.meetingId();
         try {

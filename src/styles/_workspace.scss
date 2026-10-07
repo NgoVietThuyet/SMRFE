@@ -1,0 +1,139 @@
+// Shared workspace primitives. Included after legacy rules in styles.scss.
+@mixin styles {
+  // Alias về design tokens (src/styles/tokens/_tokens.scss) — không khai báo màu mới ở đây.
+  :root, .theme-dark, .theme-light {
+    --workspace-bg: var(--color-bg-page);
+    --workspace-border: var(--color-border-subtle);
+    --workspace-ink: var(--color-text);
+    --workspace-muted: var(--color-text-secondary);
+    --workspace-blue: var(--color-primary);
+    --workspace-blue-bg: var(--color-primary-subtle);
+    --workspace-green: var(--color-success-text);
+    --workspace-green-bg: var(--color-success-bg);
+    --workspace-amber: var(--color-warning-text);
+    --workspace-amber-bg: var(--color-warning-bg);
+    --workspace-red: var(--color-danger-text);
+    --workspace-red-bg: var(--color-danger-bg);
+    --workspace-purple: var(--color-ai);
+    --workspace-purple-bg: var(--color-ai-bg);
+    --workspace-radius: var(--radius-md);
+  }
+
+  .smr-panel {
+    min-width: 0;
+    background: #fff;
+    border: 1px solid var(--workspace-border);
+    border-radius: var(--workspace-radius);
+    overflow: hidden;
+  }
+  .smr-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 46px;
+    margin-inline: 16px;
+    border-bottom: 1px solid var(--workspace-border);
+    h2 { margin: 0; color: var(--workspace-ink); font-size: 16px; font-weight: 700; }
+  }
+  .smr-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    color: var(--workspace-blue);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover { color: var(--primary-600); text-decoration: underline; }
+    &:focus-visible { outline: 2px solid var(--workspace-blue); outline-offset: 3px; }
+  }
+  .smr-flag, .smr-status, .smr-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 24px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+    white-space: nowrap;
+    color: var(--workspace-muted);
+    background: var(--color-bg-subtle);
+  }
+  .smr-status--ongoing .smr-status__dot { animation: smr-pulse 1.6s var(--ease-standard) infinite; }
+  .smr-flag--info, .smr-status--upcoming, .smr-badge--upcoming {
+    color: var(--workspace-blue); background: var(--workspace-blue-bg);
+  }
+  .smr-flag--success, .smr-status--ongoing, .smr-status--completed, .smr-status--success, .smr-badge--ongoing {
+    color: var(--workspace-green); background: var(--workspace-green-bg);
+  }
+  .smr-flag--warning, .smr-status--pending, .smr-badge--pending {
+    color: var(--workspace-amber); background: var(--workspace-amber-bg);
+  }
+  .smr-flag--danger, .smr-status--cancelled, .smr-badge--cancelled {
+    color: var(--workspace-red); background: var(--workspace-red-bg);
+  }
+  .smr-flag--purple { color: var(--workspace-purple); background: var(--workspace-purple-bg); }
+  .smr-status__dot, .smr-live-dot {
+    display: inline-block; flex: 0 0 7px; width: 7px; height: 7px;
+    border-radius: 50%; background: currentColor;
+  }
+  // Avatar: 8 cặp màu (đều ≥ 6:1), chọn xác định theo tên — xem shared/ui/avatar
+  .smr-avatar {
+    display: inline-flex; flex: 0 0 30px; width: 30px; height: 30px;
+    align-items: center; justify-content: center; border-radius: 50%;
+    background: #dceeff; color: #0b4f7c; font-size: 11px; font-weight: 700;
+    &--0 { background: #dceeff; color: #0b4f7c; }
+    &--1 { background: #f8e0ed; color: #8a2f6b; }
+    &--2 { background: #d9f0e5; color: #1f5c40; }
+    &--3 { background: #fff0d6; color: #6b4519; }
+    &--4 { background: #e8e2ff; color: #4a3a96; }
+    &--5 { background: #d5f2f2; color: #0f5f63; }
+    &--6 { background: #ffe4d6; color: #8a3412; }
+    &--7 { background: #e2e8f0; color: #334155; }
+    &--more { background: #edf1f6; color: var(--workspace-muted); }
+  }
+  .smr-avatar-group { display: flex; align-items: center; gap: 4px; min-width: 0; }
+
+  // Dense, readable table defaults shared by meeting/task/catalog lists.
+  .ant-table .ant-table-thead > tr > th {
+    height: 42px; padding: 10px 14px;
+    background: var(--table-header-bg) !important; color: var(--workspace-muted);
+    font-size: 13px !important; font-weight: 600 !important; text-transform: none;
+    border-bottom-color: var(--workspace-border);
+  }
+  .ant-table .ant-table-tbody > tr > td {
+    padding: 12px 14px; font-size: 14px !important; border-bottom-color: var(--workspace-border);
+  }
+  .list-page .ant-table-tbody > tr.ant-table-row > td,
+  .list-page-tab-body .ant-table-tbody > tr.ant-table-row > td,
+  .list-page-body .ant-table-tbody > tr.ant-table-row > td { height: var(--table-row-height); }
+  .ant-table .ant-table-tbody > tr:nth-child(n) > td { background: #fff; }
+  .ant-table .ant-table-tbody > tr:hover > td { background: var(--color-bg-hover) !important; }
+  .ant-table .ant-table-tbody > tr.ant-table-placeholder:hover > td { background: #fff !important; }
+
+  .smr-compact-controls .ant-btn.ant-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 36px !important; padding: 0 14px; font-size: 13px !important;
+    line-height: 1.4 !important; border-radius: 5px; box-shadow: none;
+    &.ant-btn-primary { background: var(--workspace-blue); border-color: var(--workspace-blue); }
+    &.ant-btn-primary:hover { background: var(--primary-600); border-color: var(--primary-600); }
+  }
+  @media (max-width: 767px) {
+    .smr-compact-controls .ant-btn.ant-btn { min-height: 44px; }
+    .smr-panel__header { flex-wrap: wrap; gap: 4px 12px; padding-block: 10px; }
+    .smr-link { min-height: 36px; }
+  }
+}
+
+@keyframes smr-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}

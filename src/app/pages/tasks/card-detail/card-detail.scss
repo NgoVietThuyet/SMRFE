@@ -1,0 +1,231 @@
+.cd__title,
+.cd__title-input {
+    display: block;
+    width: 100%;
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-primary);
+}
+
+.cd__title {
+    padding: 2px var(--space-1);
+    margin-left: calc(-1 * var(--space-1));
+    border: none;
+    border-radius: var(--radius-xs);
+    background: none;
+    text-align: left;
+    overflow-wrap: anywhere;
+
+    &:is(button) { cursor: text; }
+    &:is(button):hover,
+    &:is(button):focus-visible { background: var(--bg-subtle); }
+}
+
+.cd__title-input {
+    padding: 2px var(--space-2);
+    border: 1px solid var(--primary-600);
+    border-radius: var(--radius-xs);
+    outline: none;
+}
+
+.cd__context {
+    margin: 0 0 var(--space-4);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.cd__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: var(--space-6);
+}
+
+.cd__main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    min-width: 0;
+}
+
+.cd__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.cd__section-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.cd__h {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cd__count,
+.cd__pct {
+    font-size: var(--font-size-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+}
+
+.cd__bar {
+    flex: 1 1 auto;
+    max-width: 160px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--border-default);
+    overflow: hidden;
+}
+
+.cd__bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--primary-600);
+    transition: width 0.2s ease;
+
+    &.is-done { background: var(--success); }
+}
+
+.cd__desc {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--text-primary);
+}
+
+.cd__muted {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.cd__row-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.cd__subs {
+    display: flex;
+    flex-direction: column;
+    margin: 0 calc(-1 * var(--space-2));
+}
+
+.cd__add-sub {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.cd__banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-sm);
+    background: var(--success-bg);
+    font-size: var(--font-size-sm);
+    color: var(--success);
+
+    > span:nth-child(2) { flex: 1; color: var(--text-primary); }
+}
+
+.cd__activity {
+    margin: 0;
+    padding-left: var(--space-4);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+
+    li + li { margin-top: var(--space-1); }
+}
+
+.cd__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.cd__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+
+    nz-select,
+    nz-date-picker { width: 100%; }
+}
+
+.cd__label {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.cd__value {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-size-sm);
+}
+
+.cd__due.is-overdue ::ng-deep input { color: var(--danger); font-weight: 600; }
+.cd__due.is-due-soon ::ng-deep input { color: var(--warning); font-weight: 600; }
+
+.cd__due-note {
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+}
+
+.cd__link {
+    font-size: var(--font-size-sm);
+    color: var(--primary-600);
+    overflow-wrap: anywhere;
+
+    &:hover { text-decoration: underline; }
+}
+
+.cd__readonly {
+    display: flex;
+    gap: var(--space-1);
+    align-items: center;
+    font-size: var(--font-size-xs);
+}
+
+.cd__delete {
+    align-self: flex-start;
+}
+
+.cd__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.cd__sk {
+    display: block;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+
+    &--sm { width: 50%; height: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cd__bar-fill { transition: none; }
+}
+
+@media (max-width: 767px) {
+    .cd__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    // Thuộc tính lên trước checklist trên mobile để đổi cột/phụ trách nhanh.
+    .cd__side { order: -1; }
+
+    .cd__add-sub { flex-wrap: wrap; }
+}

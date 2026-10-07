@@ -1,32 +1,306 @@
-// MeetingDetail — tabs underline kế thừa .ant-tabs (style.scss).
+// MeetingDetail — header 1 dòng meta + CTA, grid section phẳng (không card lồng card).
+// Chỉ dùng design tokens (src/styles/tokens/_tokens.scss).
+:host {
+    display: block;
+}
+
 .meeting-detail {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+    max-width: var(--page-max-width);
+}
+
+// ── Header ──────────────────────────────────────────
+.meeting-detail__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-5);
+}
+
+.meeting-detail__heading {
+    min-width: 0;
+}
+
+.meeting-detail__title {
+    margin: 0;
+    color: var(--color-text);
+    font-size: var(--text-xl);
+    line-height: var(--leading-xl);
+    font-weight: var(--weight-bold);
+    overflow-wrap: anywhere;
+}
+
+.meeting-detail__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-2);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+}
+
+.meeting-detail__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    white-space: nowrap;
+
+    [nz-icon] {
+        color: var(--color-text-muted);
+    }
+}
+
+.meeting-detail__code {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+
+.meeting-detail__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+.meeting-detail__cta.ant-btn {
+    height: var(--control-md) !important;
+    padding: 0 var(--space-5);
+    font-weight: var(--weight-semibold);
+}
+
+// ── Tabs ────────────────────────────────────────────
+.meeting-detail__tabs {
+    min-width: 0;
 }
 
 .meeting-detail__tabs .smr-section {
     margin-top: var(--space-4);
 }
 
+:host ::ng-deep .meeting-detail__tabs > .ant-tabs-nav {
+    margin: 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+:host ::ng-deep .meeting-detail__tabs > .ant-tabs-nav .ant-tabs-tab {
+    padding: var(--space-3) var(--space-1);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+}
+
+:host ::ng-deep .meeting-detail__tabs > .ant-tabs-nav .ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--color-primary);
+    font-weight: var(--weight-semibold);
+}
+
+// ── Tổng quan ───────────────────────────────────────
+.meeting-detail__overview {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+.meeting-detail__overview-main {
+    min-width: 0;
+}
+
+.meeting-detail__edit {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.meeting-detail__sidebar {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.meeting-detail__settings,
+.meeting-detail__activity,
+.meeting-detail__tasks {
+    list-style: none;
+    margin: 0;
+}
+
+.meeting-detail__settings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+
+    li {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+    }
+
+    [nz-icon] {
+        color: var(--color-success-text);
+    }
+
+    .is-off {
+        color: var(--color-text-muted);
+
+        [nz-icon] {
+            color: var(--color-text-muted);
+        }
+    }
+}
+
+.meeting-detail__activity {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+
+    li {
+        display: grid;
+        grid-template-columns: 8px minmax(0, 1fr);
+        column-gap: var(--space-3);
+        align-items: baseline;
+    }
+}
+
+.meeting-detail__activity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-subtle-hover);
+    transform: translateY(1px);
+}
+
+.meeting-detail__activity-text {
+    color: var(--color-text);
+    font-size: var(--text-sm);
+}
+
+.meeting-detail__activity-time {
+    grid-column: 2;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+}
+
+.meeting-detail__muted {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
+// ── Công việc ───────────────────────────────────────
+.meeting-detail__tasks {
+    display: flex;
+    flex-direction: column;
+}
+
+.meeting-detail__task {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px 150px;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--table-row-height);
+    border-bottom: 1px solid var(--color-border-subtle);
+
+    &:last-child {
+        border-bottom: 0;
+    }
+}
+
+.meeting-detail__task-title {
+    color: var(--color-text);
+    font-weight: var(--weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.meeting-detail__task-person {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+}
+
+// ── Biên bản & ghi hình ─────────────────────────────
+.meeting-detail__post-meeting {
+    display: flex;
+    flex-direction: column;
+
+    .smr-section + .smr-section {
+        margin-top: var(--space-4);
+    }
+}
+
+// ── Modal hủy ───────────────────────────────────────
 .meeting-detail__error {
-    background-color: var(--danger-bg);
-    border: 1px solid var(--danger-border);
-    color: var(--danger);
-    border-radius: var(--radius-md);
-    padding: 12px var(--space-3);
-    font-size: var(--font-size-sm);
+    background-color: var(--color-danger-bg);
+    border: 1px solid var(--color-danger-border);
+    color: var(--color-danger-text);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    font-size: var(--text-sm);
     margin-bottom: var(--space-4);
 }
 
 .meeting-detail__label {
     display: block;
-    font-size: var(--font-size-base);
-    font-weight: 500;
-    color: var(--text-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
     margin-bottom: var(--space-2);
 }
 
 .meeting-detail__required {
-    color: var(--danger);
+    color: var(--color-danger-text);
+}
+
+// ── Responsive ──────────────────────────────────────
+@media (max-width: 1199px) {
+    .meeting-detail__overview {
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .meeting-detail__header {
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    .meeting-detail__title {
+        font-size: var(--text-lg);
+        line-height: var(--leading-lg);
+    }
+
+    .meeting-detail__actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    // CTA chính lên đầu, chiếm cả hàng; hành động phụ xếp hàng dưới
+    .meeting-detail__cta {
+        order: -1;
+        flex: 1 1 100%;
+    }
+
+    .meeting-detail__overview {
+        grid-template-columns: 1fr;
+    }
+
+    .meeting-detail__task {
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: var(--space-2) 0;
+
+        .meeting-detail__task-person {
+            grid-row: 2;
+        }
+    }
+
+    :host ::ng-deep .meeting-detail__tabs > .ant-tabs-nav .ant-tabs-tab {
+        margin-right: var(--space-4) !important;
+    }
 }

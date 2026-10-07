@@ -7,6 +7,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { AuthService } from '../../core/services/auth.service';
 import { AppLocale, LocaleService } from '../../core/services/locale.service';
+import { Avatar } from '../../shared/ui/avatar/avatar';
 
 export interface BreadcrumbItem {
     label: string;
@@ -22,7 +23,8 @@ export interface BreadcrumbItem {
     selector: 'app-top-header',
     templateUrl: './top-header.html',
     styleUrl: './top-header.scss',
-    imports: [RouterLink, NzDropdownModule, NzIconModule, NzInputModule, NzMenuModule],
+    imports: [
+        Avatar,RouterLink, NzDropdownModule, NzIconModule, NzInputModule, NzMenuModule],
 })
 export class TopHeader {
     private readonly auth = inject(AuthService);

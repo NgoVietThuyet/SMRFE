@@ -5,12 +5,14 @@
 <div class="list-page">
     <div class="list-page-header">
         <div class="list-page-header-title">
-            <h1 class="list-page-header-heading">Chức danh</h1>
-            <span class="list-page-header-subtitle">Quản lý danh sách chức danh — mã, tên, thứ tự, trạng thái</span>
+            <div>
+                <h1 class="list-page-header-heading">Chức danh</h1>
+                <p class="list-page-header-subtitle">Quản lý danh sách chức danh — mã, tên, thứ tự, trạng thái</p>
+            </div>
         </div>
         <div class="list-page-header-actions">
-            <button nz-button class="list-page-header-btn-primary" (click)="openCreate()" id="btn-create-title">
-                <app-custom-icon name="Add2" [size]="16" customClass="icon-color-inherit"></app-custom-icon>
+            <button nz-button nzType="primary" class="list-page-header-btn-primary" (click)="openCreate()" id="btn-create-title">
+                <span nz-icon nzType="plus" nzTheme="outline"></span>
                 Thêm chức danh
             </button>
         </div>
@@ -75,12 +77,12 @@
                         <ng-template #noData><nz-empty nzNotFoundImage="simple" nzNotFoundContent="Không có chức danh" /></ng-template>
                         <thead>
                             <tr>
-                                <th nzWidth="160px">MÃ</th>
-                                <th nzWidth="260px">TÊN CHỨC DANH</th>
-                                <th nzWidth="100px">THỨ TỰ</th>
-                                <th nzWidth="160px">TRẠNG THÁI</th>
-                                <th nzWidth="100px">SỐ NV</th>
-                                <th nzWidth="180px" nzAlign="center">THAO TÁC</th>
+                                <th nzWidth="150px">Mã</th>
+                                <th>Tên chức danh</th>
+                                <th nzWidth="90px">Thứ tự</th>
+                                <th nzWidth="150px">Trạng thái</th>
+                                <th nzWidth="90px">Số NV</th>
+                                <th nzWidth="110px" nzRight nzAlign="right"><span class="sr-only">Thao tác</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,17 +93,26 @@
                                         <span style="font-weight:500; color:#0f172a;">{{ t.name }}</span>
                                         @if (t.notes) { <span style="display:block; font-size:13px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;">{{ t.notes }}</span> }
                                     </td>
-                                    <td><span style="color:#64748b;">{{ t.orderNumber }}</span></td>
+                                    <td><span class="text-secondary">{{ t.orderNumber }}</span></td>
                                     <td>
                                         <span class="smr-status" [ngClass]="t.isActive ? 'smr-status--ongoing' : 'smr-status--ended'">
                                             <span class="smr-status__dot"></span> {{ statusLabel(t.isActive) }}
                                         </span>
                                     </td>
-                                    <td><span style="color:#334155;">{{ t.employeeCount }}</span></td>
-                                    <td nzAlign="center">
-                                        <button nz-button nzType="link" (click)="openTitleDetail(t)">Xem</button>
-                                        <button nz-button nzType="link" (click)="openEdit(t)">Sửa</button>
-                                        <button nz-button nzType="link" nzDanger (click)="confirmDelete(t)" [disabled]="t.employeeCount>0" nz-tooltip [nzTooltipTitle]="t.employeeCount>0 ? 'Đang có nhân sự sử dụng' : null">Xóa</button>
+                                    <td><span class="text-secondary">{{ t.employeeCount }}</span></td>
+                                    <td nzRight nzAlign="right">
+                                        <span class="titles__actions">
+                                            <button nz-button nzType="link" (click)="openEdit(t)">Sửa</button>
+                                            <button class="smr-icon-btn" nz-dropdown [nzDropdownMenu]="rowMenu" nzTrigger="click" nzPlacement="bottomRight" [attr.aria-label]="'Thao tác khác cho ' + t.name">
+                                                <app-custom-icon name="3dots" [size]="18"></app-custom-icon>
+                                            </button>
+                                        </span>
+                                        <nz-dropdown-menu #rowMenu="nzDropdownMenu">
+                                            <ul nz-menu>
+                                                <li nz-menu-item (click)="openTitleDetail(t)">Xem chi tiết</li>
+                                                <li nz-menu-item nzDanger [nzDisabled]="t.employeeCount > 0" (click)="t.employeeCount > 0 || confirmDelete(t)" [attr.title]="t.employeeCount > 0 ? 'Đang có nhân sự sử dụng' : null">Xóa</li>
+                                            </ul>
+                                        </nz-dropdown-menu>
                                     </td>
                                 </tr>
                             }

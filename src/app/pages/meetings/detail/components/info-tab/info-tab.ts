@@ -66,13 +66,41 @@ export class InfoTab {
         );
     }
 
+    displayDescription(): string {
+        const d = (this.meeting()?.description ?? '').trim();
+        if (!d || d === '[]' || d === 'null' || d === 'undefined') {
+            return 'Chưa có mô tả cho cuộc họp.';
+        }
+        return d;
+    }
+
+    displayAgenda(): string {
+        const a = (this.meeting()?.agenda ?? '').trim();
+        if (!a || a === '[]' || a === 'null' || a === 'undefined') {
+            return 'Chưa có chương trình cuộc họp.';
+        }
+        return a;
+    }
+
+    hasDescription(): boolean {
+        const d = (this.meeting()?.description ?? '').trim();
+        return !!d && d !== '[]' && d !== 'null' && d !== 'undefined';
+    }
+
+    hasAgenda(): boolean {
+        const a = (this.meeting()?.agenda ?? '').trim();
+        return !!a && a !== '[]' && a !== 'null' && a !== 'undefined';
+    }
+
     startEdit(): void {
         if (!this.canEdit()) return;
         const m = this.meeting();
+        const cleanDesc = (m.description ?? '').trim();
+        const cleanAgenda = (m.agenda ?? '').trim();
         this.form.setValue({
             name: m.name,
-            description: m.description ?? '',
-            agenda: m.agenda ?? '',
+            description: (cleanDesc === '[]' || cleanDesc === 'null') ? '' : (m.description ?? ''),
+            agenda: (cleanAgenda === '[]' || cleanAgenda === 'null') ? '' : (m.agenda ?? ''),
             expectedStartTime: m.expectedStartTime ? new Date(m.expectedStartTime) : null,
             expectedEndTime: m.expectedEndTime ? new Date(m.expectedEndTime) : null,
             visibility: m.visibility,

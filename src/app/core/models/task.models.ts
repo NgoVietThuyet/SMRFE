@@ -130,3 +130,6 @@ export interface TaskSearchResult {
     pageSize: number;
     summary: TaskSummary;
 }
+
+// Nhãn 3 cấp theo mô hình Kanban: Công việc (bảng) → Đầu việc (cột) → Việc nhỏ (thẻ)
+export const LEVEL_LABEL = ['Công việc', 'Đầu việc', 'Việc nhỏ'] as const;

@@ -1,0 +1,41 @@
+<header class="board-column__head">
+    <span class="board-column__dot" aria-hidden="true"></span>
+    <h2 class="board-column__title">{{ column().title }}</h2>
+    <span class="board-column__count">{{ cards().length }}</span>
+</header>
+
+<div class="board-column__list" cdkDropList [cdkDropListData]="column().status" (cdkDropListDropped)="onDrop($event)"
+    [cdkDropListSortingDisabled]="true">
+    @for (card of cards(); track card.id) {
+        <app-task-card cdkDrag [cdkDragData]="card" [cdkDragDisabled]="isLocked(card)"
+            [cdkDragStartDelay]="dragDelay" [card]="card" [columns]="columns()"
+            [pending]="pendingIds().has(card.id)" (opened)="opened.emit(card)"
+            (moveTo)="moveTo.emit({ card, toStatus: $event })" (moveBy)="moveBy.emit({ card, delta: $event })">
+            <div *cdkDragPlaceholder class="board-column__placeholder"></div>
+        </app-task-card>
+    } @empty {
+        <p class="board-column__empty">
+            Kéo thẻ vào đây@if (canAdd()) { hoặc bấm “+ Thêm đầu việc”}.
+        </p>
+    }
+</div>
+
+@if (canAdd()) {
+    <div class="board-column__add">
+        @if (adding()) {
+            <input #addInput nz-input class="board-column__add-input" placeholder="Nhập tiêu đề rồi nhấn Enter"
+                [attr.aria-label]="'Tiêu đề đầu việc mới trong cột ' + column().title" maxlength="300"
+                [ngModel]="draft()" (ngModelChange)="draft.set($event)" [disabled]="saving()"
+                (keydown.enter)="submitAdd()" (keydown.escape)="cancelAdd()" />
+            <div class="board-column__add-actions">
+                <button nz-button nzType="primary" nzSize="small" (click)="submitAdd()" [nzLoading]="saving()"
+                    [disabled]="!draft().trim()">Thêm</button>
+                <button nz-button nzType="text" nzSize="small" (click)="cancelAdd()" [disabled]="saving()">Hủy</button>
+            </div>
+        } @else {
+            <button type="button" class="board-column__add-btn" (click)="startAdd()">
+                <span nz-icon nzType="plus" nzTheme="outline"></span> Thêm đầu việc
+            </button>
+        }
+    </div>
+}

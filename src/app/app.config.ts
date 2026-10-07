@@ -1,12 +1,13 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { en_US, provideNzI18n } from 'ng-zorro-antd/i18n';
+import { provideNzI18n, vi_VN } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
 import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { provideA11yPatch } from './shared/a11y/a11y-patch';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import {
@@ -133,8 +134,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),
     provideHttpClient(withInterceptors([authInterceptor])),
-    provideNzI18n(en_US),
+    provideNzI18n(vi_VN), // phân trang, picker, empty… hiển thị tiếng Việt (F-20)
     provideNzDateFnsAdapter(),
     provideNzIcons(icons),
+    provideA11yPatch(),
   ],
 };

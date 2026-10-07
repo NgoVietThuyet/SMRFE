@@ -29,6 +29,14 @@ export interface ForgotPasswordRequest {
     email: string;
 }
 
+// PUT /api/Auth/Profile — chỉ cập nhật hồ sơ của tài khoản đang đăng nhập
+export interface UpdateProfileRequest {
+    fullName: string;
+    email: string;
+    phone: string;
+    address: string;
+}
+
 // AuthResultDto trong Data khi login/refresh thành công
 export interface AuthResult {
     success: boolean;
@@ -45,4 +53,11 @@ export interface AuthUser {
     userName: string;
     fullName: string;
     email: string;
+}
+
+export interface UserProfile extends AuthUser {
+    phone: string;
+    address: string;
+    organizationName?: string | null;
+    titleName?: string | null;
 }

@@ -20,6 +20,7 @@ import {
     MeetingVisibility,
     UserSearchItem,
 } from '../../../../core/models/meeting.models';
+import { SelectA11yDirective } from '../../../../shared/a11y/select-a11y.directive';
 
 // Validator chung: kết thúc phải sau bắt đầu và không quá 24h (khớp BE ValidateSchedule)
 function endTimeValidator(control: AbstractControl): ValidationErrors | null {
@@ -42,6 +43,7 @@ function endTimeValidator(control: AbstractControl): ValidationErrors | null {
     templateUrl: './create-meeting-modal.html',
     styleUrl: './create-meeting-modal.scss',
     imports: [
+        SelectA11yDirective,
         ReactiveFormsModule,
         NzModalModule,
         NzInputModule,

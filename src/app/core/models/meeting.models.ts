@@ -113,6 +113,8 @@ export interface MeetingJoinInfo {
     meetingId: string;
     roomName: string;
     domain: string;
+    jitsiDomain?: string;
+    externalApiUrl?: string;
     displayName: string;
     isModerator: boolean;
     startWithAudioMuted: boolean;
@@ -169,3 +171,50 @@ export interface ChatMessage {
     messageText: string;
     createdAt: string;
 }
+
+// Live Subtitle / Caption DTO
+export interface MeetingCaptionDto {
+    id?: string;
+    meetingId: string;
+    speakerId?: string;
+    speakerUserName: string;
+    speakerName: string;
+    text: string;
+    language: 'vi-VN' | 'en-US';
+    isFinal: boolean;
+    timestamp: string; // ISO 8601
+}
+
+// Meeting RAG & AI Chat Models
+export interface MeetingRagChunkDto {
+    id: string;
+    sourceType: string;
+    sourceTitle: string;
+    speakerName?: string;
+    content: string;
+    timestamp?: string;
+    relevanceScore?: number;
+}
+
+export interface MeetingRagStatus {
+    meetingId: string;
+    indexed: boolean;
+    chunkCount: number;
+    lastIndexedAt?: string;
+    sourcesSummary: string;
+}
+
+export interface MeetingAiChatRequest {
+    query: string;
+    conversationId?: string;
+}
+
+export interface MeetingAiChatResponse {
+    answer: string;
+    citations: MeetingRagChunkDto[];
+    timestamp: string;
+    model: string;
+    success: boolean;
+}
+
+

@@ -1,5 +1,5 @@
 <!-- =====================================================
-     MeetingDetail — header context + 5 tabs
+     MeetingDetail — meeting context + 4 functional tabs
 ===================================================== -->
 <div class="meeting-detail">
 
@@ -33,32 +33,42 @@
     </div>
     } @else if (meeting(); as m) {
 
-    <!-- ── Header context ────────────────────────── -->
-    <div class="smr-page-header">
-        <div>
-            <h2 class="smr-page-header__title">{{ m.name }}</h2>
-            <p class="smr-page-header__desc">
-                {{ formatDateTime(m.expectedStartTime) }}
-                @if (m.expectedEndTime) {
-                <span> - {{ formatDateTime(m.expectedEndTime) }}</span>
-                }
-            </p>
-            <p class="smr-page-header__desc">
+    <!-- Header: 1 dòng meta duy nhất + CTA chính (F-07) -->
+    <header class="meeting-detail__header">
+        <div class="meeting-detail__heading">
+            <h1 class="meeting-detail__title">{{ m.name }}</h1>
+            <div class="meeting-detail__meta" aria-label="Thông tin nhanh cuộc họp">
                 <span class="smr-status" [ngClass]="'smr-status--' + statusClass(m.status)">
-                    <span class="smr-status__dot"></span>
-                    {{ statusLabel(m.status) }}
+                    <span class="smr-status__dot"></span>{{ statusLabel(m.status) }}
                 </span>
-            </p>
+                <span class="meeting-detail__meta-item">
+                    <span nz-icon nzType="calendar" nzTheme="outline"></span>{{ formatRange(m.expectedStartTime, m.expectedEndTime) }}
+                </span>
+                <span class="meeting-detail__meta-item">
+                    <smr-avatar [name]="m.hostName" size="xs" />{{ m.hostName || '—' }}
+                </span>
+                <span class="meeting-detail__meta-item">
+                    <span nz-icon nzType="team" nzTheme="outline"></span>{{ m.participantCount }} người
+                </span>
+                <span class="meeting-detail__meta-item">
+                    <span nz-icon nzType="safety" nzTheme="outline"></span>{{ visibilityLabel(m.visibility) }}
+                </span>
+                @if (m.roomCode) {
+                <span class="meeting-detail__meta-item meeting-detail__code">
+                    <span nz-icon nzType="number" nzTheme="outline"></span>{{ m.roomCode }}
+                </span>
+                }
+            </div>
         </div>
-        <div class="smr-page-header__actions">
-            @if (canJoin()) {
-            <button nz-button nzType="primary" (click)="joinMeeting()" id="btn-join">
-                Tham gia
+
+        <div class="meeting-detail__actions">
+            <button nz-button nzType="default" (click)="copyInvite()">
+                <span nz-icon nzType="copy" nzTheme="outline"></span>
+                Sao chép lời mời
             </button>
-            }
             @if (canManage()) {
-            <button class="smr-icon-btn" nz-dropdown [nzDropdownMenu]="moreMenu" nzTrigger="click"
-                nzPlacement="bottomRight" aria-label="Thao tác khác">
+            <button class="smr-icon-btn meeting-detail__more" nz-dropdown [nzDropdownMenu]="moreMenu"
+                nzTrigger="click" nzPlacement="bottomRight" aria-label="Thao tác khác">
                 <span nz-icon nzType="more" nzTheme="outline"></span>
             </button>
             <nz-dropdown-menu #moreMenu="nzDropdownMenu">
@@ -66,10 +76,6 @@
                     <li nz-menu-item (click)="editMeeting()">
                         <span nz-icon nzType="edit" nzTheme="outline"></span>
                         <span>Chỉnh sửa</span>
-                    </li>
-                    <li nz-menu-item (click)="viewTasks()">
-                        <span nz-icon nzType="check-square" nzTheme="outline"></span>
-                        <span>Công việc</span>
                     </li>
                     @if (canCancel()) {
                     <li nz-menu-item nzDanger (click)="openCancel()">
@@ -80,19 +86,78 @@
                 </ul>
             </nz-dropdown-menu>
             }
+            @if (primaryAction(); as action) {
+            <button nz-button nzType="primary" class="meeting-detail__cta" (click)="runPrimaryAction()" id="btn-join">
+                <span nz-icon [nzType]="action.icon" nzTheme="outline"></span>
+                {{ action.label }}
+            </button>
+            }
         </div>
-    </div>
+    </header>
 
-    <!-- ── Tabs ──────────────────────────────────── -->
-    <nz-tabs [nzSelectedIndex]="activeTab()" (nzSelectedIndexChange)="activeTab.set($event)"
+    <nz-tabs [nzSelectedIndex]="activeTab()" (nzSelectedIndexChange)="onTabChange($event)"
         class="meeting-detail__tabs">
-        <nz-tab nzTitle="Thông tin chung">
+        <nz-tab nzTitle="Tổng quan">
+            <div class="meeting-detail__overview">
+                <section class="smr-section meeting-detail__overview-main">
+                    <div class="smr-section__header">
+                        <h2 class="smr-section__title">Nội dung cuộc họp</h2>
+                        @if (canManage()) {
+                        <button nz-button nzType="default" class="meeting-detail__edit" (click)="editMeeting()">
+                            <span nz-icon nzType="edit" nzTheme="outline"></span>
+                            Chỉnh sửa
+                        </button>
+                        }
+                    </div>
+                    <div class="smr-section__body">
+                        <app-info-tab [meeting]="m" (updated)="onDetailChanged($event)" />
+                    </div>
+                </section>
+
+                <aside class="meeting-detail__sidebar">
+                    <section class="smr-section meeting-detail__side-card">
+                        <div class="smr-section__header">
+                            <h2 class="smr-section__title">Cài đặt phòng</h2>
+                        </div>
+                        <ul class="smr-section__body meeting-detail__settings">
+                            @for (s of settingList(); track s.label) {
+                            <li [class.is-off]="!s.on">
+                                <span nz-icon [nzType]="s.on ? 'check-circle' : 'close-circle'" nzTheme="outline"></span>
+                                {{ s.label }}
+                                <span class="sr-only">{{ s.on ? 'Bật' : 'Tắt' }}</span>
+                            </li>
+                            }
+                        </ul>
+                    </section>
+
+                    <section class="smr-section meeting-detail__side-card">
+                        <div class="smr-section__header">
+                            <h2 class="smr-section__title">Hoạt động gần đây</h2>
+                        </div>
+                        <ol class="smr-section__body meeting-detail__activity">
+                            @for (a of recentActivity(); track a.id) {
+                            <li>
+                                <span class="meeting-detail__activity-dot" aria-hidden="true"></span>
+                                <span class="meeting-detail__activity-text">{{ activityLabel(a.action) }}</span>
+                                <time class="meeting-detail__activity-time">{{ formatDateTime(a.occurredAt) }}</time>
+                            </li>
+                            } @empty {
+                            <li class="meeting-detail__muted">Chưa có hoạt động.</li>
+                            }
+                        </ol>
+                    </section>
+                </aside>
+            </div>
+        </nz-tab>
+
+        <nz-tab [nzTitle]="'Người tham gia (' + m.participantCount + ')'">
             <div class="smr-section">
                 <div class="smr-section__body">
-                    <app-info-tab [meeting]="m" (updated)="onDetailChanged($event)" />
+                    <app-participants-tab [meeting]="m" (changed)="onDetailChanged($event)" />
                 </div>
             </div>
         </nz-tab>
+
         <nz-tab nzTitle="Tài liệu">
             <div class="smr-section">
                 <div class="smr-section__body">
@@ -100,32 +165,70 @@
                 </div>
             </div>
         </nz-tab>
-        <nz-tab nzTitle="Người tham gia">
-            <div class="smr-section">
-                <div class="smr-section__body">
-                    <app-participants-tab [meeting]="m" (changed)="onDetailChanged($event)" />
-                </div>
+
+        <nz-tab nzTitle="Biên bản & ghi hình">
+            <div class="meeting-detail__post-meeting">
+                <section class="smr-section">
+                    <div class="smr-section__header">
+                        <h2 class="smr-section__title">Trợ lý AI & Biên bản cuộc họp</h2>
+                    </div>
+                    <div class="smr-section__body">
+                        <app-ai-tab [meetingId]="m.id" />
+                    </div>
+                </section>
+                <section class="smr-section">
+                    <div class="smr-section__header">
+                        <h2 class="smr-section__title">Ghi hình cuộc họp</h2>
+                    </div>
+                    <div class="smr-section__body">
+                        <app-recordings-tab [meetingId]="m.id" />
+                    </div>
+                </section>
             </div>
         </nz-tab>
-        <nz-tab nzTitle="AI tóm tắt">
-            <div class="smr-section">
-                <div class="smr-section__body">
-                    <app-ai-tab />
+
+        <nz-tab [nzTitle]="'Công việc' + (tasksTotal() !== null ? ' (' + tasksTotal() + ')' : '')">
+            <section class="smr-section">
+                <div class="smr-section__header">
+                    <h2 class="smr-section__title">Công việc phát sinh từ cuộc họp</h2>
+                    <button nz-button nzType="default" (click)="viewTasks()">
+                        Mở bảng công việc
+                        <span nz-icon nzType="right" nzTheme="outline"></span>
+                    </button>
                 </div>
-            </div>
-        </nz-tab>
-        <nz-tab nzTitle="Ghi hình">
-            <div class="smr-section">
                 <div class="smr-section__body">
-                    <app-recordings-tab [meetingId]="m.id" />
+                    @if (tasksLoading()) {
+                    <div class="smr-loading"><nz-spin></nz-spin></div>
+                    } @else if (tasksError()) {
+                    <p class="meeting-detail__muted" role="alert">{{ tasksError() }}
+                        <button nz-button nzType="link" (click)="loadTasks()">Thử lại</button></p>
+                    } @else {
+                    <ul class="meeting-detail__tasks">
+                        @for (t of tasks(); track t.id) {
+                        <li class="meeting-detail__task">
+                            <span class="meeting-detail__task-title">{{ t.title }}</span>
+                            <span class="meeting-detail__task-person">
+                                @if (t.assigneeFullName || t.assigneeUserName) {
+                                <smr-avatar [name]="t.assigneeFullName || t.assigneeUserName" size="xs" />
+                                {{ t.assigneeFullName || t.assigneeUserName }}
+                                } @else { Chưa gán }
+                            </span>
+                            <span class="smr-status" [ngClass]="'smr-status--' + taskTone(t.status)">
+                                <span class="smr-status__dot"></span>{{ taskLabel(t.status) }}
+                            </span>
+                        </li>
+                        } @empty {
+                        <li class="meeting-detail__muted">Chưa có công việc nào gắn với cuộc họp này.</li>
+                        }
+                    </ul>
+                    }
                 </div>
-            </div>
+            </section>
         </nz-tab>
     </nz-tabs>
 
     }
 
-    <!-- ── Modal hủy họp ─────────────────────────── -->
     <nz-modal [nzVisible]="cancelOpen()" nzTitle="Hủy cuộc họp" [nzFooter]="cancelFooter"
         [nzMaskClosable]="false" (nzOnCancel)="closeCancel()">
         <ng-container *nzModalContent>

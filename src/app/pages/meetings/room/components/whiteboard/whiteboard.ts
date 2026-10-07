@@ -69,6 +69,7 @@ export class WhiteboardCanvas implements OnInit {
     private readonly meetingService = inject(MeetingService);
     private readonly message = inject(NzMessageService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly canvasBackground = '#ffffff';
 
     private readonly boardWrap = viewChild.required<ElementRef<HTMLElement>>('boardWrap');
     private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
@@ -160,7 +161,7 @@ export class WhiteboardCanvas implements OnInit {
         this.drawing = true;
         this.current = {
             points: [p],
-            color: tool === 'eraser' ? '#0b1220' : this.color(),
+            color: tool === 'eraser' ? this.canvasBackground : this.color(),
             width: tool === 'eraser' ? Math.max(this.width(), 12) : this.width(),
             eraser: tool === 'eraser',
             alpha: tool === 'highlighter' ? 0.35 : 1,
@@ -240,8 +241,8 @@ export class WhiteboardCanvas implements OnInit {
         const w = canvas.width / this.dpr;
         const h = canvas.height / this.dpr;
         ctx.clearRect(0, 0, w, h);
-        // Nền tối đồng bộ stage
-        ctx.fillStyle = '#0b1220';
+        // Bảng trắng luôn dùng nền trắng, đồng bộ với giao diện light mode.
+        ctx.fillStyle = this.canvasBackground;
         ctx.fillRect(0, 0, w, h);
         for (const s of this.strokes) this.drawStroke(s);
         for (const sh of this.shapes) this.drawShape(sh);

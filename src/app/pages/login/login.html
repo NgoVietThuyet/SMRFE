@@ -10,6 +10,9 @@
 
         <!-- ── Brand Area ─────────────────────────────── -->
         <header class="login__brand">
+            <div class="login__brand-logo" aria-hidden="true">
+                <span nz-icon nzType="video-camera" nzTheme="outline"></span>
+            </div>
             <h1 class="login__brand-name">SmartMeeting</h1>
             <p class="login__brand-desc">Nền tảng họp và cộng tác nội bộ doanh nghiệp</p>
         </header>
@@ -62,6 +65,9 @@
 
                 <!-- Support row -->
                 <div class="login__support">
+                    <label nz-checkbox formControlName="rememberMe">
+                        <span class="login__remember-label">Ghi nhớ đăng nhập</span>
+                    </label>
                     <button class="smr-text-btn" type="button" (click)="onForgotPassword()" [disabled]="forgotLoading()">
                         {{ forgotLoading() ? 'Đang gửi...' : 'Quên mật khẩu?' }}
                     </button>

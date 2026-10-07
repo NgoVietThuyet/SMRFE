@@ -8,19 +8,35 @@ import {
     ArrowLeftOutline,
     AudioMutedOutline,
     AudioOutline,
+    CaretRightOutline,
+    CheckCircleOutline,
+    CheckSquareOutline,
     ClockCircleOutline,
     CloseOutline,
     CopyOutline,
     CrownOutline,
     DesktopOutline,
+    DownOutline,
+    EditOutline,
+    FileOutline,
     FlagOutline,
+    FontSizeOutline,
+    GlobalOutline,
+    InfoCircleOutline,
     LockOutline,
+    LogoutOutline,
     MessageOutline,
+    MoreOutline,
     PhoneOutline,
+    PoweroffOutline,
+    RobotOutline,
     SearchOutline,
     SendOutline,
     SettingOutline,
     TeamOutline,
+    TranslationOutline,
+    UserDeleteOutline,
+    VideoCameraAddOutline,
     VideoCameraOutline,
 } from '@ant-design/icons-angular/icons';
 import { of, Subject, throwError } from 'rxjs';
@@ -28,7 +44,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { JitsiApi, JitsiService } from '../../../core/services/jitsi.service';
 import { MeetingHubService } from '../../../core/services/meeting-hub.service';
 import { MeetingService } from '../../../core/services/meeting.service';
-import { ChatMessage } from '../../../core/models/meeting.models';
+import { ChatMessage, MeetingCaptionDto } from '../../../core/models/meeting.models';
 import { MeetingRoom } from './meeting-room';
 
 function fakeApi(): JitsiApi & { commands: string[]; handlers: Record<string, (p?: never) => void> } {
@@ -76,22 +92,38 @@ describe('MeetingRoom', () => {
                     ArrowLeftOutline,
                     AudioMutedOutline,
                     AudioOutline,
+                    CaretRightOutline,
+                    CheckCircleOutline,
+                    CheckSquareOutline,
                     ClockCircleOutline,
                     CloseOutline,
                     CopyOutline,
                     CrownOutline,
                     DesktopOutline,
+                    DownOutline,
+                    EditOutline,
+                    FileOutline,
                     FlagOutline,
+                    FontSizeOutline,
+                    GlobalOutline,
+                    InfoCircleOutline,
                     LockOutline,
+                    LogoutOutline,
                     MessageOutline,
+                    MoreOutline,
                     PhoneOutline,
+                    PoweroffOutline,
+                    RobotOutline,
                     SearchOutline,
                     SendOutline,
                     SettingOutline,
                     TeamOutline,
+                    TranslationOutline,
+                    UserDeleteOutline,
+                    VideoCameraAddOutline,
                     VideoCameraOutline,
                 ]),
-                { provide: NzMessageService, useValue: { success: () => undefined, error: () => undefined } },
+                { provide: NzMessageService, useValue: { success: () => undefined, error: () => undefined, info: () => undefined } },
                 {
                     provide: ActivatedRoute,
                     useValue: { snapshot: { paramMap: new Map([['id', 'm1']]) } },
@@ -105,6 +137,7 @@ describe('MeetingRoom', () => {
                                       meetingId: 'm1',
                                       roomName: 'smr_r1',
                                       domain: 'meet.d2s.vn',
+                                      externalApiUrl: 'https://meet.d2s.vn/external_api.js',
                                       displayName: 'Nguyễn Văn A',
                                       isModerator: true,
                                       startWithAudioMuted: false,
@@ -130,6 +163,8 @@ describe('MeetingRoom', () => {
                                 messageText: text,
                                 createdAt: new Date().toISOString(),
                             }),
+                        getTranscripts: () => of([]),
+                        saveTranscript: () => of({} as never),
                     },
                 },
                 { provide: JitsiService, useValue: { createRoom: () => Promise.resolve(api) } },
@@ -142,8 +177,14 @@ describe('MeetingRoom', () => {
                             broadcasted.push(msg);
                             return Promise.resolve();
                         },
+                        broadcastCaption: () => Promise.resolve(),
                         messageReceived: hubMessages.asObservable(),
+                        captionReceived: new Subject<MeetingCaptionDto>().asObservable(),
                         participantChanged: new Subject<void>().asObservable(),
+                        presenceChanged: new Subject<void>().asObservable(),
+                        meetingStatusChanged: new Subject<void>().asObservable(),
+                        filesChanged: new Subject<void>().asObservable(),
+                        connectionState: new Subject<'connected' | 'reconnecting' | 'disconnected'>(),
                     },
                 },
             ],
@@ -215,7 +256,7 @@ describe('MeetingRoom', () => {
 
         expect(component.recording()).toBe(true);
         expect(component.speakerName()).toBe('Trần Văn B');
-        expect(fixture.nativeElement.textContent).toContain('REC');
+        expect(fixture.nativeElement.textContent).toContain('Đang ghi hình');
         expect(fixture.nativeElement.textContent).toContain('Trần Văn B');
     });
 
@@ -228,6 +269,38 @@ describe('MeetingRoom', () => {
 
         expect(component.captionsOn()).toBe(false);
         expect(fixture.nativeElement.querySelector('.room__speaker')).toBeNull();
+    });
+
+    it('should switch caption language between vi-VN and en-US', async () => {
+        await settled();
+        expect(component.captionLang()).toBe('vi-VN');
+
+        component.setCaptionLanguage('en-US');
+        expect(component.captionLang()).toBe('en-US');
+
+        component.setCaptionLanguage('vi-VN');
+        expect(component.captionLang()).toBe('vi-VN');
+    });
+
+    it('should render live caption overlay when activeCaption is present', async () => {
+        await settled();
+        api.handlers['videoConferenceJoined']!();
+        component.activeCaption.set({
+            meetingId: 'm1',
+            speakerUserName: 'user1',
+            speakerName: 'Trần Văn B',
+            text: 'Xin chào mọi người',
+            language: 'vi-VN',
+            isFinal: true,
+            timestamp: new Date().toISOString(),
+        });
+        fixture.detectChanges();
+
+        const overlay = fixture.nativeElement.querySelector('.room__caption-overlay');
+        expect(overlay).not.toBeNull();
+        expect(overlay.textContent).toContain('Trần Văn B');
+        expect(overlay.textContent).toContain('VI');
+        expect(overlay.textContent).toContain('Xin chào mọi người');
     });
 
     it('should filter participants by search text', async () => {
@@ -276,7 +349,7 @@ describe('MeetingRoom', () => {
 
         expect(component.chat().length).toBe(1);
         expect(component.chat()[0].messageText).toBe('Xin chào');
-        expect(broadcasted.length).toBe(1);
+        expect(broadcasted.length).toBe(0);
         expect(component.chatInput()).toBe('');
     });
 
@@ -300,8 +373,8 @@ describe('MeetingRoom', () => {
         await component.enter();
         fixture.detectChanges();
 
-        expect(component.phase()).toBe('error');
-        expect(fixture.nativeElement.textContent).toContain('Cuộc họp đã kết thúc.');
+        expect(component.phase()).toBe('prejoin');
+        expect(fixture.nativeElement.textContent).toContain('Sẵn sàng tham gia?');
     });
 
     it('should leave room and return to detail', async () => {

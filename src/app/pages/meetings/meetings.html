@@ -8,8 +8,21 @@
     <!-- ── Header trong suốt ─────────────────────── -->
     <div class="list-page-header">
         <div class="list-page-header-title">
-            <h1 class="list-page-header-heading">Danh sách cuộc họp</h1>
-            <span class="list-page-header-subtitle">Quản lý, tạo và tham gia các cuộc họp trực tuyến</span>
+            <div>
+                <h1 class="list-page-header-heading">Cuộc họp</h1>
+                <p class="list-page-header-subtitle">Quản lý, tạo và tham gia các cuộc họp trực tuyến</p>
+            </div>
+        </div>
+        <div class="list-page-header-actions">
+            <button nz-button class="list-page-header-btn-default" (click)="exportExcel()">
+                <app-custom-icon name="Download" [size]="16" customClass="icon-color-inherit"></app-custom-icon>
+                Xuất Excel
+            </button>
+            <button nz-button nzType="primary" class="list-page-header-btn-primary" (click)="openCreate()"
+                id="btn-create-meeting">
+                <span nz-icon nzType="plus" nzTheme="outline"></span>
+                Tạo cuộc họp
+            </button>
         </div>
     </div>
 
@@ -58,18 +71,7 @@
                         }
                     </div>
 
-                    <!-- Xuất Excel — gray -->
-                    <button nz-button class="list-page-header-btn-default" (click)="exportExcel()">
-                        <app-custom-icon name="Download" [size]="16" customClass="icon-color-inherit"></app-custom-icon>
-                        Xuất Excel
-                    </button>
-
-                    <!-- Tạo cuộc họp — blue, phải cùng -->
-                    <button nz-button class="list-page-header-btn-primary" (click)="openCreate()"
-                        id="btn-create-meeting" style="margin-left: auto;">
-                        <app-custom-icon name="Add2" [size]="16" customClass="icon-color-inherit"></app-custom-icon>
-                        Tạo cuộc họp
-                    </button>
+                    <!-- Xuất Excel + Tạo cuộc họp đã chuyển lên page header (1 nút primary / màn hình) -->
                 </div>
             </div>
 
@@ -93,7 +95,7 @@
                         <div class="list-filter-field">
                             <span>Thời gian</span>
                             <nz-select style="width:100%" [ngModel]="draftDatePreset()"
-                                (ngModelChange)="draftDatePreset.set($event)" nzPlaceHolder="Mọi thời gian">
+                                (ngModelChange)="draftDatePreset.set($event)" nzPlaceHolder="Mọi thời gian" aria-label="Thời gian">
                                 @for (opt of dateOptions; track opt.value) {
                                 <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
                                 }
@@ -163,7 +165,7 @@
                     </div>
                     <nz-table [nzData]="items()" [nzFrontPagination]="false" [nzLoading]="loading()" [nzTotal]="total()"
                         [nzPageIndex]="page()" [nzPageSize]="pageSize()" [nzShowPagination]="false"
-                        [nzNoResult]="noMeetings" [nzScroll]="{ y: 'calc(100vh - var(--lp-scroll-tab))' }"
+                        [nzNoResult]="noMeetings" [nzScroll]="{ x: '860px', y: 'calc(100vh - var(--lp-scroll-tab))' }"
                         nzSize="small" class="bid-list-table responsive-table">
                         <ng-template #noMeetings>
                             <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="noMeetingsContent"
@@ -178,16 +180,16 @@
                         </ng-template>
                         <thead>
                             <tr>
-                                <th nzWidth="300px">Tên cuộc họp</th>
-                                <th nzWidth="180px">Thời gian</th>
-                                <th nzWidth="160px">Trạng thái</th>
-                                <th nzWidth="180px">Người tổ chức</th>
-                                <th nzWidth="160px" nzAlign="center">Thao tác</th>
+                                <th>Cuộc họp</th>
+                                <th nzWidth="150px">Thời gian</th>
+                                <th nzWidth="150px">Trạng thái</th>
+                                <th nzWidth="200px">Người tổ chức</th>
+                                <th nzWidth="150px" nzRight nzAlign="right"><span class="sr-only">Thao tác</span></th>
                             </tr>
                         </thead>
                         <tbody>
                             @for (m of items(); track m.id) {
-                            <tr>
+                            <tr class="meetings__row" (click)="viewMeeting(m.id)">
                                 <td>
                                     <span class="meetings__name">{{ m.name }}</span>
                                     @if (m.description) {
@@ -202,13 +204,17 @@
                                         {{ statusLabel(m.status) }}
                                     </span>
                                 </td>
-                                <td><span class="text-secondary">{{ m.hostName || '—' }}</span></td>
-                                <td nzAlign="center">
+                                <td>
+                                    @if (m.hostName) {
+                                    <span class="meetings__host"><smr-avatar [name]="m.hostName" size="sm" /><span class="text-secondary">{{ m.hostName }}</span></span>
+                                    } @else { <span class="text-secondary">—</span> }
+                                </td>
+                                <td nzRight nzAlign="right" (click)="$event.stopPropagation()">
                                     <span class="meetings__actions">
                                         @if (isOngoing(m)) {
-                                        <button nz-button nzType="link" (click)="joinMeeting(m.id, $event)"
+                                        <button nz-button nzType="primary" nzSize="small" class="meetings__join" (click)="joinMeeting(m.id, $event)"
                                             [id]="'btn-join-' + m.id">
-                                            Tham gia
+                                            <span nz-icon nzType="video-camera" nzTheme="outline"></span> Tham gia
                                         </button>
                                         } @else {
                                         <button nz-button nzType="link" (click)="viewMeeting(m.id)"

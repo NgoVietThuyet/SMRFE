@@ -7,15 +7,17 @@
     <!-- ── Header trong suốt ─────────────────────── -->
     <div class="list-page-header">
         <div class="list-page-header-title">
-            <h1 class="list-page-header-heading">Danh bạ</h1>
-            <span class="list-page-header-subtitle">Cơ cấu tổ chức và hồ sơ nhân sự — tài khoản do hệ thống tự tạo</span>
+            <div>
+                <h1 class="list-page-header-heading">Danh bạ</h1>
+                <p class="list-page-header-subtitle">Cơ cấu tổ chức và hồ sơ nhân sự — tài khoản do hệ thống tự tạo</p>
+            </div>
         </div>
         <div class="list-page-header-actions">
             <button nz-button class="list-page-header-btn-default" (click)="openOrgCreate()">
                 <span nz-icon nzType="apartment" nzTheme="outline"></span>
                 Thêm phòng ban
             </button>
-            <button nz-button class="list-page-header-btn-primary" (click)="openEmpCreate()">
+            <button nz-button nzType="primary" class="list-page-header-btn-primary" (click)="openEmpCreate()">
                 <span nz-icon nzType="user-add" nzTheme="outline"></span>
                 Thêm nhân sự
             </button>
@@ -28,15 +30,11 @@
 
             <!-- ── Thanh lọc INLINE — nhân sự ───── -->
             <div class="list-page-filter-bar">
-                <span class="list-page-filter-bar-label">Tìm kiếm nhân sự</span>
                 <div class="list-page-filter-bar-row">
                     <div class="list-page-filter-bar-search">
                         <input nz-input type="search" autocomplete="off" placeholder="Tìm tên, username, email..."
                             aria-label="Tìm kiếm nhân sự" [ngModel]="empKeyword()" (ngModelChange)="onEmpKeywordInput($event)" />
-                        <button type="button" class="list-page-filter-bar-search-btn" aria-label="Tìm kiếm" (click)="loadEmployees()">
-                            <span nz-icon nzType="search" nzTheme="outline"></span>
-                        </button>
-                        <button type="button" class="list-page-filter-bar-refresh-btn" aria-label="Làm mới" (click)="reloadEmployees()">
+                        <button type="button" class="list-page-filter-bar-search-reset-btn" aria-label="Làm mới" (click)="reloadEmployees()">
                             <span nz-icon nzType="reload" nzTheme="outline"></span>
                         </button>
                     </div>
@@ -105,7 +103,7 @@
                         <ng-template #orgNodeTpl let-node>
                             <span class="contacts__node" [class.contacts__node--inactive]="!$any(node.origin).isActive">
                                 <span nz-icon nzType="apartment" nzTheme="outline" class="contacts__node-icon"></span>
-                                <span class="contacts__node-name">{{ node.title }}</span>
+                                <span class="contacts__node-name" [attr.title]="node.title">{{ node.title }}</span>
                                 <span class="contacts__node-count">{{ $any(node.origin).subtreeCount }}</span>
                             </span>
                         </ng-template>
@@ -179,7 +177,7 @@
                         <div class="smr-section contacts__list" style="border:1px solid var(--bs-border); border-radius:var(--radius-sm);">
                             @for (u of items(); track u.userName) {
                             <button type="button" class="contacts__row" (click)="openEmpDetail(u)">
-                                <nz-avatar class="contacts__avatar" [nzText]="initials(u.fullName)" />
+                                <smr-avatar [name]="u.fullName" size="md" />
                                 <span class="contacts__main">
                                     <span class="contacts__name">{{ u.fullName }}</span>
                                     <span class="contacts__sub">{{ u.titleName ?? titleName(u.titleCode) }} · {{ u.organizationName ?? u.orgId }}</span>

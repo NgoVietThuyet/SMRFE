@@ -1,0 +1,100 @@
+<div class="list-page profile-page">
+    <div class="list-page-card">
+        <div class="list-page-card-inner profile-page__inner">
+            <div class="profile-page__heading">
+                <div>
+                    <p class="profile-page__eyebrow">TÀI KHOẢN</p>
+                    <h1 class="profile-page__title">Thông tin cá nhân</h1>
+                    <p class="profile-page__description">Cập nhật thông tin hiển thị và thông tin liên hệ của bạn.</p>
+                </div>
+                <span class="profile-page__avatar" aria-hidden="true">
+                    {{ profile()?.fullName?.charAt(0)?.toUpperCase() || 'U' }}
+                </span>
+            </div>
+
+            @if (loading()) {
+                <div class="profile-page__state">
+                    <nz-spin nzSize="large"></nz-spin>
+                    <span>Đang tải thông tin...</span>
+                </div>
+            } @else if (loadError()) {
+                <div class="profile-page__state profile-page__state--error" role="alert">
+                    <strong>Không thể tải thông tin cá nhân</strong>
+                    <span>{{ loadError() }}</span>
+                    <button nz-button type="button" (click)="loadProfile()">Thử lại</button>
+                </div>
+            } @else {
+                <div class="profile-page__content">
+                    <form nz-form [formGroup]="form" (ngSubmit)="save()" class="profile-form" novalidate>
+                        <div class="profile-form__section">
+                            <h2>Thông tin có thể chỉnh sửa</h2>
+                            <p>Các thay đổi sẽ được áp dụng cho tài khoản đang đăng nhập.</p>
+
+                            <div class="profile-form__grid">
+                                <nz-form-item>
+                                    <nz-form-label nzRequired>Họ và tên</nz-form-label>
+                                    <nz-form-control nzErrorTip="Vui lòng nhập họ và tên.">
+                                        <input nz-input formControlName="fullName" autocomplete="name" placeholder="Nhập họ và tên" />
+                                    </nz-form-control>
+                                </nz-form-item>
+
+                                <nz-form-item>
+                                    <nz-form-label nzRequired>Email</nz-form-label>
+                                    <nz-form-control nzErrorTip="Email không hợp lệ hoặc đang để trống.">
+                                        <input nz-input type="email" formControlName="email" autocomplete="email" placeholder="name@company.com" />
+                                    </nz-form-control>
+                                </nz-form-item>
+
+                                <nz-form-item>
+                                    <nz-form-label>Số điện thoại</nz-form-label>
+                                    <nz-form-control nzErrorTip="Số điện thoại không được vượt quá 50 ký tự.">
+                                        <input nz-input type="tel" formControlName="phone" autocomplete="tel" placeholder="Nhập số điện thoại" />
+                                    </nz-form-control>
+                                </nz-form-item>
+
+                                <nz-form-item class="profile-form__field--wide">
+                                    <nz-form-label>Địa chỉ</nz-form-label>
+                                    <nz-form-control nzErrorTip="Địa chỉ không được vượt quá 500 ký tự.">
+                                        <input nz-input formControlName="address" autocomplete="street-address" placeholder="Nhập địa chỉ" />
+                                    </nz-form-control>
+                                </nz-form-item>
+                            </div>
+                        </div>
+
+                        @if (saveError()) {
+                            <p class="profile-form__error" role="alert">{{ saveError() }}</p>
+                        }
+
+                        <div class="profile-form__actions">
+                            <button nz-button nzType="primary" type="submit" [nzLoading]="saving()" [disabled]="form.pristine">
+                                Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+
+                    <aside class="profile-summary">
+                        <div class="profile-summary__head">
+                            <h2>Thông tin tài khoản</h2>
+                            <span class="profile-summary__status">Đang hoạt động</span>
+                        </div>
+                        <dl>
+                            <div>
+                                <dt>Tên đăng nhập</dt>
+                                <dd>{{ profile()?.userName }}</dd>
+                            </div>
+                            <div>
+                                <dt>Phòng ban</dt>
+                                <dd>{{ profile()?.organizationName || 'Chưa cập nhật' }}</dd>
+                            </div>
+                            <div>
+                                <dt>Chức danh</dt>
+                                <dd>{{ profile()?.titleName || 'Chưa cập nhật' }}</dd>
+                            </div>
+                        </dl>
+                        <p class="profile-summary__hint">Username, phòng ban và chức danh được quản lý bởi bộ phận nhân sự.</p>
+                    </aside>
+                </div>
+            }
+        </div>
+    </div>
+</div>

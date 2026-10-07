@@ -16,3 +16,50 @@
 router-outlet {
     display: none;
 }
+// ── Bottom navigation (mobile) ───────────────────────
+.smr-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .smr-bottom-nav {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        flex-shrink: 0;
+        height: 60px;
+        padding-bottom: env(safe-area-inset-bottom);
+        background: var(--color-bg-surface);
+        border-top: 1px solid var(--color-border-subtle);
+        box-shadow: 0 -2px 8px rgb(15 23 42 / 0.04);
+    }
+
+    .smr-bottom-nav__item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        border: 0;
+        background: transparent;
+        color: var(--color-text-secondary);
+        font: inherit;
+        font-size: 11px;
+        text-decoration: none;
+        cursor: pointer;
+
+        .anticon {
+            font-size: 20px;
+            color: inherit;
+        }
+
+        &.is-active {
+            color: var(--color-primary);
+            font-weight: var(--weight-semibold);
+        }
+
+        &:focus-visible {
+            outline: none;
+            box-shadow: inset var(--focus-ring);
+        }
+    }
+}
