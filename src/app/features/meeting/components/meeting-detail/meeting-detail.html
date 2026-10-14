@@ -195,8 +195,8 @@
                     <button nz-button nzType="primary" [nzLoading]="uploading" (click)="fileInput.click()">
                         <nz-icon nzType="upload" /> Tải lên
                     </button>
-                    <span class="muted small">Tối đa 200MB mỗi file. Thành viên cuộc họp đều xem được.</span>
-                    <input #fileInput type="file" hidden multiple (change)="onFilePicked($event)" />
+                    <span class="muted small">{{ uploadPolicy.hint }}. Thành viên cuộc họp đều xem được.</span>
+                    <input #fileInput type="file" hidden multiple [accept]="uploadPolicy.accept" (change)="onFilePicked($event)" />
                 </div>
                 }
                 <nz-list nzBordered nzSize="small" [nzLoading]="!filesLoaded" [nzDataSource]="files" [nzRenderItem]="fileTpl"

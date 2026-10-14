@@ -370,10 +370,10 @@
 
 <nz-modal [(nzVisible)]="isUploadVisible" nzTitle="Tải tệp lên" [nzFooter]="uploadFooter" (nzOnCancel)="isUploadVisible = false" [nzWidth]="520">
   <ng-container *nzModalContent>
-    <nz-upload nzType="drag" [nzMultiple]="true" [nzFileList]="uploadFileList" [nzBeforeUpload]="beforeUpload" class="upload-area">
+    <nz-upload nzType="drag" [nzMultiple]="true" [nzAccept]="uploadPolicy.accept" [nzFileList]="uploadFileList" [nzBeforeUpload]="beforeUpload" class="upload-area">
       <p class="ant-upload-drag-icon"><nz-icon nzType="inbox" /></p>
       <p class="ant-upload-text">Kéo thả tệp vào đây hoặc nhấp để chọn tệp</p>
-      <p class="ant-upload-hint">Hỗ trợ tải lên nhiều tệp. Giới hạn dung lượng theo cấu hình hệ thống.</p>
+      <p class="ant-upload-hint">Hỗ trợ tải lên nhiều tệp. {{ uploadPolicy.hint }}.</p>
     </nz-upload>
   </ng-container>
   <ng-template #uploadFooter>

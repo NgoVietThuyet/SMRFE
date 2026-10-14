@@ -138,8 +138,86 @@
                 </nz-table>
             </nz-card>
 
-            <nz-alert nzType="info" nzShowIcon
-                nzMessage="Xuất danh sách tham dự (XLSX) và tỷ lệ xử lý AI sẽ có khi làm xong phòng họp (P10) và biên bản (P13)."></nz-alert>
+            <!-- ===== Xử lý AI (job nền) ===== -->
+            <nz-card nzTitle="Xử lý AI" [nzExtra]="aiExtra" [nzLoading]="loading" class="ai-card">
+                <ng-template #aiExtra><span class="muted">Sinh biên bản và tổng hợp biên bản theo mẫu</span></ng-template>
+                @if (ai && ai.total) {
+                <div nz-row [nzGutter]="[16, 16]">
+                    <div nz-col [nzXs]="12" [nzMd]="6">
+                        <div class="ai-stat"><div class="ai-value">{{ ai.total }}</div><div class="muted">Tổng job</div></div>
+                    </div>
+                    <div nz-col [nzXs]="12" [nzMd]="6">
+                        <div class="ai-stat">
+                            <div class="ai-value" [class.bad]="ai.successRate < 80">{{ ai.successRate }}%</div>
+                            <div class="muted">Thành công ({{ ai.done }} xong · {{ ai.failed }} lỗi)</div>
+                        </div>
+                    </div>
+                    <div nz-col [nzXs]="12" [nzMd]="6">
+                        <div class="ai-stat">
+                            <div class="ai-value">{{ duration(ai.avgRunSeconds) }}</div>
+                            <div class="muted">Thời gian xử lý trung bình · p95 {{ duration(ai.p95RunSeconds) }}</div>
+                        </div>
+                    </div>
+                    <div nz-col [nzXs]="12" [nzMd]="6">
+                        <div class="ai-stat">
+                            <div class="ai-value">{{ duration(ai.avgWaitSeconds) }}</div>
+                            <div class="muted">Chờ trong hàng đợi · đang chờ {{ ai.pending }}, đang chạy {{ ai.running }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nz-table #types class="mt-3" nzBordered nzSize="small" [nzData]="ai.byType" [nzShowPagination]="false">
+                    <thead>
+                        <tr>
+                            <th>Loại job</th>
+                            <th nzAlign="right" nzWidth="110px">Tổng</th>
+                            <th nzAlign="right" nzWidth="110px">Xong</th>
+                            <th nzAlign="right" nzWidth="110px">Lỗi</th>
+                            <th nzAlign="right" nzWidth="170px">Xử lý trung bình</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (t of types.data; track t.type) {
+                        <tr>
+                            <td>{{ t.label }}</td>
+                            <td nzAlign="right">{{ t.total }}</td>
+                            <td nzAlign="right">{{ t.done }}</td>
+                            <td nzAlign="right" [class.bad]="t.failed > 0">{{ t.failed }}</td>
+                            <td nzAlign="right">{{ duration(t.avgRunSeconds) }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </nz-table>
+
+                @if (ai.recentFailures.length) {
+                <div class="fail-title">Lỗi gần đây</div>
+                <nz-table #fails nzBordered nzSize="small" [nzData]="ai.recentFailures" [nzShowPagination]="false">
+                    <thead>
+                        <tr>
+                            <th nzWidth="150px">Thời điểm</th>
+                            <th nzWidth="200px">Loại job</th>
+                            <th nzWidth="220px">Cuộc họp</th>
+                            <th>Lỗi</th>
+                            <th nzWidth="130px">Người yêu cầu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (f of fails.data; track f.id) {
+                        <tr>
+                            <td>{{ failedAt(f.createdAt) | date: 'HH:mm dd/MM/yyyy' }}</td>
+                            <td>{{ f.label }}</td>
+                            <td>{{ f.meetingName || '---' }}</td>
+                            <td class="break-all">{{ f.error || '---' }}</td>
+                            <td>{{ f.createdBy }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </nz-table>
+                }
+                } @else {
+                <nz-empty nzNotFoundContent="Chưa có job AI nào trong khoảng thời gian này"></nz-empty>
+                }
+            </nz-card>
         </div>
     </nz-page-header-content>
 </nz-page-header>

@@ -14,9 +14,10 @@ import { SystemService } from '../../services/system.service';
 import { RoomService } from '../../../meeting/services/room.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize, switchMap, of } from 'rxjs';
-import { HumanResourceSummary, MeetingReport, TaskReport } from '../../models/admin.models';
+import { HumanResourceSummary, MeetingReport, AiPipelineReport, TaskReport } from '../../models/admin.models';
 
 /** P5 — Thống kê toàn hệ thống (mẫu 2.FrontEnd hrm-dashboard / ast-dashboard). */
+import { DateTimeUtils } from '../../../../shared/utils';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -35,6 +36,7 @@ export class AdminDashboard implements OnInit, OnDestroy {
   hr: HumanResourceSummary | null = null;
   meeting: MeetingReport | null = null;
   task: TaskReport | null = null;
+  ai: AiPipelineReport | null = null;
   loading = false;
 
   // ── Biểu đồ ──
@@ -127,17 +129,31 @@ export class AdminDashboard implements OnInit, OnDestroy {
     forkJoin([
       this.service.meetingReport(from, to, this.organizationId),
       this.service.taskReport(from, to),
+      this.service.aiPipelineReport(from, to),
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ([meeting, task]) => {
+        next: ([meeting, task, ai]) => {
           this.meeting = meeting;
           this.task = task;
+          this.ai = ai;
           this.buildCharts();
           this.loading = false;
         },
         error: () => this.loading = false,
       });
+  }
+
+  /** "12,5 giây" / "2 phút 05 giây". */
+  duration(seconds: number | null | undefined): string {
+    const s = Math.max(0, seconds ?? 0);
+    if (s < 60) return `${s.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} giây`;
+    const m = Math.floor(s / 60);
+    return `${m} phút ${String(Math.round(s % 60)).padStart(2, '0')} giây`;
+  }
+
+  failedAt(utc: string): Date | null {
+    return DateTimeUtils.fromUtc(utc);
   }
 
   reset(): void {

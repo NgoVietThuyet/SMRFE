@@ -3,9 +3,8 @@ import { Subject, debounceTime, filter, takeUntil } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModules } from '../../../../../shared/ng-zorro.module';
 import { GlobalService } from '../../../../../core';
-import { RealtimeHubService } from '../../../../../shared/services';
+import { RealtimeHubService, UploadPolicyService } from '../../../../../shared/services';
 import { DateTimeUtils, FileUtils } from '../../../../../shared/utils';
-import { UPLOAD_MAX_BYTES, validateClientFile } from '../../../../../shared/utils/file-upload-guard';
 import { MeetingFile } from '../../../models/meeting.models';
 import { MeetingService } from '../../../services/meeting.service';
 
@@ -19,7 +18,8 @@ import { MeetingService } from '../../../services/meeting.service';
     <button nz-button nzType="dashed" nzBlock [nzLoading]="uploading" (click)="input.click()" class="upload">
       <nz-icon nzType="upload" /> Tải tài liệu lên
     </button>
-    <input #input type="file" hidden multiple (change)="picked($event)" />
+    <div class="hint">{{ uploadPolicy.hint }}</div>
+    <input #input type="file" hidden multiple [accept]="uploadPolicy.accept" (change)="picked($event)" />
     }
     @if (!loaded) { <nz-spin nzSimple class="spin"></nz-spin> }
     @else if (!files.length) { <nz-empty nzNotFoundContent="Chưa có tài liệu"></nz-empty> }
@@ -36,7 +36,8 @@ import { MeetingService } from '../../../services/meeting.service';
   `,
   styles: [`
     :host { display: block; }
-    .upload { margin-bottom: 8px; }
+    .upload { margin-bottom: 4px; }
+    .hint { font-size: 12px; color: #8c8c8c; margin-bottom: 8px; }
     .spin { display: block; margin: 24px auto; }
     .file { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid #f5f5f5; }
     .icon { width: 28px; height: 28px; object-fit: contain; }
@@ -59,6 +60,7 @@ export class RoomFilesPanel implements OnInit, OnDestroy {
     private hub: RealtimeHubService,
     private global: GlobalService,
     private message: NzMessageService,
+    readonly uploadPolicy: UploadPolicyService,
   ) { }
 
   ngOnInit(): void {
@@ -96,7 +98,7 @@ export class RoomFilesPanel implements OnInit, OnDestroy {
       this.uploading = false;
       return;
     }
-    const error = validateClientFile(file, UPLOAD_MAX_BYTES.explorer);
+    const error = this.uploadPolicy.check(file);
     if (error) {
       this.message.warning(`${file.name}: ${error}`);
       this.next(queue);

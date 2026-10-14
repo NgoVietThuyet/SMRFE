@@ -7,9 +7,8 @@ import { NzTimelineModule } from 'ng-zorro-antd/timeline';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
 import { GlobalService, SessionService } from '../../../../core';
 import { APP_RIGHTS } from '../../../../shared/constants';
-import { RealtimeHubService } from '../../../../shared/services';
+import { RealtimeHubService, UploadPolicyService } from '../../../../shared/services';
 import { DateTimeUtils, FileUtils } from '../../../../shared/utils';
-import { UPLOAD_MAX_BYTES, validateClientFile } from '../../../../shared/utils/file-upload-guard';
 import { TaskListItem } from '../../../dashboard/models/dashboard.models';
 import {
   MeetingActivity, MeetingDetail, MeetingFile, MeetingListItem, MeetingParticipant, MeetingRole, MeetingSettings, MeetingStatus, UserSearchItem,
@@ -112,6 +111,7 @@ export class MeetingDetailPage implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     public router: Router,
     private message: NzMessageService,
+    readonly uploadPolicy: UploadPolicyService,
   ) { }
 
   ngOnInit(): void {
@@ -397,7 +397,7 @@ export class MeetingDetailPage implements OnInit, OnDestroy {
       this.uploading = false;
       return;
     }
-    const error = validateClientFile(file, UPLOAD_MAX_BYTES.explorer);
+    const error = this.uploadPolicy.check(file);
     if (error) {
       this.message.warning(`${file.name}: ${error}`);
       this.uploadNext(queue);

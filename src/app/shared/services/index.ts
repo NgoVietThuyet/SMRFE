@@ -4,3 +4,5 @@ export { NotificationService } from './notification.service';
 export { RealtimeHubService, ROOM_EVENTS } from './realtime-hub.service';
 export type { RoomEvent, RoomEventName } from './realtime-hub.service';
 export { AuthService } from './auth.service';
+export { UploadPolicyService } from './upload-policy.service';
+export type { UploadPolicy } from './upload-policy.service';

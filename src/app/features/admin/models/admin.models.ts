@@ -159,6 +159,27 @@ export interface TaskReport {
     overdue: number;
 }
 
+/** AiPipelineReportResponse — GET /api/admin/reports/ai-pipeline (job AI nền từ SyBackgroundJobs). */
+export interface AiPipelineReport {
+    from: string;
+    to: string;
+    total: number;
+    pending: number;
+    running: number;
+    done: number;
+    failed: number;
+    /** % xong / (xong + lỗi) */
+    successRate: number;
+    avgWaitSeconds: number;
+    avgRunSeconds: number;
+    p95RunSeconds: number;
+    byType: { type: string; label: string; total: number; done: number; failed: number; avgRunSeconds: number }[];
+    recentFailures: {
+        id: string; type: string; label: string; meetingId: string | null; meetingName: string;
+        error: string | null; createdBy: string; createdAt: string;
+    }[];
+}
+
 export interface HumanResourceSummary {
     organizationCount: number;
     employeeCount: number;

@@ -17,6 +17,7 @@ import { TaskUi } from '../../utils/task-ui';
  * Trái: tiêu đề, nhãn, Mô tả, Checklist, Đính kèm, Bình luận. Phải: THÊM VÀO THẺ · THÔNG TIN · THAO TÁC.
  * Mọi thay đổi lưu ngay; đóng modal báo `closed(true)` nếu có thay đổi để bảng tải lại.
  */
+import { UploadPolicyService } from '../../../../shared/services';
 @Component({
   selector: 'app-card-detail',
   standalone: true,
@@ -73,6 +74,7 @@ export class CardDetailModal implements OnInit, OnChanges, OnDestroy {
     private meetings: MeetingService,
     private session: SessionService,
     private message: NzMessageService,
+    readonly uploadPolicy: UploadPolicyService,
   ) { }
 
   ngOnInit(): void {
@@ -312,6 +314,12 @@ export class CardDetailModal implements OnInit, OnChanges, OnDestroy {
   // ===================== Đính kèm =====================
 
   beforeUpload = (file: NzUploadFile): boolean => {
+    // Kiểm tra theo Cấu hình hệ thống trước khi đưa vào danh sách chờ tải (BE kiểm tra lại).
+    const error = this.uploadPolicy.check(file as unknown as File);
+    if (error) {
+      this.message.warning(`${file.name}: ${error}`);
+      return false;
+    }
     this.uploadFileList = [...this.uploadFileList, file];
     return false;
   };

@@ -4,7 +4,7 @@ import { CommonService, PagedResult } from '../../../shared/services';
 import { PaginationResult } from '../../../shared/models';
 import { DateTimeUtils } from '../../../shared/utils';
 import {
-    AuditLog, AuditLogFilter, HumanResourceSummary, MeetingReport, MinutesTemplate, SystemSettings, TaskReport,
+    AiPipelineReport, AuditLog, AuditLogFilter, HumanResourceSummary, MeetingReport, MinutesTemplate, SystemSettings, TaskReport,
 } from '../models/admin.models';
 
 /** Thống kê (P5), Nhật ký (P6), Cấu hình (P7) — /api/admin/** chỉ Admin. */
@@ -20,6 +20,8 @@ export class SystemService {
     meetingReport(from: string, to: string, organizationId: string | null): Observable<MeetingReport> { return this.common.get<MeetingReport>('admin/reports/meetings', { from, to, organizationId }) }
 
     taskReport(from: string, to: string): Observable<TaskReport> { return this.common.get<TaskReport>('admin/reports/tasks', { from, to }, false) }
+
+    aiPipelineReport(from: string, to: string): Observable<AiPipelineReport> { return this.common.get<AiPipelineReport>('admin/reports/ai-pipeline', { from, to }, false) }
 
     // ── P6 ──
     auditLogs(filter: AuditLogFilter): Observable<PaginationResult> {

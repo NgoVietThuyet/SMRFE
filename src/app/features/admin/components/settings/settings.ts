@@ -12,6 +12,7 @@ const SUGGESTED_EXTENSIONS = [
 ];
 
 /** P7 — Cấu hình hệ thống (mẫu 2.FrontEnd system-manager/document-system). Không hiển thị bí mật. */
+import { UploadPolicyService } from '../../../../shared/services';
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -35,6 +36,7 @@ export class Settings implements OnInit, OnDestroy {
     private global: GlobalService,
     private service: SystemService,
     private message: NzMessageService,
+    private uploadPolicy: UploadPolicyService,
   ) {
     this.global.setBreadcrumb([{ name: 'Cấu hình hệ thống', path: 'admin/settings' }]);
   }
@@ -71,6 +73,8 @@ export class Settings implements OnInit, OnDestroy {
       .pipe(finalize(() => this.isSaving = false), takeUntil(this.destroy$))
       .subscribe(() => {
         this.message.success('Đã lưu cấu hình');
+        // Màn tải tài liệu áp dụng giới hạn mới ngay, không cần tải lại trang.
+        this.uploadPolicy.refresh();
         this.loadSettings();
         this.loadTemplates();
       });
