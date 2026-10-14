@@ -20,9 +20,11 @@ interface ChangePasswordModel {
 const SIDEBAR_COLLAPSED_KEY = 'sidebarCollapsed';
 const NOTIFICATION_PAGE_SIZE = 20;
 
+import { MinutesExportService } from '../../../features/minutes/services/minutes-export.service';
+import { MinutesExportIndicator } from '../../../features/minutes/components/minutes-export-indicator/minutes-export-indicator';
 @Component({
   selector: 'app-main-layout',
-  imports: [SharedModules],
+  imports: [SharedModules, MinutesExportIndicator],
   standalone: true,
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss'
@@ -63,8 +65,11 @@ export class MainLayout implements OnInit, OnDestroy {
     private hub: RealtimeHubService,
     private notification: NzNotificationService,
     private router: Router,
+    private minutesExports: MinutesExportService,
   ) {
     this.accountInfo = this.session.accountInfo;
+    // Job "Tải biên bản họp" chạy ngầm: khôi phục sau khi tải lại trang, tự tải file khi xong.
+    this.minutesExports.start();
   }
 
   ngOnInit(): void {
@@ -345,6 +350,10 @@ export class MainLayout implements OnInit, OnDestroy {
         });
     }
     this.isNotificationPopoverVisible = false;
+    if (noti.type === 'MINUTES_EXPORT_READY' && noti.data?.['exportId'] && noti.data?.['success'] !== false) {
+      this.minutesExports.downloadAgain(noti.data['exportId'], noti.data['meetingName'] ?? '');
+      return;
+    }
     const url = this.notificationUrl(noti);
     if (url) {
       this.router.navigateByUrl(url);

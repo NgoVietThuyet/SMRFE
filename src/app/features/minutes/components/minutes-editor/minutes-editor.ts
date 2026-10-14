@@ -15,6 +15,7 @@ import {
 } from '../../models/minutes.models';
 import { MinutesService, offsetLabel, saveBlob } from '../../services/minutes.service';
 import { formatRange } from '../minutes-list/minutes-list';
+import { MinutesExportActions } from '../minutes-export-actions/minutes-export-actions';
 
 /** Mục đang chọn nguồn: bấm đoạn transcript bên trái để gắn vào mục này. */
 type PickTarget = { kind: 'summary' } | { kind: 'decision'; index: number } | { kind: 'action'; index: number };
@@ -27,7 +28,7 @@ type PickTarget = { kind: 'summary' } | { kind: 'decision'; index: number } | { 
 @Component({
   selector: 'app-minutes-editor',
   standalone: true,
-  imports: [SharedModules],
+  imports: [SharedModules, MinutesExportActions],
   templateUrl: './minutes-editor.html',
   styleUrl: './minutes-editor.scss',
 })

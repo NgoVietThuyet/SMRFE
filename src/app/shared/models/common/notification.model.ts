@@ -10,7 +10,8 @@ export type NotificationType =
     | 'TASK_SHARED'
     | 'TASK_COMPLETED'
     | 'MINUTES_READY'
-    | 'MINUTES_PUBLISHED';
+    | 'MINUTES_PUBLISHED'
+    | 'MINUTES_EXPORT_READY';
 
 /** 0 Thông tin · 1 Cảnh báo · 2 Lỗi · 3 Cần xác nhận */
 export enum NotificationSeverity {

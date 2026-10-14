@@ -129,7 +129,7 @@
                 <app-room-files-panel [meetingId]="meetingId" [canUpload]="canUploadFiles"></app-room-files-panel>
                 }
                 @if (panelTab === 'tasks' && !isGuest) {
-                <app-room-tasks-panel [meetingId]="meetingId"></app-room-tasks-panel>
+                <app-room-tasks-panel [meetingId]="meetingId" [canCreate]="canCreateTask"></app-room-tasks-panel>
                 }
             </div>
         </aside>

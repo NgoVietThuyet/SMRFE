@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiResponse, CommonService, PagedResult } from '../../../shared/services';
 import {
-    MinutesContent, MinutesDetail, MinutesJob, MinutesListItem, MinutesVersion, TranscriptSegment,
+    MinutesContent, MinutesDetail, MinutesExport, MinutesJob, MinutesListItem, MinutesTemplateInfo, MinutesVersion, TranscriptSegment,
 } from '../models/minutes.models';
 
 /** API biên bản (P13): /api/minutes, /api/Meeting/{id}/minutes/**, /api/Meeting/{id}/transcripts. */
@@ -51,6 +51,36 @@ export class MinutesService {
 
     reject(meetingId: string, version: number, reason: string): Observable<MinutesVersion> {
         return this.common.post<ApiResponse<MinutesVersion>>(`${this.base(meetingId)}/minutes/${version}/reject`, { reason }, true, false).pipe(map(r => r.data));
+    }
+
+    // ----- Mẫu biên bản của cuộc họp + "Tải biên bản họp" chạy ngầm (mọi thành viên)
+    template(meetingId: string): Observable<MinutesTemplateInfo> {
+        return this.common.get<MinutesTemplateInfo>(`${this.base(meetingId)}/minutes/template`, null, false);
+    }
+
+    uploadTemplate(meetingId: string, file: File): Observable<MinutesTemplateInfo> {
+        return this.common.uploadFiles(`${this.base(meetingId)}/minutes/template`, [file], 'file', undefined, true, true)
+            .pipe(map(r => r.data as MinutesTemplateInfo));
+    }
+
+    deleteTemplate(meetingId: string): Observable<ApiResponse> {
+        return this.common.delete(`${this.base(meetingId)}/minutes/template`, null, false, false);
+    }
+
+    requestExport(meetingId: string): Observable<MinutesExport> {
+        return this.common.post<ApiResponse<MinutesExport>>(`${this.base(meetingId)}/minutes/exports`, null, false, false).pipe(map(r => r.data));
+    }
+
+    exportStatus(exportId: string): Observable<MinutesExport> {
+        return this.common.get<MinutesExport>(`minutes/exports/${encodeURIComponent(exportId)}`, null, false);
+    }
+
+    exportFile(exportId: string, fallbackName: string): Observable<{ blob: Blob; fileName: string }> {
+        return this.common.downloadFile(`minutes/exports/${encodeURIComponent(exportId)}/file`, null, false).pipe(map(res => {
+            const disposition = res.headers.get('Content-Disposition') ?? '';
+            const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(disposition);
+            return { blob: res.body as Blob, fileName: decodeURIComponent(match?.[1] ?? match?.[2] ?? fallbackName) };
+        }));
     }
 
     docx(meetingId: string, version: number): Observable<{ blob: Blob; fileName: string }> {

@@ -3,12 +3,13 @@ import { Subject, finalize, takeUntil } from 'rxjs';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
 import { MINUTES_STATUS_META, MinutesDetail, MinutesStatus } from '../../models/minutes.models';
 import { MinutesService, saveBlob } from '../../services/minutes.service';
+import { MinutesExportActions } from '../minutes-export-actions/minutes-export-actions';
 
 /** Tab "Biên bản và ghi hình" trong chi tiết cuộc họp (P9): trạng thái biên bản + lối vào trình soạn (P13) và Trợ lý AI (P14). */
 @Component({
   selector: 'app-minutes-summary',
   standalone: true,
-  imports: [SharedModules],
+  imports: [SharedModules, MinutesExportActions],
   template: `
     <nz-spin [nzSpinning]="loading">
       @if (detail; as d) {
@@ -28,13 +29,13 @@ import { MinutesService, saveBlob } from '../../services/minutes.service';
         <nz-descriptions-item nzTitle="Tóm tắt"><div class="summary">{{ d.current.content.summary }}</div></nz-descriptions-item>
         }
       </nz-descriptions>
+      <div class="export">
+        <app-minutes-export-actions [meetingId]="d.meetingId" [meetingName]="d.meetingName"></app-minutes-export-actions>
+      </div>
       <div class="actions">
         <button nz-button nzType="primary" [routerLink]="['/minutes', d.meetingId]">
           <nz-icon nzType="file-text" /> {{ d.canEdit ? 'Mở trình soạn biên bản' : 'Xem biên bản' }}
         </button>
-        @if (d.current && (d.canEdit || d.current.status === Status.Published)) {
-        <button nz-button (click)="download()"><nz-icon nzType="file-word" /> Tải DOCX</button>
-        }
         <button nz-button [routerLink]="['/ai-assistant']" [queryParams]="{ meetingId: d.meetingId }">
           <nz-icon nzType="robot" /> Hỏi Trợ lý AI
         </button>
@@ -45,7 +46,8 @@ import { MinutesService, saveBlob } from '../../services/minutes.service';
     </nz-spin>
   `,
   styles: [`
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .export { margin-top: 16px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     .summary { white-space: pre-wrap; }
   `],
 })

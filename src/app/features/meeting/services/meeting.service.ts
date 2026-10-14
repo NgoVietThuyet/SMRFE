@@ -61,6 +61,12 @@ export class MeetingService {
     }
 
     // ----- Công việc của cuộc họp
+    /** Tạo nhanh một việc vào bảng chung của cuộc họp (tab Công việc trong phòng họp). */
+    createCard(meetingId: string, title: string): Observable<{ workId: string; listId: string; cardId: string; title: string }> {
+        return this.common.post<ApiResponse<{ workId: string; listId: string; cardId: string; title: string }>>(
+            `Task/meeting/${encodeURIComponent(meetingId)}/cards`, { title }, false, false).pipe(map(res => res.data));
+    }
+
     tasks(meetingId: string): Observable<TaskSearchResult> {
         return this.common.post<ApiResponse<TaskSearchResult>>('Task/query', { shortcut: 'all', keyword: '', meetingId, page: 1, pageSize: 100 }, false, false)
             .pipe(map(res => res.data));

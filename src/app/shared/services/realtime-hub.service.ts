@@ -10,7 +10,7 @@ export const ROOM_EVENTS = [
     'LobbyChanged', 'LobbyDecision', 'ForceMute', 'Kicked', 'RoleChanged', 'FilesChanged', 'TaskChanged',
     'WhiteboardOp', 'WhiteboardSaved', 'WhiteboardLockChanged', 'RecordingChanged',
     // P13 — tiến độ sinh / duyệt biên bản (gửi tới thành viên cuộc họp)
-    'MinutesStatusChanged',
+    'MinutesStatusChanged', 'MinutesExportReady',
 ] as const;
 export type RoomEventName = typeof ROOM_EVENTS[number];
 export interface RoomEvent { name: RoomEventName; payload: any }

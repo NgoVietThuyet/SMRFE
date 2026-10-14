@@ -67,6 +67,9 @@ export class MeetingRoom implements OnInit, OnDestroy {
   joinInfo: JoinInfo | null = null;
   private api: JitsiApi | null = null;
   jitsiError = '';
+  /** Đã vào được hội nghị Jitsi (mic / camera / chia sẻ màn hình chỉ dùng được sau thời điểm này). */
+  mediaReady = false;
+  private mediaTimer: ReturnType<typeof setTimeout> | null = null;
 
   audioMuted = false;
   videoMuted = false;
@@ -361,6 +364,18 @@ export class MeetingRoom implements OnInit, OnDestroy {
       on('screenSharingStatusChanged', p => this.sharing = !!p.on);
       on('recordingStatusChanged', p => this.recording = !!p.on);
       on('readyToClose', () => this.leave());
+      on('videoConferenceJoined', () => {
+        this.mediaReady = true;
+        this.jitsiError = '';
+        this.clearMediaTimer();
+      });
+      // Máy chủ Jitsi lỗi (ví dụ thiếu config.js) thì iframe vẫn tải nhưng không bao giờ vào được hội nghị.
+      this.clearMediaTimer();
+      this.mediaTimer = setTimeout(() => this.zone.run(() => {
+        if (!this.mediaReady && this.api) {
+          this.jitsiError = `Không kết nối được máy chủ video (${info.domain}). Micro, camera và chia sẻ màn hình chưa dùng được; chat, phụ đề, bảng trắng vẫn hoạt động. Hãy báo quản trị viên kiểm tra máy chủ Jitsi.`;
+        }
+      }), 20000);
     } catch (e: any) {
       this.jitsiError = e?.message || 'Không tải được video (Jitsi). Các chức năng khác vẫn dùng được.';
     }
@@ -369,11 +384,23 @@ export class MeetingRoom implements OnInit, OnDestroy {
   // ===================== Thanh điều khiển =====================
 
   toggleAudio(): void {
-    this.api?.executeCommand('toggleAudio');
+    if (this.mediaAvailable()) this.api?.executeCommand('toggleAudio');
   }
 
   toggleVideo(): void {
-    this.api?.executeCommand('toggleVideo');
+    if (this.mediaAvailable()) this.api?.executeCommand('toggleVideo');
+  }
+
+  /** Chưa vào được hội nghị video thì báo lý do thay vì bấm không có gì xảy ra. */
+  private mediaAvailable(): boolean {
+    if (this.mediaReady) return true;
+    this.message.warning(this.jitsiError || 'Đang kết nối máy chủ video, vui lòng thử lại sau vài giây.');
+    return false;
+  }
+
+  private clearMediaTimer(): void {
+    if (this.mediaTimer) clearTimeout(this.mediaTimer);
+    this.mediaTimer = null;
   }
 
   get canShare(): boolean {
@@ -381,7 +408,13 @@ export class MeetingRoom implements OnInit, OnDestroy {
   }
 
   toggleShare(): void {
-    if (this.canShare) this.api?.executeCommand('toggleShareScreen');
+    if (this.canShare && this.mediaAvailable()) this.api?.executeCommand('toggleShareScreen');
+  }
+
+  /** Tạo việc trong phòng: mọi thành viên (khách không có tab Công việc), trừ cuộc họp đã hủy / lưu trữ. */
+  get canCreateTask(): boolean {
+    const st = this.meeting?.status;
+    return !this.isGuest && st !== MeetingStatus.Cancelled && st !== MeetingStatus.Archived;
   }
 
   get canCaption(): boolean {
@@ -509,6 +542,8 @@ export class MeetingRoom implements OnInit, OnDestroy {
     this.captionSub = null;
     try { this.api?.dispose(); } catch { /* iframe đã đóng */ }
     this.api = null;
+    this.mediaReady = false;
+    this.clearMediaTimer();
     if (this.phase === 'room' || this.phase === 'connecting') {
       void this.hub.leaveMeeting(this.meetingId);
       this.room.markLeft(this.meetingId);

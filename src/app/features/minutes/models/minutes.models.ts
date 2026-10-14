@@ -113,6 +113,29 @@ export interface MinutesListItem {
     publishedAt: string | null;
 }
 
+/** Mẫu biên bản đang dùng của cuộc họp (MinutesTemplateInfo). */
+export interface MinutesTemplateInfo {
+    source: 'MEETING' | 'SYSTEM' | 'BUILTIN';
+    fileId: string | null;
+    fileName: string;
+    format: 'DOCX' | 'PDF';
+    uploadedBy: string | null;
+    uploadedByName: string | null;
+    uploadedAt: string | null;
+    sections: string[];
+    canDelete: boolean;
+}
+
+/** Job "Tải biên bản họp" (status như JobStatus). */
+export interface MinutesExport {
+    id: string;
+    meetingId: string;
+    meetingName: string;
+    status: JobStatus;
+    error: string | null;
+    reused: boolean;
+}
+
 /** MeetingCaptionDto — một đoạn transcript. */
 export interface TranscriptSegment {
     id: string;

@@ -52,10 +52,12 @@
             <nz-icon nzType="copy" /> Tạo bản nháp mới
         </button>
         }
-        @if (current) {
-        <button nz-button (click)="download()"><nz-icon nzType="file-word" /> Tải DOCX</button>
-        }
     </header>
+
+    <!-- Mẫu biên bản + tải biên bản (mọi thành viên; tổng hợp chạy ngầm) -->
+    <div class="export-bar">
+        <app-minutes-export-actions [meetingId]="detail.meetingId" [meetingName]="detail.meetingName"></app-minutes-export-actions>
+    </div>
 
     <!-- ===== Thông báo ===== -->
     <div class="banners">
