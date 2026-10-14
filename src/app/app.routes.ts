@@ -96,7 +96,6 @@ export const routes: Routes = [
                 loadComponent: () =>
                     import('./pages/meetings/detail/meeting-detail').then((m) => m.MeetingDetail),
                 data: {
-                    showBack: true,
                     showSearch: false,
                     breadcrumb: [{ label: 'Cuộc họp', route: '/meetings' }, { label: 'Chi tiết' }],
                 },

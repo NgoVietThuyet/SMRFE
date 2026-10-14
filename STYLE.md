@@ -190,6 +190,19 @@ Search icon trong input: `input {padding0 68 0 12 height34}` 2 nút absolute `ri
 
 `.ant-drawer-content-wrapper {box-shadow: -4 0 24 rgba(15,23,42,.15)}`, `.drawer-grey-background {header/body bg #f4f8fb}`, `.ant-drawer-header {padding32 calc(32+var(--sb-w)) 16 32 min-height96 border none bg #fff; title 24 500 #075985; extra gap8}`, `.ant-drawer-body {padding0 32 16 bg #fff scrollbar-gutter stable}`, inline drawer `.ant-drawer:has(>.layout-inline-drawer){left var(--app-sider-width)}`, modal inline `.ant-modal-wrap.layout-inline-modal {left var(--app-sider-width)}`.
 
+### 8.1 Nút hành động ở góc phải header — drawer & popup (bắt buộc, 10/2026)
+
+Chi tiết: `Document/Plan_GiaoDien_Drawer.md`. Mọi drawer/popup có nút xác nhận theo cùng một quy chuẩn:
+
+- **Bố cục:** tiêu đề trái · nhóm nút phải · ✕ ngoài cùng. Không dùng `nzFooter`, không đặt nút cuối body. Header dính đỉnh (60px), chỉ body cuộn.
+- **Thứ tự trái → phải:** hành động phụ → từ chối (Hủy/Không/Đóng) → **nút chính luôn ở mép phải**. Hành động nguy hiểm trong drawer xem (Khóa, Xóa) vào menu `⋯`, màu đỏ.
+- **Dựng bằng** `<smr-header-actions [actions]="…" [busy]="saving()">` (`shared/ui/header-actions`), cấu hình `HeaderAction[]` (`kind: 'primary'`, `danger`, `overflow`, `submitForm`, `mobileLabel`, `hidden`). Tối đa 3 nút trên desktop; < 768px chỉ nút chính + `⋯`.
+- **Drawer:** `nzWrapClassName="smr-entity-drawer smr-drawer--v2"` + `[nzExtra]="tpl"`. Drawer form: `[nzClosable]="false"` (đã có Hủy), `(nzOnClose)` gọi hàm có `confirmDiscard()`.
+- **Modal template:** `nzWrapClassName="smr-popup"`, `[nzTitle]="headTpl"` chứa `.smr-popup__head` > `h2.smr-popup__title` + `<smr-header-actions>`, `[nzFooter]="null"`, `[nzClosable]="false"`. < 768px tự thành bottom sheet.
+- **Popup xác nhận:** dùng `ConfirmDialogService.open({ title, content, okText, danger, onOk })` (`shared/ui/confirm-dialog`). **Không dùng `NzModalService.confirm`** (luôn đặt nút ở đáy). Popup nguy hiểm focus sẵn vào "Không"; `onOk` ném lỗi → popup giữ mở.
+- **Form:** nút submit nằm ngoài `<form>` → `submitForm: 'form-id'` (thuộc tính HTML `form`). Nút Lưu **không disable** khi form lỗi: bấm → `markAllAsTouched()` + `focusFirstInvalid()`. Đóng form đã sửa → hỏi "Bỏ thay đổi chưa lưu?" (`confirmDiscard`).
+- **Lưu ngay khi đổi (vd Chi tiết việc nhỏ):** không có nút Lưu; header hiện `[status]="'Đang lưu…' | 'Đã lưu'"`.
+
 ## 9. Tabs
 
 Global: `.ant-tabs-nav-list {gap4}`, `.ant-tabs-tab {padding6 12 or 12 0 margin0 4 0 0 or 32?)}`.

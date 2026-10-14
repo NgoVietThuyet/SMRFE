@@ -135,11 +135,6 @@
     &.is-done { background: var(--success); }
 }
 
-.task-board__hint {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-}
-
 .task-board__warn {
     margin: 0;
     padding: var(--space-2) var(--space-3);
@@ -160,14 +155,55 @@
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
-    align-items: stretch;
+    align-items: flex-start;
     gap: var(--space-3);
     overflow-x: auto;
     padding-bottom: var(--space-2);
+    scroll-snap-type: x proximity;
 }
 
-.task-board__tabs {
-    display: none;
+// Ô "Thêm đầu việc" — cột giả ở cuối dãy, như Trello
+.task-board__add-list {
+    flex: 0 0 280px;
+    width: 280px;
+    scroll-snap-align: start;
+
+    &.is-open {
+        padding: var(--space-2);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-md);
+        background: var(--bg-subtle);
+    }
+}
+
+.task-board__add-list-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        border-style: solid;
+        border-color: var(--primary-500);
+        background: var(--bg-subtle);
+        color: var(--text-primary);
+    }
+}
+
+.task-board__add-list-actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
 }
 
 // ── Trạng thái ──────────────────────────────────
@@ -196,7 +232,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    flex: 0 0 300px;
+    flex: 0 0 280px;
     padding: var(--space-3);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
@@ -215,51 +251,13 @@
     .task-board__bar-fill { transition: none; }
 }
 
-// ── Mobile: 1 cột + tab ─────────────────────────
+// ── Mobile: mỗi cột gần full màn, vuốt ngang để đổi cột ──
 @media (max-width: 767px) {
     .task-board__meta { padding-left: 0; }
-    .task-board__hint { display: none; }
     .task-board__filter { flex: 1 1 160px; width: auto; }
     .task-board__edit .task-board__btn-text { display: none; }
 
-    .task-board__tabs {
-        display: flex;
-        gap: var(--space-1);
-        padding: var(--space-1);
-        border-radius: var(--radius-md);
-        background: var(--bg-subtle);
-    }
-
-    .task-board__tab {
-        flex: 1 1 0;
-        min-height: 40px;
-        padding: var(--space-1) var(--space-2);
-        border: none;
-        border-radius: var(--radius-sm);
-        background: none;
-        font-size: var(--font-size-xs);
-        font-weight: 500;
-        color: var(--text-secondary);
-        cursor: pointer;
-
-        &.is-active {
-            background: var(--bg-surface);
-            color: var(--text-primary);
-            box-shadow: var(--shadow-1);
-        }
-    }
-
-    .task-board__tab-count {
-        margin-left: 2px;
-        color: var(--text-muted);
-    }
-
-    .task-board__columns {
-        overflow-x: visible;
-
-        app-board-column:not(.is-active),
-        .task-board__sk-col:not(.is-active) { display: none; }
-
-        .task-board__sk-col { flex: 1 1 auto; }
-    }
+    .task-board__columns { scroll-snap-type: x mandatory; }
+    .task-board__add-list,
+    .task-board__sk-col { flex-basis: calc(100vw - 56px); width: calc(100vw - 56px); }
 }

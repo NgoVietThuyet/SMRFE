@@ -1,22 +1,16 @@
 <!-- =====================================================
      TopHeader — SmartMeeting
-     Toggle | Back? | Breadcrumb | Search? | bell + VI/EN + help? + avatar
+     Toggle | Breadcrumb | Search? | bell + VI/EN + help? + avatar
 ===================================================== -->
 
 <header class="smr-top-header">
 
-    <!-- ── Left: toggle + back + breadcrumb ─────────── -->
+    <!-- ── Left: toggle + breadcrumb ─────────── -->
     <div class="smr-top-header__left">
         <button class="smr-icon-btn" (click)="toggleSidebar()"
             aria-label="Mở hoặc đóng menu điều hướng" title="Menu điều hướng">
             <span nz-icon [nzType]="collapsed() ? 'menu-unfold' : 'menu-fold'" nzTheme="outline"></span>
         </button>
-
-        @if (showBack()) {
-        <button class="smr-icon-btn" (click)="goBack()" title="Quay lại" aria-label="Quay lại">
-            <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
-        </button>
-        }
 
         @if (breadcrumb().length > 0) {
         <nav class="smr-top-header__breadcrumb" aria-label="Breadcrumb">
@@ -47,10 +41,29 @@
         </nz-input-wrapper>
         }
 
-        <button class="smr-icon-btn smr-top-header__bell" title="Thông báo" aria-label="Thông báo"
-            [class.smr-top-header__bell--unread]="hasUnread()">
+        <button #bell type="button" class="smr-icon-btn smr-top-header__bell" title="Thông báo"
+            [attr.aria-label]="bellLabel()" aria-haspopup="dialog" [attr.aria-expanded]="panelOpen()"
+            (click)="toggleNotifications()"
+            nz-popover [nzPopoverContent]="notiPanel" [nzPopoverTrigger]="null"
+            [nzPopoverVisible]="panelOpen() && !panelMobile()" (nzPopoverVisibleChange)="onPopoverVisible($event)"
+            nzPopoverPlacement="bottomRight" nzPopoverOverlayClassName="smr-noti-popover">
             <span nz-icon nzType="bell" nzTheme="outline"></span>
+            @if (notifications.badge()) {
+            <span class="smr-top-header__badge" aria-hidden="true">{{ notifications.badge() }}</span>
+            }
         </button>
+        <ng-template #notiPanel>
+            <app-notification-panel (closed)="closeNotifications()" />
+        </ng-template>
+        <nz-drawer [nzVisible]="panelOpen() && panelMobile()" nzPlacement="right" nzWidth="100%"
+            [nzClosable]="false" [nzBodyStyle]="{ padding: 0, height: '100%' }" (nzOnClose)="closeNotifications()">
+            <ng-container *nzDrawerContent>
+                @if (panelOpen() && panelMobile()) {
+                <app-notification-panel [fullscreen]="true" (closed)="closeNotifications()" />
+                }
+            </ng-container>
+        </nz-drawer>
+        <span class="sr-only" aria-live="polite">{{ liveMessage() }}</span>
 
         <div class="smr-top-header__locale" role="group" aria-label="Ngôn ngữ">
             <button type="button" [class.smr-top-header__locale--active]="locale() === 'vi'"

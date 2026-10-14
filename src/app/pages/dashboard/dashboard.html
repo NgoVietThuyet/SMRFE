@@ -162,7 +162,14 @@
 @if (selectedTask()) {
     <app-task-detail-drawer [open]="true" [taskId]="selectedTask()" (closed)="selectedTask.set(null)" (changed)="refreshTasks()" />
 }
-<nz-modal [nzVisible]="showJoinModal()" nzTitle="Tham gia bằng mã" [nzFooter]="joinFooter" [nzWidth]="460" [nzMaskClosable]="!joining()" [nzClosable]="!joining()" (nzOnCancel)="showJoinModal.set(false)">
+<nz-modal [nzVisible]="showJoinModal()" [nzTitle]="joinHeadTpl" [nzFooter]="null" [nzClosable]="false" [nzWidth]="460"
+    nzWrapClassName="smr-popup" [nzMaskClosable]="!joining()" [nzKeyboard]="!joining()" (nzOnCancel)="showJoinModal.set(false)">
+    <ng-template #joinHeadTpl>
+        <div class="smr-popup__head">
+            <h2 class="smr-popup__title">Tham gia bằng mã</h2>
+            <smr-header-actions [actions]="joinActions()" [busy]="joining()" />
+        </div>
+    </ng-template>
     <ng-container *nzModalContent>
         <form id="join-code-form" (ngSubmit)="submitJoinCode()" class="dashboard__join-form">
             <label for="meeting-code">Mã phòng họp</label>
@@ -171,6 +178,5 @@
             <p id="join-code-error" role="alert" class="dashboard__join-error">{{ joinError() }}</p>
         </form>
     </ng-container>
-    <ng-template #joinFooter><button nz-button [disabled]="joining()" (click)="showJoinModal.set(false)">Đóng</button><button nz-button nzType="primary" type="submit" form="join-code-form" [nzLoading]="joining()">Tham gia</button></ng-template>
 </nz-modal>
 

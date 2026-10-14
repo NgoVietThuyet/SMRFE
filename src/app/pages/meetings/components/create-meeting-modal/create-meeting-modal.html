@@ -2,15 +2,21 @@
      CreateMeetingModal — popup tạo cuộc họp (480–800px).
      Khung modal kế thừa .ant-modal-* trong style.scss.
 ===================================================== -->
-<nz-modal [nzVisible]="open()" nzTitle="Tạo cuộc họp" [nzWidth]="800" [nzFooter]="footerTpl"
-    [nzMaskClosable]="false" [nzKeyboard]="!saving()" (nzOnCancel)="close()">
+<nz-modal [nzVisible]="open()" [nzTitle]="headTpl" [nzWidth]="800" [nzFooter]="null" [nzClosable]="false"
+    nzWrapClassName="smr-popup" [nzMaskClosable]="false" [nzKeyboard]="!saving()" (nzOnCancel)="requestClose()">
+    <ng-template #headTpl>
+        <div class="smr-popup__head">
+            <h2 class="smr-popup__title">Tạo cuộc họp</h2>
+            <smr-header-actions [actions]="headerActions()" [busy]="!!saving()" />
+        </div>
+    </ng-template>
 
     <ng-container *nzModalContent>
         @if (submitError()) {
         <div class="cmm-error" role="alert">{{ submitError() }}</div>
         }
 
-        <form [formGroup]="form" class="cmm-form" novalidate>
+        <form id="cmm-form" [formGroup]="form" class="cmm-form" novalidate (ngSubmit)="submit(false)">
             <div class="cmm-field">
                 <label class="cmm-label" for="cmm-name">Tên cuộc họp <span class="cmm-required">*</span></label>
                 <input nz-input id="cmm-name" formControlName="name" placeholder="Nhập tên cuộc họp"
@@ -93,12 +99,4 @@
             </fieldset>
         </form>
     </ng-container>
-
-    <ng-template #footerTpl>
-        <button nz-button nzType="default" (click)="close()" [disabled]="!!saving()">Hủy</button>
-        <button nz-button nzType="default" (click)="submit(true)" [nzLoading]="saving() === 'draft'"
-            [disabled]="!!saving()">Lưu nháp</button>
-        <button nz-button nzType="primary" (click)="submit(false)" [nzLoading]="saving() === 'create'"
-            [disabled]="!!saving()">Tạo cuộc họp</button>
-    </ng-template>
 </nz-modal>

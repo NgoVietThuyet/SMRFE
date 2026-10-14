@@ -510,13 +510,4 @@
         </div>
     </footer>
     }
-
-    <!-- Confirm kết thúc -->
-    <nz-modal [nzVisible]="endOpen()" [nzTitle]="t('endTitle')" [nzOkText]="t('confirmEnd')"
-        [nzOkDanger]="true" [nzCancelText]="t('cancel')" [nzOkLoading]="ending()"
-        (nzOnOk)="confirmEnd()" (nzOnCancel)="closeEnd()">
-        <ng-container *nzModalContent>
-            <p class="room__modal-text">{{ t('endBody') }}</p>
-        </ng-container>
-    </nz-modal>
 </div>

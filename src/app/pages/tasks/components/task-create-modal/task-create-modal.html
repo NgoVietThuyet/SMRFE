@@ -2,8 +2,14 @@
      TaskCreateModal — popup tạo công việc.
      Pattern khung modal kế thừa .ant-modal-* (style.scss).
 ===================================================== -->
-<nz-modal [nzVisible]="open()" [nzTitle]="parentId() ? 'Tạo công việc con' : 'Tạo công việc'" [nzWidth]="700" [nzFooter]="footerTpl"
-    [nzMaskClosable]="false" [nzKeyboard]="!saving()" (nzOnCancel)="close()">
+<nz-modal [nzVisible]="open()" [nzTitle]="headTpl" [nzWidth]="700" [nzFooter]="null" [nzClosable]="false"
+    nzWrapClassName="smr-popup" [nzMaskClosable]="false" [nzKeyboard]="!saving()" (nzOnCancel)="requestClose()">
+    <ng-template #headTpl>
+        <div class="smr-popup__head">
+            <h2 class="smr-popup__title">{{ parentId() ? 'Tạo công việc con' : 'Tạo công việc' }}</h2>
+            <smr-header-actions [actions]="headerActions()" [busy]="saving()" />
+        </div>
+    </ng-template>
 
     <ng-container *nzModalContent>
         @if (parentId() && parentTitle()) {
@@ -15,7 +21,7 @@
         <div class="tcm-error" role="alert">{{ submitError() }}</div>
         }
 
-        <form [formGroup]="form" class="tcm-form" novalidate>
+        <form id="tcm-form" [formGroup]="form" class="tcm-form" novalidate (ngSubmit)="submit()">
             <div class="tcm-field">
                 <label class="tcm-label" for="tcm-title">Tên công việc <span class="tcm-required">*</span></label>
                 <input nz-input id="tcm-title" formControlName="title" placeholder="Nhập tên công việc"
@@ -95,10 +101,4 @@
             </label>
         </form>
     </ng-container>
-
-    <ng-template #footerTpl>
-        <button nz-button nzType="default" (click)="close()" [disabled]="saving()">Hủy</button>
-        <button nz-button nzType="primary" (click)="submit()" [nzLoading]="saving()"
-            [disabled]="saving()">Tạo công việc</button>
-    </ng-template>
 </nz-modal>

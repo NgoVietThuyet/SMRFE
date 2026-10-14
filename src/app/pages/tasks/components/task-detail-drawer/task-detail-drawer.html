@@ -2,7 +2,10 @@
      TaskDetailDrawer — chi tiết công việc.
      Xem/Sửa + Chia sẻ & Quyền (creator) + Xóa (creator).
 ===================================================== -->
-<nz-drawer [nzVisible]="open()" [nzWidth]="720" nzPlacement="right" nzWrapClassName="smr-entity-drawer" [nzTitle]="drawerTitle" (nzOnClose)="close()">
+<nz-drawer [nzVisible]="open()" [nzWidth]="720" nzPlacement="right" nzWrapClassName="smr-entity-drawer smr-drawer--v2"
+    [nzTitle]="drawerTitle" [nzExtra]="actionsTpl" [nzClosable]="!editing()" [nzMaskClosable]="!saving() && !deleteSaving()"
+    (nzOnClose)="close()">
+    <ng-template #actionsTpl><smr-header-actions [actions]="headerActions()" [busy]="saving() || deleteSaving()" /></ng-template>
     <ng-template #drawerTitle>
         @if (task(); as t) {
         <span class="tdd__title-text" [attr.title]="t.title">{{ t.title }}</span>
@@ -30,7 +33,7 @@
         @if (submitError()) {
         <div class="tdd__error" role="alert">{{ submitError() }}</div>
         }
-        <form [formGroup]="editForm" class="tdd__form" novalidate>
+        <form id="tdd-edit-form" [formGroup]="editForm" class="tdd__form" novalidate (ngSubmit)="saveEdit()">
             <div class="tdd__field">
                 <label class="tdd__label" for="tdd-title">Tên công việc <span class="tdd__required">*</span></label>
                 <input nz-input id="tdd-title" formControlName="title" [maxlength]="300" />
@@ -80,10 +83,6 @@
                 </div>
             </div>
         </form>
-        <div class="tdd__actions">
-            <button nz-button nzType="default" (click)="cancelEdit()" [disabled]="saving()">Hủy</button>
-            <button nz-button nzType="primary" (click)="saveEdit()" [nzLoading]="saving()">Lưu</button>
-        </div>
         }
 
         <!-- ── Mode Xem ─────────────────────────── -->
@@ -163,32 +162,6 @@
             }
         </dl>
 
-        <div class="tdd__actions">
-            @if (t.level === 0) {
-            <a nz-button nzType="primary" [routerLink]="['/tasks', t.id]" (click)="close()">
-                <span nz-icon nzType="project" nzTheme="outline"></span>
-                Mở bảng
-            </a>
-            }
-            @if (t.canEdit) {
-            <button nz-button [nzType]="t.level === 0 ? 'default' : 'primary'" (click)="startEdit()">
-                <span nz-icon nzType="edit" nzTheme="outline"></span>
-                Sửa
-            </button>
-            }
-            @if (t.level < 2) {
-            <button nz-button nzType="default" (click)="openSubCreate(t)">
-                <span nz-icon nzType="plus" nzTheme="outline"></span>
-                {{ t.level === 0 ? 'Thêm đầu việc' : 'Thêm việc nhỏ' }}
-            </button>
-            }
-            @if (t.isCreator) {
-            <button nz-button nzType="default" nzDanger (click)="openDelete()">
-                <span nz-icon nzType="delete" nzTheme="outline"></span>
-                Xóa
-            </button>
-            }
-        </div>
 
         <!-- ── Hierarchy: Công việc nhỏ / Task con ───── -->
         <div class="tdd__hierarchy">
@@ -296,18 +269,3 @@
 
 <!-- Tạo con modal -->
 <app-task-create-modal [open]="subCreateOpen()" [parentId]="subCreateParentId()" [parentTitle]="subCreateParentTitle()" [meetingId]="task()?.meetingId ?? null" (closed)="closeSubCreate()" (created)="onSubCreated()" />
-
-<!-- ── Modal xác nhận xóa ─────────────────────────── -->
-<nz-modal [nzVisible]="deleteOpen()" nzTitle="Xóa công việc" [nzFooter]="deleteFooter" [nzMaskClosable]="false"
-    (nzOnCancel)="closeDelete()">
-    <ng-container *nzModalContent>
-        <p>Bạn có chắc muốn xóa công việc này?</p>
-        <p class="tdd__muted">Hành động này không thể hoàn tác.</p>
-    </ng-container>
-    <ng-template #deleteFooter>
-        <button nz-button nzType="default" (click)="closeDelete()" [disabled]="deleteSaving()">Không</button>
-        <button nz-button nzType="primary" nzDanger (click)="confirmDelete()" [nzLoading]="deleteSaving()">
-            Xóa
-        </button>
-    </ng-template>
-</nz-modal>

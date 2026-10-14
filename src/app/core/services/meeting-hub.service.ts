@@ -3,6 +3,7 @@ import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signal
 import { BehaviorSubject, Subject } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 import { ChatMessage, MeetingCaptionDto } from '../models/meeting.models';
+import { NotificationCreatedEvent, NotificationsReadEvent } from '../models/notification.models';
 import { AuthService } from './auth.service';
 
 
@@ -42,7 +43,10 @@ export interface MeetingStatusChangedEvent {
 // - PresenceChanged → IsJoined sync sau join/leave/end.
 // - FilesChanged → tài liệu realtime.
 // - MeetingStatusChanged → Ongoing/Ended sync.
-// - 1 connection dùng chung, tự reconnect.
+// - NotificationCreated/NotificationsRead → kênh THEO NGƯỜI DÙNG
+//   (BE xác thực JWT lúc bắt tay, chỉ đẩy cho đúng chủ thông báo).
+// - 1 connection dùng chung, tự reconnect. Kết nối được giữ khi
+//   đã đăng nhập (connectForUser) hoặc còn ở trong phòng họp.
 // =====================================================
 @Injectable({ providedIn: 'root' })
 export class MeetingHubService {
@@ -50,6 +54,9 @@ export class MeetingHubService {
     private connection: HubConnection | null = null;
     private refCount = 0;
     private currentMeetingId: string | null = null;
+    /** Đang giữ kết nối cho kênh thông báo cá nhân (đã đăng nhập). */
+    private userHold = false;
+    private starting: Promise<void> | null = null;
 
     readonly messageReceived = new Subject<ChatMessage>();
     readonly participantChanged = new Subject<void>();
@@ -59,6 +66,22 @@ export class MeetingHubService {
     readonly meetingStatusChanged = new Subject<MeetingStatusChangedEvent>();
     readonly captionReceived = new Subject<MeetingCaptionDto>();
     readonly connectionState = new BehaviorSubject<'connected' | 'reconnecting' | 'disconnected'>('disconnected');
+    readonly notificationCreated = new Subject<NotificationCreatedEvent>();
+    readonly notificationsRead = new Subject<NotificationsReadEvent>();
+
+    /** Mở (hoặc giữ) kết nối để nhận thông báo cá nhân — gọi sau khi đăng nhập. */
+    async connectForUser(): Promise<void> {
+        this.userHold = true;
+        await this.ensureConnection();
+    }
+
+    /** Đăng xuất / đổi tài khoản: đóng hẳn kết nối để không nhận thông báo của phiên cũ. */
+    async disconnectUser(): Promise<void> {
+        this.userHold = false;
+        this.refCount = 0;
+        this.currentMeetingId = null;
+        await this.stop();
+    }
 
 
     async joinRoom(meetingId: string): Promise<void> {
@@ -71,7 +94,7 @@ export class MeetingHubService {
             this.refCount++;
             this.currentMeetingId = meetingId;
         } catch (error) {
-            if (this.refCount === 0) await this.stop();
+            if (this.refCount === 0 && !this.userHold) await this.stop();
             throw error;
         }
     }
@@ -84,7 +107,7 @@ export class MeetingHubService {
             this.refCount = Math.max(0, this.refCount - 1);
             if (this.refCount === 0) {
                 this.currentMeetingId = null;
-                await this.stop();
+                if (!this.userHold) await this.stop();
             } else if (this.currentMeetingId === meetingId) {
                 this.currentMeetingId = null;
             }
@@ -106,6 +129,8 @@ export class MeetingHubService {
     }
 
     private async ensureConnection(): Promise<void> {
+        // Hai lời gọi đồng thời (chuông + phòng họp) dùng chung một lần start.
+        if (this.starting) return this.starting;
         if (this.connection) {
             if (this.connection.state === 'Disconnected') await this.startExistingConnection(this.connection);
             return;
@@ -135,6 +160,8 @@ export class MeetingHubService {
         });
         connection.on('FilesChanged', (e: FilesChangedEvent) => this.filesChanged.next(e));
         connection.on('MeetingStatusChanged', (e: MeetingStatusChangedEvent) => this.meetingStatusChanged.next(e));
+        connection.on('NotificationCreated', (e: NotificationCreatedEvent) => this.notificationCreated.next(e));
+        connection.on('NotificationsRead', (e: NotificationsReadEvent) => this.notificationsRead.next(e));
         connection.onreconnected(async () => {
             this.participantChanged.next();
             if (this.currentMeetingId) {
@@ -151,12 +178,15 @@ export class MeetingHubService {
 
     private async startExistingConnection(connection: HubConnection): Promise<void> {
         this.connectionState.next('reconnecting');
+        this.starting = connection.start();
         try {
-            await connection.start();
+            await this.starting;
             this.connectionState.next('connected');
         } catch (error) {
             this.connectionState.next('disconnected');
             throw error;
+        } finally {
+            this.starting = null;
         }
     }
 

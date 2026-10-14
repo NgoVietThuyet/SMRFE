@@ -21,6 +21,8 @@ import {
     UserSearchItem,
 } from '../../../../core/models/meeting.models';
 import { SelectA11yDirective } from '../../../../shared/a11y/select-a11y.directive';
+import { ConfirmDialogService, confirmDiscard, focusFirstInvalid } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
+import { HeaderAction, HeaderActions } from '../../../../shared/ui/header-actions/header-actions';
 
 // Validator chung: kết thúc phải sau bắt đầu và không quá 24h (khớp BE ValidateSchedule)
 function endTimeValidator(control: AbstractControl): ValidationErrors | null {
@@ -43,6 +45,7 @@ function endTimeValidator(control: AbstractControl): ValidationErrors | null {
     templateUrl: './create-meeting-modal.html',
     styleUrl: './create-meeting-modal.scss',
     imports: [
+        HeaderActions,
         SelectA11yDirective,
         ReactiveFormsModule,
         NzModalModule,
@@ -55,6 +58,7 @@ function endTimeValidator(control: AbstractControl): ValidationErrors | null {
 })
 export class CreateMeetingModal {
     private readonly fb = inject(FormBuilder);
+    private readonly dialog = inject(ConfirmDialogService);
     private readonly meetingService = inject(MeetingService);
     private readonly destroyRef = inject(DestroyRef);
 
@@ -152,6 +156,19 @@ export class CreateMeetingModal {
         this.userSearch$.next(query);
     }
 
+    // ── Nút header popup (Plan_GiaoDien_Drawer.md) ──
+    readonly headerActions = computed<HeaderAction[]>(() => [
+        { label: 'Hủy', run: () => void this.requestClose() },
+        { label: 'Lưu nháp', loading: this.saving() === 'draft', run: () => this.submit(true) },
+        { label: 'Tạo cuộc họp', mobileLabel: 'Tạo', kind: 'primary', loading: this.saving() === 'create', submitForm: 'cmm-form' },
+    ]);
+
+    /** Hủy / Esc: hỏi trước nếu đã nhập. */
+    async requestClose(): Promise<void> {
+        if (this.saving()) return;
+        if (await confirmDiscard(this.dialog, this.form.dirty)) this.close();
+    }
+
     close(): void {
         if (this.saving()) return;
         this.submitError.set(null);
@@ -162,6 +179,7 @@ export class CreateMeetingModal {
         this.submitError.set(null);
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+            focusFirstInvalid(document.getElementById('cmm-form'));
             return;
         }
         const v = this.form.getRawValue();

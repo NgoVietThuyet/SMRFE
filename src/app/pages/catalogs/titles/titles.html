@@ -129,8 +129,9 @@
     </div>
 
     @if (detailTitle()) {
-    <nz-drawer [nzVisible]="true" nzTitle="Chi tiết chức danh" [nzWidth]="560"
-        nzWrapClassName="smr-entity-drawer" (nzOnClose)="closeTitleDetail()">
+    <nz-drawer [nzVisible]="true" nzTitle="Chi tiết chức danh" [nzWidth]="560" [nzExtra]="detailActionsTpl"
+        nzWrapClassName="smr-entity-drawer smr-drawer--v2" (nzOnClose)="closeTitleDetail()">
+        <ng-template #detailActionsTpl><smr-header-actions [actions]="detailActions()" /></ng-template>
         <ng-container *nzDrawerContent>
             @if (detailTitle(); as t) {
                 <div class="entity-summary">
@@ -149,10 +150,6 @@
                     <div><dt>Số nhân sự</dt><dd>{{ t.employeeCount }}</dd></div>
                     <div><dt>Ghi chú</dt><dd>{{ t.notes || '—' }}</dd></div>
                 </dl>
-                <div class="entity-drawer-actions">
-                    <button nz-button nzType="default" (click)="closeTitleDetail()">Đóng</button>
-                    <button nz-button nzType="primary" (click)="openEdit(t)">Sửa chức danh</button>
-                </div>
             }
         </ng-container>
     </nz-drawer>
@@ -160,9 +157,12 @@
 
     <!-- Drawer form tạo/sửa -->
     @if (showForm()) {
-    <nz-drawer [nzVisible]="true" nzTitle="{{ editingCode() ? 'Sửa chức danh' : 'Thêm chức danh' }}" [nzWidth]="560" nzWrapClassName="smr-entity-drawer" [nzClosable]="true" (nzOnClose)="closeForm()" [nzFooter]="drawerFooter">
+    <nz-drawer [nzVisible]="true" nzTitle="{{ editingCode() ? 'Sửa chức danh' : 'Thêm chức danh' }}" [nzWidth]="560"
+        nzWrapClassName="smr-entity-drawer smr-drawer--v2" [nzClosable]="false" [nzMaskClosable]="!saving()"
+        [nzExtra]="formActionsTpl" (nzOnClose)="requestCloseForm()">
+        <ng-template #formActionsTpl><smr-header-actions [actions]="formActions()" [busy]="saving()" /></ng-template>
         <ng-container *nzDrawerContent>
-            <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submitForm()">
+            <form id="title-form" nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submitForm()">
                 <nz-form-item>
                     <nz-form-label nzRequired>Mã chức danh</nz-form-label>
                     <nz-form-control nzErrorTip="Mã 1-20 ký tự, viết hoa">
@@ -196,12 +196,6 @@
                 </nz-form-item>
             </form>
         </ng-container>
-        <ng-template #drawerFooter>
-            <div style="display:flex; justify-content:flex-end; gap:8px;">
-                <button nz-button nzType="default" (click)="closeForm()">Hủy</button>
-                <button nz-button nzType="primary" (click)="submitForm()" [nzLoading]="saving()"> {{ editingCode() ? 'Cập nhật' : 'Thêm' }} </button>
-            </div>
-        </ng-template>
     </nz-drawer>
     }
 </div>

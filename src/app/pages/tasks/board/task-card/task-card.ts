@@ -2,14 +2,15 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
-import { BoardColumn, TaskListItem, TaskPriority, TaskStatus } from '../../../../core/models/task.models';
+import { TaskListItem, TaskPriority, TaskStatus } from '../../../../core/models/task.models';
 import { Avatar } from '../../../../shared/ui/avatar/avatar';
+import { taskStatus } from '../../../../shared/utils/status-map';
 import { dueClass, priorityLabel, shortDate } from '../../../../shared/utils/task-format';
 
 // =====================================================
-// TaskCard — mặt thẻ Đầu việc trên bảng Kanban.
-// Dải ưu tiên · tiêu đề (2 dòng) · ☑ x/y việc nhỏ · hạn · người phụ trách.
-// Bàn phím: Enter mở chi tiết, Shift+←/→ chuyển cột kề bên.
+// TaskCard — thẻ Việc nhỏ (level 2) trong một cột Đầu việc.
+// Ô tick hoàn thành · tiêu đề (2 dòng) · trạng thái · hạn · người phụ trách.
+// Bàn phím: Enter mở chi tiết, Shift+←/→ chuyển sang cột kề bên.
 // =====================================================
 @Component({
     selector: 'app-task-card',
@@ -21,8 +22,8 @@ import { dueClass, priorityLabel, shortDate } from '../../../../shared/utils/tas
         role: 'button',
         '[class.is-pending]': 'pending()',
         '[class.is-locked]': '!card().canEdit',
+        '[class.is-done]': 'done()',
         '[class.is-high]': 'card().priority === TaskPriority.High',
-        '[class.is-low]': 'card().priority === TaskPriority.Low',
         '[attr.aria-label]': 'ariaLabel()',
         '[attr.aria-busy]': 'pending() || null',
         '(click)': 'opened.emit()',
@@ -31,52 +32,54 @@ import { dueClass, priorityLabel, shortDate } from '../../../../shared/utils/tas
         '(keydown.shift.arrowleft)': 'onShift($event, -1)',
     },
     template: `
-        <div class="task-card__top">
-            @if (card().priority !== TaskPriority.Medium) {
-                <span class="task-card__prio">{{ priorityText() }}</span>
-            }
+        <div class="task-card__row">
+            <button type="button" class="task-card__check" role="checkbox" [attr.aria-checked]="done()"
+                [disabled]="!card().canEdit || pending()"
+                [attr.aria-label]="(done() ? 'Bỏ hoàn thành ' : 'Đánh dấu hoàn thành ') + card().title"
+                (click)="$event.stopPropagation(); toggled.emit(!done())" (keydown.enter)="$event.stopPropagation()">
+            </button>
+            <h3 class="task-card__title">{{ card().title }}</h3>
             @if (card().canEdit) {
                 <button type="button" class="task-card__menu" nz-dropdown [nzDropdownMenu]="menu" nzTrigger="click"
-                    nzPlacement="bottomRight" [attr.aria-label]="'Chuyển ' + card().title + ' sang cột khác'"
+                    nzPlacement="bottomRight" [attr.aria-label]="'Chuyển ' + card().title + ' sang đầu việc khác'"
                     (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" [disabled]="pending()">
                     <span nz-icon nzType="more" nzTheme="outline"></span>
                 </button>
                 <nz-dropdown-menu #menu="nzDropdownMenu">
                     <ul nz-menu>
-                        @for (col of columns(); track col.key) {
-                            @if (col.status !== card().status) {
-                                <li nz-menu-item (click)="moveTo.emit(col.status)">Chuyển sang “{{ col.title }}”</li>
-                            }
+                        @for (l of otherLists(); track l.id) {
+                            <li nz-menu-item (click)="moveTo.emit(l.id)">Chuyển sang “{{ l.title }}”</li>
+                        } @empty {
+                            <li nz-menu-item nzDisabled>Chưa có đầu việc khác</li>
                         }
                     </ul>
                 </nz-dropdown-menu>
             } @else {
-                <span class="task-card__lock" nz-tooltip nzTooltipTitle="Bạn chỉ có quyền xem đầu việc này"
-                    aria-label="Chỉ xem">
+                <span class="task-card__lock" nz-tooltip nzTooltipTitle="Bạn chỉ có quyền xem việc nhỏ này" aria-label="Chỉ xem">
                     <span nz-icon nzType="lock" nzTheme="outline"></span>
                 </span>
             }
         </div>
-        <h3 class="task-card__title">{{ card().title }}</h3>
-        <div class="task-card__meta">
-            @if (card().childrenCount > 0) {
-                <span class="task-card__check" [class.is-done]="allDone()"
-                    [attr.aria-label]="card().completedChildrenCount + ' trên ' + card().childrenCount + ' việc nhỏ đã xong'">
-                    <span nz-icon nzType="check-square" nzTheme="outline"></span>
-                    {{ card().completedChildrenCount }}/{{ card().childrenCount }}
-                </span>
-            }
-            @if (card().dueDate) {
-                <span class="task-card__due" [class.is-overdue]="dueTone() === 'is-overdue'" [class.is-due-soon]="dueTone() === 'is-due-soon'">
-                    <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
-                    {{ dueText() }}
-                </span>
-            }
-            <span class="task-card__spacer"></span>
-            @if (card().assigneeUserName) {
-                <smr-avatar [name]="card().assigneeFullName || card().assigneeUserName" size="xs" />
-            }
-        </div>
+        @if (hasMeta()) {
+            <div class="task-card__meta">
+                @if (card().priority === TaskPriority.High) {
+                    <span class="task-card__prio">{{ priorityText() }}</span>
+                }
+                @if (card().status === TaskStatus.InProgress) {
+                    <span class="task-card__status">{{ statusText() }}</span>
+                }
+                @if (card().dueDate) {
+                    <span class="task-card__due" [class.is-overdue]="dueTone() === 'is-overdue'" [class.is-due-soon]="dueTone() === 'is-due-soon'">
+                        <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+                        {{ dueText() }}
+                    </span>
+                }
+                <span class="task-card__spacer"></span>
+                @if (card().assigneeUserName) {
+                    <smr-avatar [name]="card().assigneeFullName || card().assigneeUserName" size="xs" />
+                }
+            </div>
+        }
         @if (pending()) {
             <span class="task-card__spinner" aria-hidden="true"></span>
         }
@@ -85,27 +88,33 @@ import { dueClass, priorityLabel, shortDate } from '../../../../shared/utils/tas
 })
 export class TaskCard {
     readonly TaskPriority = TaskPriority;
+    readonly TaskStatus = TaskStatus;
 
     readonly card = input.required<TaskListItem>();
-    readonly columns = input<BoardColumn[]>([]);
+    /** Các cột (Đầu việc) của bảng — cho menu "Chuyển sang…". */
+    readonly lists = input<TaskListItem[]>([]);
     readonly pending = input(false);
 
     readonly opened = output<void>();
-    readonly moveTo = output<TaskStatus>();
+    readonly toggled = output<boolean>();
+    readonly moveTo = output<string>();
     readonly moveBy = output<number>();
 
+    protected readonly done = computed(() => this.card().status === TaskStatus.Completed);
+    protected readonly otherLists = computed(() => this.lists().filter((l) => l.id !== this.card().parentId));
     protected readonly priorityText = computed(() => priorityLabel(this.card().priority));
+    protected readonly statusText = computed(() => taskStatus(this.card().status).label);
     protected readonly dueText = computed(() => shortDate(this.card().dueDate));
     protected readonly dueTone = computed(() => dueClass(this.card().dueDate, this.card().status));
-    protected readonly allDone = computed(
-        () => this.card().childrenCount > 0 && this.card().completedChildrenCount === this.card().childrenCount
-    );
+    protected readonly hasMeta = computed(() => {
+        const c = this.card();
+        return c.priority === TaskPriority.High || c.status === TaskStatus.InProgress || !!c.dueDate || !!c.assigneeUserName;
+    });
     protected readonly ariaLabel = computed(() => {
         const c = this.card();
-        const parts = [c.title];
-        if (c.childrenCount) parts.push(`${c.completedChildrenCount}/${c.childrenCount} việc nhỏ`);
+        const parts = [c.title, taskStatus(c.status).label];
         if (c.dueDate) parts.push(`hạn ${shortDate(c.dueDate)}`);
-        if (c.canEdit) parts.push('Shift + mũi tên trái/phải để chuyển cột');
+        if (c.canEdit) parts.push('Shift + mũi tên trái/phải để chuyển đầu việc');
         return parts.join(', ');
     });
 

@@ -28,6 +28,7 @@ import { RecordingsTab } from './components/recordings-tab/recordings-tab';
 import { meetingStatus, taskStatus } from '../../../shared/utils/status-map';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { friendlyError } from '../../../shared/utils/friendly-error';
+import { HeaderAction, HeaderActions } from '../../../shared/ui/header-actions/header-actions';
 
 // =====================================================
 // MeetingDetail — Chi tiết cuộc họp: header 1 dòng meta + CTA
@@ -39,6 +40,7 @@ import { friendlyError } from '../../../shared/utils/friendly-error';
     templateUrl: './meeting-detail.html',
     styleUrl: './meeting-detail.scss',
     imports: [
+        HeaderActions,
         CommonModule,
         FormsModule,
         NzButtonModule,
@@ -122,6 +124,13 @@ export class MeetingDetail implements OnInit {
     cancelOpen = signal<boolean>(false);
     cancelReason = signal<string>('');
     cancelling = signal<boolean>(false);
+    cancelReasonError = signal<string | null>(null);
+
+    // Nút header popup Hủy cuộc họp (Plan_GiaoDien_Drawer.md)
+    readonly cancelActions = computed<HeaderAction[]>(() => [
+        { label: 'Không', autofocus: true, run: () => this.closeCancel() },
+        { label: 'Hủy cuộc họp', mobileLabel: 'Hủy họp', kind: 'primary', danger: true, loading: this.cancelling(), run: () => this.confirmCancel() },
+    ]);
     cancelError = signal<string | null>(null);
 
     ngOnInit(): void {
@@ -277,6 +286,7 @@ export class MeetingDetail implements OnInit {
     openCancel(): void {
         this.cancelReason.set('');
         this.cancelError.set(null);
+        this.cancelReasonError.set(null);
         this.cancelOpen.set(true);
     }
 
@@ -288,7 +298,13 @@ export class MeetingDetail implements OnInit {
     confirmCancel(): void {
         const reason = this.cancelReason().trim();
         const id = this.meeting()?.id;
-        if (!reason || !id || this.cancelling()) return;
+        if (!reason) {
+            // Nút luôn bấm được: báo lỗi ngay dưới ô nhập thay vì disable.
+            this.cancelReasonError.set('Nhập lý do hủy cuộc họp.');
+            document.getElementById('cancel-reason')?.focus();
+            return;
+        }
+        if (!id || this.cancelling()) return;
         this.cancelling.set(true);
         this.cancelError.set(null);
         this.meetingService

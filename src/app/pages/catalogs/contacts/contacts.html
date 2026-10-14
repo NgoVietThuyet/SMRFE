@@ -207,7 +207,9 @@
 
     <!-- ── Drawer chi tiết nhân sự ─────────────── -->
     @if (detailOpen()) {
-    <nz-drawer [nzVisible]="true" nzTitle="Hồ sơ nhân sự" [nzWidth]="640" nzWrapClassName="smr-entity-drawer" (nzOnClose)="closeEmpDetail()">
+    <nz-drawer [nzVisible]="true" nzTitle="Hồ sơ nhân sự" [nzWidth]="640" nzWrapClassName="smr-entity-drawer smr-drawer--v2"
+        [nzExtra]="detailActionsTpl" (nzOnClose)="closeEmpDetail()">
+        <ng-template #detailActionsTpl><smr-header-actions [actions]="detailActions()" /></ng-template>
         <ng-container *nzDrawerContent>
             @if (detailLoading() && !detail()) {
             <div class="smr-loading"><nz-spin></nz-spin></div>
@@ -243,20 +245,6 @@
                 <div><dt>Ngày tạo</dt><dd>{{ d.createDate ? (d.createDate | date:'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
                 <div><dt>Cập nhật</dt><dd>{{ d.updateDate ? (d.updateDate | date:'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
             </dl>
-            <div class="contacts__drawer-actions">
-                <button nz-button nzType="default" (click)="openEmpEdit(d)">
-                    <span nz-icon nzType="edit" nzTheme="outline"></span>
-                    Sửa
-                </button>
-                <button nz-button nzType="default" (click)="confirmToggleStatus(d)">
-                    <span nz-icon [nzType]="d.isActive ? 'lock' : 'unlock'" nzTheme="outline"></span>
-                    {{ d.isActive ? 'Khóa' : 'Mở khóa' }}
-                </button>
-                <button nz-button nzType="default" (click)="confirmResetPassword(d)">
-                    <span nz-icon nzType="key" nzTheme="outline"></span>
-                    Đặt lại mật khẩu
-                </button>
-            </div>
             }
         </ng-container>
     </nz-drawer>
@@ -264,9 +252,12 @@
 
     <!-- ── Drawer form nhân sự ─────────────────── -->
     @if (empFormOpen()) {
-    <nz-drawer [nzVisible]="true" [nzTitle]="editingUser() ? 'Sửa nhân sự' : 'Thêm nhân sự'" [nzWidth]="640" nzWrapClassName="smr-entity-drawer" (nzOnClose)="closeEmpForm()">
+    <nz-drawer [nzVisible]="true" [nzTitle]="editingUser() ? 'Sửa nhân sự' : 'Thêm nhân sự'" [nzWidth]="640"
+        nzWrapClassName="smr-entity-drawer smr-drawer--v2" [nzClosable]="false" [nzMaskClosable]="!empSaving()"
+        [nzExtra]="empActionsTpl" (nzOnClose)="requestCloseEmpForm()">
+        <ng-template #empActionsTpl><smr-header-actions [actions]="empFormActions()" [busy]="empSaving()" /></ng-template>
         <ng-container *nzDrawerContent>
-            <form nz-form nzLayout="vertical" [formGroup]="empForm" (ngSubmit)="submitEmpForm()">
+            <form id="emp-form" nz-form nzLayout="vertical" [formGroup]="empForm" (ngSubmit)="submitEmpForm()">
                 <nz-form-item>
                     <nz-form-label nzRequired>Họ và tên</nz-form-label>
                     <nz-form-control nzErrorTip="Nhập họ tên nhân sự">
@@ -316,12 +307,6 @@
                 } @else {
                 <p class="contacts__hint">Tên đăng nhập: {{ '@' }}{{ editingUser() }} (không đổi).</p>
                 }
-                <div class="contacts__drawer-actions">
-                    <button nz-button nzType="default" type="button" (click)="closeEmpForm()">Hủy</button>
-                    <button nz-button nzType="primary" type="submit" [disabled]="empSaving()" [nzLoading]="empSaving()">
-                        {{ editingUser() ? 'Lưu thay đổi' : 'Thêm nhân sự' }}
-                    </button>
-                </div>
             </form>
         </ng-container>
     </nz-drawer>
@@ -329,9 +314,12 @@
 
     <!-- ── Drawer form phòng ban ───────────────── -->
     @if (orgFormOpen()) {
-    <nz-drawer [nzVisible]="true" [nzTitle]="editingOrgId() ? 'Sửa phòng ban' : 'Thêm phòng ban'" [nzWidth]="560" nzWrapClassName="smr-entity-drawer" (nzOnClose)="closeOrgForm()">
+    <nz-drawer [nzVisible]="true" [nzTitle]="editingOrgId() ? 'Sửa phòng ban' : 'Thêm phòng ban'" [nzWidth]="560"
+        nzWrapClassName="smr-entity-drawer smr-drawer--v2" [nzClosable]="false" [nzMaskClosable]="!orgSaving()"
+        [nzExtra]="orgActionsTpl" (nzOnClose)="requestCloseOrgForm()">
+        <ng-template #orgActionsTpl><smr-header-actions [actions]="orgFormActions()" [busy]="orgSaving()" /></ng-template>
         <ng-container *nzDrawerContent>
-            <form nz-form nzLayout="vertical" [formGroup]="orgForm" (ngSubmit)="submitOrgForm()">
+            <form id="org-form" nz-form nzLayout="vertical" [formGroup]="orgForm" (ngSubmit)="submitOrgForm()">
                 <nz-form-item>
                     <nz-form-label nzRequired>Tên đơn vị</nz-form-label>
                     <nz-form-control nzErrorTip="Nhập tên phòng ban">
@@ -366,12 +354,6 @@
                         <nz-switch formControlName="isActive" nzCheckedChildren="Hoạt động" nzUnCheckedChildren="Ngừng" />
                     </nz-form-control>
                 </nz-form-item>
-                <div class="contacts__drawer-actions">
-                    <button nz-button nzType="default" type="button" (click)="closeOrgForm()">Hủy</button>
-                    <button nz-button nzType="primary" type="submit" [disabled]="orgSaving()" [nzLoading]="orgSaving()">
-                        {{ editingOrgId() ? 'Lưu thay đổi' : 'Thêm phòng ban' }}
-                    </button>
-                </div>
             </form>
         </ng-container>
     </nz-drawer>

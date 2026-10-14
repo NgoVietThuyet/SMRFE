@@ -9,9 +9,9 @@ import {
     LockOutline,
     MoreOutline,
     PlusOutline,
-    UserAddOutline,
+    InfoCircleOutline,
 } from '@ant-design/icons-angular/icons';
-import { TaskDetail, TaskListItem, TaskPriority, TaskStatus } from '../models/task.models';
+import { TaskDetail, TaskListItem, TaskPriority, TaskSearchResult, TaskStatus } from '../models/task.models';
 
 export const TEST_ICONS = [
     ArrowLeftOutline,
@@ -23,7 +23,7 @@ export const TEST_ICONS = [
     LockOutline,
     MoreOutline,
     PlusOutline,
-    UserAddOutline,
+    InfoCircleOutline,
 ];
 
 export function makeTask(patch: Partial<TaskListItem> = {}): TaskListItem {
@@ -31,8 +31,8 @@ export function makeTask(patch: Partial<TaskListItem> = {}): TaskListItem {
         id: 'c1',
         meetingId: null,
         meetingName: null,
-        parentId: 'w1',
-        level: 1,
+        parentId: 'l1',
+        level: 2,
         childrenCount: 0,
         completedChildrenCount: 0,
         progress: 0,
@@ -58,3 +58,7 @@ export const BOARD: TaskDetail = {
     shares: [],
     children: [],
 };
+
+export function pageOf(items: TaskListItem[]): TaskSearchResult {
+    return { items, totalItems: items.length, totalPages: 1, page: 1, pageSize: 100, summary: { total: items.length, mine: 0, overdue: 0, today: 0 } };
+}

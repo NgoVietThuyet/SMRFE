@@ -1,0 +1,103 @@
+<div class="noti-panel__head">
+    <h2 class="noti-panel__title">Thông báo</h2>
+    <button type="button" class="noti-panel__link" (click)="markAll()" [disabled]="store.unreadCount() === 0">
+        Đánh dấu tất cả đã đọc
+    </button>
+    <button type="button" class="noti-panel__close" (click)="closed.emit()" aria-label="Đóng thông báo">
+        <span nz-icon nzType="close" nzTheme="outline"></span>
+    </button>
+</div>
+
+<div class="noti-panel__tabs" role="tablist" aria-label="Lọc thông báo">
+    <button #firstTab type="button" role="tab" class="noti-panel__tab" [class.is-active]="store.filter() === 'all'"
+        [attr.aria-selected]="store.filter() === 'all'" (click)="setFilter('all')">Tất cả</button>
+    <button type="button" role="tab" class="noti-panel__tab" [class.is-active]="store.filter() === 'unread'"
+        [attr.aria-selected]="store.filter() === 'unread'" (click)="setFilter('unread')">
+        Chưa đọc
+        @if (store.unreadCount() > 0) { <span class="noti-panel__count">{{ store.badge() }}</span> }
+    </button>
+</div>
+
+@if (store.realtime() === 'polling') {
+    <p class="noti-panel__degraded" role="status">
+        <span nz-icon nzType="reload" nzTheme="outline"></span> Đang cập nhật định kỳ
+    </p>
+}
+
+<div class="noti-panel__body" role="tabpanel">
+    @if (store.loading() && !store.items().length) {
+        <div class="noti-panel__skeleton" aria-busy="true" aria-label="Đang tải thông báo">
+            @for (i of [1, 2, 3, 4]; track i) {
+                <div class="noti-panel__sk-row">
+                    <span class="noti-panel__sk noti-panel__sk--avatar"></span>
+                    <span class="noti-panel__sk-lines">
+                        <span class="noti-panel__sk"></span>
+                        <span class="noti-panel__sk noti-panel__sk--short"></span>
+                    </span>
+                </div>
+            }
+        </div>
+    } @else if (store.error() && !store.items().length) {
+        <div class="noti-panel__state" role="alert">
+            <p>{{ store.error() }}</p>
+            <button nz-button nzSize="small" (click)="store.load()">Thử lại</button>
+        </div>
+    } @else if (!store.items().length) {
+        <div class="noti-panel__state">
+            <span nz-icon nzType="bell" nzTheme="outline" class="noti-panel__state-icon"></span>
+            @if (store.filter() === 'unread') {
+                <p>Bạn đã đọc hết thông báo.</p>
+                <button type="button" class="noti-panel__link" (click)="setFilter('all')">Xem tất cả</button>
+            } @else {
+                <p>Bạn chưa có thông báo nào.</p>
+            }
+        </div>
+    } @else {
+        @for (g of groups(); track g.label) {
+            <h3 class="noti-panel__group">{{ g.label }}</h3>
+            <ul class="noti-panel__list" role="list">
+                @for (n of g.items; track n.id) {
+                    <li class="noti-item" [class.is-unread]="!n.isRead" [class.is-warning]="n.severity >= Severity.Warning"
+                        [class.is-stale]="store.stale().has(n.id)">
+                        <a class="noti-item__main" [attr.href]="href(n)" (click)="open(n, $event)"
+                            (auxclick)="open(n, $event)" [attr.aria-label]="(n.isRead ? '' : 'Chưa đọc. ') + n.title + (n.body ? ': ' + n.body : '')">
+                            <span class="noti-item__lead" aria-hidden="true">
+                                @if (n.actorFullName || n.actorUserName) {
+                                    <smr-avatar [name]="n.actorFullName || n.actorUserName" size="sm" />
+                                    <span class="noti-item__badge"><span nz-icon [nzType]="icon(n)" nzTheme="outline"></span></span>
+                                } @else {
+                                    <span class="noti-item__icon"><span nz-icon [nzType]="icon(n)" nzTheme="outline"></span></span>
+                                }
+                            </span>
+                            <span class="noti-item__text">
+                                <span class="noti-item__title">{{ n.title }}</span>
+                                @if (n.body) { <span class="noti-item__body">“{{ n.body }}”</span> }
+                                @if (detail(n)) { <span class="noti-item__detail">{{ detail(n) }}</span> }
+                                <span class="noti-item__meta">
+                                    {{ ago(n) }}
+                                    @if (store.stale().has(n.id)) { · <span class="noti-item__stale">Không còn truy cập</span> }
+                                </span>
+                            </span>
+                            @if (!n.isRead) { <span class="noti-item__dot" aria-hidden="true"></span> }
+                        </a>
+                        <button type="button" class="noti-item__menu" nz-dropdown [nzDropdownMenu]="itemMenu" nzTrigger="click"
+                            nzPlacement="bottomRight" [attr.aria-label]="'Tùy chọn thông báo: ' + n.title">
+                            <span nz-icon nzType="more" nzTheme="outline"></span>
+                        </button>
+                        <nz-dropdown-menu #itemMenu="nzDropdownMenu">
+                            <ul nz-menu>
+                                <li nz-menu-item (click)="toggleRead(n)">{{ n.isRead ? 'Đánh dấu chưa đọc' : 'Đánh dấu đã đọc' }}</li>
+                                <li nz-menu-item nzDanger (click)="remove(n)">Xóa thông báo</li>
+                            </ul>
+                        </nz-dropdown-menu>
+                    </li>
+                }
+            </ul>
+        }
+        @if (store.hasMore()) {
+            <div class="noti-panel__more">
+                <button nz-button nzType="text" (click)="store.loadMore()" [nzLoading]="store.loadingMore()">Tải thêm</button>
+            </div>
+        }
+    }
+</div>

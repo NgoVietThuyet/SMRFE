@@ -229,8 +229,15 @@
 
     }
 
-    <nz-modal [nzVisible]="cancelOpen()" nzTitle="Hủy cuộc họp" [nzFooter]="cancelFooter"
-        [nzMaskClosable]="false" (nzOnCancel)="closeCancel()">
+    <nz-modal [nzVisible]="cancelOpen()" [nzTitle]="cancelHeadTpl" [nzFooter]="null" [nzClosable]="false" [nzWidth]="480"
+        nzWrapClassName="smr-popup" [nzMaskClosable]="false" [nzKeyboard]="!cancelling()" (nzOnCancel)="closeCancel()">
+        <ng-template #cancelHeadTpl>
+            <div class="smr-popup__head">
+                <span class="smr-popup__icon is-danger" aria-hidden="true"><span nz-icon nzType="exclamation-circle" nzTheme="outline"></span></span>
+                <h2 class="smr-popup__title">Hủy cuộc họp</h2>
+                <smr-header-actions [actions]="cancelActions()" [busy]="cancelling()" />
+            </div>
+        </ng-template>
         <ng-container *nzModalContent>
             @if (cancelError()) {
             <div class="meeting-detail__error" role="alert">{{ cancelError() }}</div>
@@ -240,15 +247,11 @@
             </label>
             <textarea nz-input id="cancel-reason" rows="3" [maxlength]="1000"
                 placeholder="Nhập lý do hủy cuộc họp..." [ngModel]="cancelReason()"
-                (ngModelChange)="cancelReason.set($event)"></textarea>
+                [attr.aria-invalid]="!!cancelReasonError()" aria-describedby="cancel-reason-error"
+                (ngModelChange)="cancelReason.set($event); cancelReasonError.set(null)"></textarea>
+            <p id="cancel-reason-error" class="smr-popup__error" role="alert">{{ cancelReasonError() }}</p>
+            <p class="smr-popup__text">Thành viên sẽ nhận thông báo kèm lý do.</p>
         </ng-container>
-        <ng-template #cancelFooter>
-            <button nz-button nzType="default" (click)="closeCancel()"
-                [disabled]="cancelling()">Không</button>
-            <button nz-button nzType="primary" nzDanger (click)="confirmCancel()"
-                [nzLoading]="cancelling()"
-                [disabled]="!cancelReason().trim() || cancelling()">Hủy cuộc họp</button>
-        </ng-template>
     </nz-modal>
 
 </div>

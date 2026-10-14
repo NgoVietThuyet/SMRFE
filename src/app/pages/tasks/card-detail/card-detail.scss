@@ -67,37 +67,27 @@
     color: var(--text-primary);
 }
 
-.cd__count,
-.cd__pct {
-    font-size: var(--font-size-xs);
-    font-variant-numeric: tabular-nums;
-    color: var(--text-secondary);
-}
-
-.cd__bar {
-    flex: 1 1 auto;
-    max-width: 160px;
-    height: 6px;
-    border-radius: var(--radius-full);
-    background: var(--border-default);
-    overflow: hidden;
-}
-
-.cd__bar-fill {
-    display: block;
-    height: 100%;
-    background: var(--primary-600);
-    transition: width 0.2s ease;
-
-    &.is-done { background: var(--success); }
-}
-
 .cd__desc {
     margin: 0;
     font-size: var(--font-size-sm);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     color: var(--text-primary);
+}
+
+.cd__desc-empty {
+    min-height: 56px;
+    padding: var(--space-2) var(--space-3);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    text-align: left;
+    cursor: text;
+
+    &:hover,
+    &:focus-visible { background: var(--border-default); color: var(--text-secondary); }
 }
 
 .cd__muted {
@@ -109,31 +99,6 @@
 .cd__row-actions {
     display: flex;
     gap: var(--space-2);
-}
-
-.cd__subs {
-    display: flex;
-    flex-direction: column;
-    margin: 0 calc(-1 * var(--space-2));
-}
-
-.cd__add-sub {
-    display: flex;
-    gap: var(--space-2);
-}
-
-.cd__banner {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--success-border);
-    border-radius: var(--radius-sm);
-    background: var(--success-bg);
-    font-size: var(--font-size-sm);
-    color: var(--success);
-
-    > span:nth-child(2) { flex: 1; color: var(--text-primary); }
 }
 
 .cd__activity {
@@ -196,10 +161,6 @@
     font-size: var(--font-size-xs);
 }
 
-.cd__delete {
-    align-self: flex-start;
-}
-
 .cd__skeleton {
     display: flex;
     flex-direction: column;
@@ -215,17 +176,11 @@
     &--sm { width: 50%; height: 14px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .cd__bar-fill { transition: none; }
-}
-
 @media (max-width: 767px) {
     .cd__grid {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    // Thuộc tính lên trước checklist trên mobile để đổi cột/phụ trách nhanh.
+    // Thuộc tính lên trước mô tả trên mobile để đổi cột/phụ trách nhanh.
     .cd__side { order: -1; }
-
-    .cd__add-sub { flex-wrap: wrap; }
 }

@@ -43,6 +43,7 @@ import { WhiteboardCanvas } from './components/whiteboard/whiteboard';
 import { ROOM_I18N, RoomKey, RoomLang } from './room-i18n';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { PrejoinDevices, PrejoinPreview } from './prejoin-preview/prejoin-preview';
+import { ConfirmDialogService } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 
 type Phase = 'loading' | 'prejoin' | 'connecting' | 'live' | 'ended' | 'error';
 type SidePanel = 'participants' | 'chat' | 'docs' | 'tasks' | 'transcript' | 'ai' | null;
@@ -85,6 +86,7 @@ export class MeetingRoom implements OnInit, OnDestroy {
     private readonly hub = inject(MeetingHubService);
     private readonly message = inject(NzMessageService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly dialog = inject(ConfirmDialogService);
     private readonly speechService = inject(SpeechRecognitionService);
     private readonly authService = inject(AuthService);
 
@@ -164,7 +166,6 @@ export class MeetingRoom implements OnInit, OnDestroy {
 
     lang = signal<RoomLang>('vi');
     whiteboardOpen = signal<boolean>(false);
-    endOpen = signal<boolean>(false);
     ending = signal<boolean>(false);
 
     // Computed for prejoin/status
@@ -759,37 +760,43 @@ export class MeetingRoom implements OnInit, OnDestroy {
         return this.meeting()?.isHost ?? false;
     }
 
+    /** Popup xác nhận (Plan_GiaoDien_Drawer.md): [Hủy] [■ Kết thúc cuộc họp] ở góc phải header. */
     openEnd(): void {
         if (!this.canEnd()) return;
-        this.endOpen.set(true);
+        void this.dialog.open({
+            title: this.t('endTitle'),
+            content: this.t('endBody'),
+            okText: this.t('confirmEnd'),
+            cancelText: this.t('cancel'),
+            danger: true,
+            onOk: () => this.confirmEnd(),
+        });
     }
 
-    closeEnd(): void {
-        if (this.ending()) return;
-        this.endOpen.set(false);
-    }
-
-    confirmEnd(): void {
+    private confirmEnd(): Promise<void> {
         const id = this.meetingId();
-        if (!id || this.ending()) return;
+        if (!id || this.ending()) return Promise.resolve();
         this.ending.set(true);
-        this.meetingService
-            .end(id)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-                next: () => {
-                    this.ending.set(false);
-                    this.endOpen.set(false);
-                    this.meeting.update((m) => (m ? { ...m, status: 3 } : m));
-                    this.stopTimer();
-                    this.phase.set('ended');
-                    setTimeout(() => void this.leave(), 1800);
-                },
-                error: (err: Error) => {
-                    this.ending.set(false);
-                    this.message.error(err.message || this.t('endFailed'));
-                },
-            });
+        return new Promise<void>((resolve, reject) => {
+            this.meetingService
+                .end(id)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                    next: () => {
+                        this.ending.set(false);
+                        this.meeting.update((m) => (m ? { ...m, status: 3 } : m));
+                        this.stopTimer();
+                        this.phase.set('ended');
+                        setTimeout(() => void this.leave(), 1800);
+                        resolve();
+                    },
+                    error: (err: Error) => {
+                        this.ending.set(false);
+                        this.message.error(err.message || this.t('endFailed'));
+                        reject(err);
+                    },
+                });
+        });
     }
 
     formatStartTime(iso: string | undefined): string {

@@ -3,7 +3,7 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { en_US, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import {
@@ -14,20 +14,22 @@ import {
     MenuUnfoldOutline,
     QuestionCircleOutline,
     SearchOutline,
+    UserOutline,
 } from '@ant-design/icons-angular/icons';
 import { of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationStore } from '../../core/services/notification.store';
 import { TopHeader } from './top-header';
 
 describe('TopHeader', () => {
     let fixture: ComponentFixture<TopHeader>;
     let component: TopHeader;
     let navigatedTo: unknown[][];
-    let backCalls: number;
+    const unread = signal(0);
 
     beforeEach(async () => {
         navigatedTo = [];
-        backCalls = 0;
+        unread.set(0);
         localStorage.removeItem('smr.locale');
 
         await TestBed.configureTestingModule({
@@ -43,6 +45,7 @@ describe('TopHeader', () => {
                     MenuUnfoldOutline,
                     QuestionCircleOutline,
                     SearchOutline,
+                    UserOutline,
                 ]),
                 {
                     provide: AuthService,
@@ -55,7 +58,26 @@ describe('TopHeader', () => {
                         logout: () => of(undefined),
                     },
                 },
-                { provide: Location, useValue: { back: () => { backCalls++; } } },
+                { provide: Location, useValue: { subscribe: () => ({ unsubscribe: () => undefined }) } },
+                {
+                    provide: NotificationStore,
+                    useValue: {
+                        unreadCount: unread,
+                        badge: computed(() => (unread() > 99 ? '99+' : unread() > 0 ? String(unread()) : '')),
+                        lastArrived: signal(null),
+                        // phần panel cần khi mở
+                        items: signal([]),
+                        filter: signal('all'),
+                        loaded: signal(true),
+                        loading: signal(false),
+                        loadingMore: signal(false),
+                        error: signal(null),
+                        realtime: signal('connected'),
+                        stale: signal(new Set()),
+                        hasMore: signal(false),
+                        load: () => Promise.resolve(),
+                    },
+                },
             ],
         }).compileComponents();
 
@@ -93,14 +115,8 @@ describe('TopHeader', () => {
         expect(emitted).toBe(true);
     });
 
-    it('should hide back by default and go back when shown', () => {
+    it('should not render a back button', () => {
         expect(fixture.debugElement.query(By.css('[aria-label="Quay lại"]'))).toBeNull();
-
-        fixture.componentRef.setInput('showBack', true);
-        fixture.detectChanges();
-
-        fixture.debugElement.query(By.css('[aria-label="Quay lại"]')).nativeElement.click();
-        expect(backCalls).toBe(1);
     });
 
     it('should emit search text and hide search when disabled', () => {
@@ -141,5 +157,31 @@ describe('TopHeader', () => {
         component.logout();
 
         expect(navigatedTo).toEqual([[['/login']]]);
+    });
+
+    it('should show unread badge and accessible bell label', () => {
+        const bell = () => fixture.debugElement.query(By.css('.smr-top-header__bell')).nativeElement as HTMLButtonElement;
+        expect(fixture.debugElement.query(By.css('.smr-top-header__badge'))).toBeNull();
+        expect(bell().getAttribute('aria-label')).toBe('Thông báo');
+
+        unread.set(3);
+        fixture.detectChanges();
+        expect(fixture.debugElement.query(By.css('.smr-top-header__badge')).nativeElement.textContent.trim()).toBe('3');
+        expect(bell().getAttribute('aria-label')).toBe('Thông báo, 3 chưa đọc');
+
+        unread.set(150);
+        fixture.detectChanges();
+        expect(fixture.debugElement.query(By.css('.smr-top-header__badge')).nativeElement.textContent.trim()).toBe('99+');
+    });
+
+    it('should toggle the notification panel from the bell', () => {
+        const bell = fixture.debugElement.query(By.css('.smr-top-header__bell')).nativeElement as HTMLButtonElement;
+        expect(bell.getAttribute('aria-expanded')).toBe('false');
+        component.toggleNotifications();
+        fixture.detectChanges();
+        expect(component.panelOpen()).toBe(true);
+        expect(bell.getAttribute('aria-expanded')).toBe('true');
+        component.toggleNotifications();
+        expect(component.panelOpen()).toBe(false);
     });
 });

@@ -3186,13 +3186,6 @@ $spacing-unit: 0.25rem;
     }
 }
 
-.entity-drawer-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding-top: 8px;
-}
-
 .smr-entity-drawer {
     .ant-drawer-header {
         padding: 16px 20px;
@@ -3240,8 +3233,7 @@ $spacing-unit: 0.25rem;
         gap: 4px;
     }
 
-    .smr-top-header__locale,
-    .smr-top-header__bell {
+    .smr-top-header__locale {
         display: none;
     }
 
@@ -3463,19 +3455,6 @@ $spacing-unit: 0.25rem;
         gap: 4px;
     }
 
-    .entity-drawer-actions,
-    .contacts__drawer-actions,
-    .tdd__actions {
-        position: sticky;
-        bottom: -20px;
-        z-index: 2;
-        margin-inline: -20px;
-        padding: 12px 20px;
-        border-top: 1px solid var(--border-default);
-        background: #fff;
-        flex-wrap: wrap;
-    }
-
     .ant-modal {
         width: calc(100vw - 24px) !important;
         max-width: calc(100vw - 24px);
@@ -3508,4 +3487,186 @@ $spacing-unit: 0.25rem;
 @media (prefers-reduced-motion: reduce) {
     .cdk-drag-preview.task-card { transform: none; }
     .cdk-drag-animating { transition: none; }
+}
+
+// ── Popover thông báo (nút Chuông) — overlay render ngoài component ──
+.smr-noti-popover .ant-popover-inner {
+    padding: 0;
+    overflow: hidden;
+}
+.smr-noti-popover .ant-popover-inner-content {
+    padding: 0;
+}
+
+// =====================================================
+// Drawer/popup v2 — nút hành động ở góc phải header
+// (Document/Plan_GiaoDien_Drawer.md). Bật bằng nzWrapClassName
+// "smr-drawer--v2" (drawer) / "smr-popup" (modal).
+// =====================================================
+.smr-drawer--v2 {
+    .ant-drawer-header {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 60px !important;
+        padding: 12px 20px !important;
+        border-bottom: 1px solid var(--border-default) !important;
+    }
+
+    // Tiêu đề trái · nút (extra) · ✕ ngoài cùng bên phải
+    .ant-drawer-header-title {
+        display: contents;
+    }
+
+    .ant-drawer-title {
+        order: 0;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 18px !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
+    }
+
+    .ant-drawer-extra {
+        order: 1;
+        flex-shrink: 0;
+    }
+
+    .ant-drawer-close {
+        order: 2;
+        margin: 0 -4px 0 0;
+        padding: 6px;
+    }
+
+    .ant-drawer-body {
+        padding: 20px !important;
+    }
+}
+
+.smr-popup {
+    .ant-modal-content {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .ant-modal-header {
+        margin: 0;
+        padding: 0;
+        border-bottom: 1px solid var(--border-default);
+    }
+
+    .ant-modal-body {
+        padding: 16px 20px 20px;
+    }
+
+    .ant-modal-footer {
+        display: none;
+    }
+}
+
+// Popup xác nhận vẽ header trong body → body không tự cuộn
+.smr-popup--confirm .ant-modal-body {
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+}
+
+.smr-popup__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+    padding: 10px 16px 10px 20px;
+    font-weight: normal;
+
+    .smr-popup--confirm & {
+        border-bottom: 1px solid var(--border-default);
+    }
+}
+
+.smr-popup__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.smr-popup__icon {
+    display: inline-flex;
+    font-size: 20px;
+    color: var(--primary-600);
+
+    &.is-danger {
+        color: var(--danger);
+    }
+}
+
+.smr-popup__body {
+    padding: 16px 20px 20px;
+}
+
+.smr-popup__text {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.smr-popup__error {
+    margin-top: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+}
+
+@media (max-width: 767px) {
+    .smr-drawer--v2 .ant-drawer-header {
+        min-height: 56px !important;
+        padding: 8px 12px 8px 16px !important;
+    }
+
+    .smr-drawer--v2 .ant-drawer-title {
+        font-size: 16px !important;
+    }
+
+    .smr-drawer--v2 .ant-drawer-body {
+        padding: 16px !important;
+    }
+
+    // Popup → bottom sheet
+    .smr-popup.ant-modal-wrap {
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .smr-popup .ant-modal {
+        top: 0;
+        width: 100% !important;
+        max-width: 100vw;
+        margin: 0;
+        padding-bottom: 0;
+        vertical-align: bottom;
+    }
+
+    .smr-popup .ant-modal-content {
+        border-radius: 14px 14px 0 0;
+    }
+
+    .smr-popup .ant-modal-body {
+        max-height: 75vh;
+    }
+
+    .smr-popup__head {
+        padding: 8px 12px 8px 16px;
+    }
 }

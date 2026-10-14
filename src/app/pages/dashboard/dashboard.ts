@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -22,10 +22,11 @@ import { CreateMeetingModal } from '../meetings/components/create-meeting-modal/
 import { TaskDetailDrawer } from '../tasks/components/task-detail-drawer/task-detail-drawer';
 import { meetingStatus } from '../../shared/utils/status-map';
 import { friendlyError } from '../../shared/utils/friendly-error';
+import { HeaderAction, HeaderActions } from '../../shared/ui/header-actions/header-actions';
 
 @Component({
     selector: 'app-dashboard', templateUrl: './dashboard.html', styleUrl: './dashboard.scss',
-    imports: [CommonModule, FormsModule, NzButtonModule, NzIconModule, NzInputModule,
+    imports: [HeaderActions, CommonModule, FormsModule, NzButtonModule, NzIconModule, NzInputModule,
         NzModalModule, NzSpinModule, NzTooltipModule, CreateMeetingModal, TaskDetailDrawer],
 })
 export class Dashboard implements OnInit {
@@ -128,6 +129,12 @@ export class Dashboard implements OnInit {
             this.message.success('Đã sao chép lời mời.');
         } catch { this.message.error('Không thể sao chép. Vui lòng mở chi tiết để lấy mã phòng.'); }
     }
+    // Nút header popup (Plan_GiaoDien_Drawer.md)
+    readonly joinActions = computed<HeaderAction[]>(() => [
+        { label: 'Đóng', run: () => this.showJoinModal.set(false) },
+        { label: 'Tham gia', kind: 'primary', submitForm: 'join-code-form', loading: this.joining() },
+    ]);
+
     openJoinModal(): void { this.joinCode = ''; this.joinError.set(''); this.showJoinModal.set(true); }
     submitJoinCode(): void {
         if (this.joining()) return;

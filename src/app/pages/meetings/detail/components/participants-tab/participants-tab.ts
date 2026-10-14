@@ -7,7 +7,6 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
-import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
@@ -18,6 +17,7 @@ import {
     MeetingParticipantRole,
     UserSearchItem,
 } from '../../../../../core/models/meeting.models';
+import { ConfirmDialogService } from '../../../../../shared/ui/confirm-dialog/confirm-dialog';
 
 // =====================================================
 // ParticipantsTab — người tham gia cuộc họp.
@@ -42,7 +42,7 @@ import {
 })
 export class ParticipantsTab {
     private readonly meetingService = inject(MeetingService);
-    private readonly modal = inject(NzModalService);
+    private readonly dialog = inject(ConfirmDialogService);
     private readonly destroyRef = inject(DestroyRef);
 
     meeting = input.required<MeetingDetailDto>();
@@ -126,31 +126,36 @@ export class ParticipantsTab {
     }
 
     confirmRemove(p: MeetingParticipantDto): void {
-        this.modal.confirm({
-            nzTitle: 'Xóa khỏi cuộc họp',
-            nzContent: `Xóa ${p.fullName} khỏi cuộc họp?`,
-            nzOkText: 'Xóa',
-            nzOkDanger: true,
-            nzCancelText: 'Hủy',
-            nzOnOk: () => {
-                this.mutating.set(p.userName);
-                this.meetingService
-                    .removeParticipant(this.meeting().id, p.userName)
-                    .pipe(takeUntilDestroyed(this.destroyRef))
-                    .subscribe({
-                        next: () => {
-                            this.mutating.set(null);
-                            const detail: MeetingDetailDto = {
-                                ...this.meeting(),
-                                participants: this.meeting().participants.filter(
-                                    (x) => x.userName !== p.userName
-                                ),
-                            };
-                            this.changed.emit(detail);
-                        },
-                        error: () => this.mutating.set(null),
-                    });
-            },
+        void this.dialog.open({
+            title: 'Xóa khỏi cuộc họp?',
+            content: `${p.fullName} sẽ không còn truy cập được cuộc họp này.`,
+            okText: 'Xóa',
+            cancelText: 'Hủy',
+            danger: true,
+            onOk: () =>
+                new Promise<void>((resolve, reject) => {
+                    this.mutating.set(p.userName);
+                    this.meetingService
+                        .removeParticipant(this.meeting().id, p.userName)
+                        .pipe(takeUntilDestroyed(this.destroyRef))
+                        .subscribe({
+                            next: () => {
+                                this.mutating.set(null);
+                                const detail: MeetingDetailDto = {
+                                    ...this.meeting(),
+                                    participants: this.meeting().participants.filter(
+                                        (x) => x.userName !== p.userName
+                                    ),
+                                };
+                                this.changed.emit(detail);
+                                resolve();
+                            },
+                            error: (err) => {
+                                this.mutating.set(null);
+                                reject(err);
+                            },
+                        });
+                }),
         });
     }
 

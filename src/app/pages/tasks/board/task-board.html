@@ -1,6 +1,6 @@
 <!-- =====================================================
      TaskBoard — bảng Kanban của một Công việc (level 0).
-     header + tab cột (mobile) + 3 cột + drawer chi tiết đầu việc
+     header + dãy cột Đầu việc (do người dùng tạo) + ô thêm đầu việc
 ===================================================== -->
 <div class="task-board">
     @if (store.error(); as err) {
@@ -40,7 +40,7 @@
 
                 <div class="task-board__actions">
                     @if (headerAssignees().length) {
-                        <div class="task-board__people" aria-label="Người phụ trách các đầu việc">
+                        <div class="task-board__people" aria-label="Người phụ trách các việc nhỏ">
                             @for (a of headerAssignees(); track a.userName) {
                                 <smr-avatar [name]="a.fullName" size="sm" />
                             }
@@ -49,19 +49,21 @@
                             }
                         </div>
                     }
-                    <nz-select class="task-board__filter" [ngModel]="store.assigneeFilter()"
-                        (ngModelChange)="store.assigneeFilter.set($event)" aria-label="Lọc theo người phụ trách">
-                        @for (opt of assigneeOptions(); track opt.value) {
-                            <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
-                        }
-                    </nz-select>
-                    @if (board()) {
-                        <button nz-button class="task-board__edit" (click)="editOpen.set(true)" aria-label="Sửa thông tin công việc">
+                    @if (store.cards().length) {
+                        <nz-select class="task-board__filter" [ngModel]="store.assigneeFilter()"
+                            (ngModelChange)="store.assigneeFilter.set($event)" aria-label="Lọc theo người phụ trách">
+                            @for (opt of assigneeOptions(); track opt.value) {
+                                <nz-option [nzValue]="opt.value" [nzLabel]="opt.label" />
+                            }
+                        </nz-select>
+                    }
+                    @if (board(); as b) {
+                        <button nz-button class="task-board__edit" (click)="infoTaskId.set(b.id)" aria-label="Sửa thông tin công việc">
                             <span nz-icon nzType="edit" nzTheme="outline"></span><span class="task-board__btn-text">Sửa thông tin</span>
                         </button>
                     }
-                    @if (canAdd()) {
-                        <button nz-button nzType="primary" (click)="addToFirstColumn()">
+                    @if (canAddList()) {
+                        <button nz-button nzType="primary" (click)="startAddList()">
                             <span nz-icon nzType="plus" nzTheme="outline"></span><span class="task-board__btn-text">Thêm đầu việc</span>
                         </button>
                     }
@@ -83,55 +85,63 @@
                             {{ b.assigneeFullName || b.assigneeUserName }}
                         </span>
                     }
-                    <span class="task-board__progress" [attr.aria-label]="'Tiến độ: ' + store.progress().done + ' trên ' + store.progress().total + ' đầu việc hoàn thành'">
-                        <span class="task-board__bar"><span class="task-board__bar-fill" [class.is-done]="store.progress().percent === 100" [style.width.%]="store.progress().percent"></span></span>
-                        {{ store.progress().done }}/{{ store.progress().total }} đầu việc
-                    </span>
-                    <span class="task-board__hint">Thẻ sắp theo ưu tiên, rồi đến hạn</span>
+                    @if (store.cards().length) {
+                        <span class="task-board__progress" [attr.aria-label]="'Tiến độ: ' + store.progress().done + ' trên ' + store.progress().total + ' việc nhỏ hoàn thành'">
+                            <span class="task-board__bar"><span class="task-board__bar-fill" [class.is-done]="store.progress().percent === 100" [style.width.%]="store.progress().percent"></span></span>
+                            {{ store.progress().done }}/{{ store.progress().total }} việc nhỏ
+                        </span>
+                    }
                 </div>
-                @if (store.totalCards() > store.cards().length) {
+                @if (store.truncated()) {
                     <p class="task-board__warn" role="status">
-                        Bảng đang hiển thị {{ store.cards().length }}/{{ store.totalCards() }} đầu việc (tối đa {{ BOARD_PAGE_SIZE }}).
+                        Một số đầu việc/việc nhỏ chưa hiển thị vì vượt giới hạn {{ BOARD_PAGE_SIZE }} mục.
                     </p>
                 }
             }
         </header>
 
-        <!-- ── Tab cột (mobile) ─────────────────── -->
-        <div class="task-board__tabs" role="tablist" aria-label="Cột trạng thái">
-            @for (col of columns(); track col.key) {
-                <button type="button" role="tab" class="task-board__tab" [class.is-active]="activeStatus() === col.status"
-                    [attr.aria-selected]="activeStatus() === col.status" (click)="activeStatus.set(col.status)">
-                    {{ col.title }} <span class="task-board__tab-count">{{ cardsOf(col).length }}</span>
-                </button>
-            }
-        </div>
-
         <!-- ── Cột ────────────────────────────── -->
         @if (store.loading() && !board()) {
             <div class="task-board__columns" aria-busy="true" aria-label="Đang tải bảng">
-                @for (col of columns(); track col.key) {
-                    <div class="task-board__sk-col" [class.is-active]="activeStatus() === col.status">
+                @for (i of [1, 2, 3]; track i) {
+                    <div class="task-board__sk-col">
                         <span class="smr-skeleton task-board__sk-head"></span>
                         <span class="smr-skeleton task-board__sk-card"></span>
                         <span class="smr-skeleton task-board__sk-card"></span>
                     </div>
                 }
             </div>
-        } @else {
-            @if (board() && store.cards().length === 0) {
-                <p class="task-board__empty-hint">
-                    Bảng chưa có đầu việc nào.
-                    @if (canAdd()) { Thêm đầu việc đầu tiên bằng nút “+ Thêm đầu việc” ở cột bất kỳ. }
-                    @else { Bạn chỉ có quyền xem bảng này. }
-                </p>
-            }
+        } @else if (board()) {
             <div class="task-board__columns" cdkDropListGroup>
-                @for (col of columns(); track col.key) {
-                    <app-board-column [class.is-active]="activeStatus() === col.status" [column]="col"
-                        [columns]="columns()" [cards]="cardsOf(col)" [pendingIds]="store.pending()" [canAdd]="canAdd()"
-                        (dropped)="onDropped($event)" (moveTo)="onDropped($event)" (opened)="openCard($event)"
-                        (moveBy)="onMoveBy($event.card, $event.delta)" (quickAdd)="onQuickAdd($event)" />
+                @for (list of lists(); track list.id) {
+                    <app-board-column [list]="list" [lists]="lists()" [cards]="cardsOf(list)" [pendingIds]="store.pending()"
+                        (dropped)="onDropped($event)" (opened)="openCard($event)" (toggled)="onToggle($event.card, $event.done)"
+                        (moveBy)="onMoveBy($event.card, $event.delta)" (quickAdd)="onQuickAdd($event)"
+                        (renamed)="onRenameList(list, $event)" (editInfo)="infoTaskId.set(list.id)" (removed)="onRemoveList(list)" />
+                }
+
+                @if (canAddList()) {
+                    <div class="task-board__add-list" [class.is-open]="addingList()">
+                        @if (addingList()) {
+                            <input #listInput nz-input placeholder="Tên đầu việc, nhấn Enter để thêm" aria-label="Tên đầu việc mới"
+                                maxlength="300" [ngModel]="listDraft()" (ngModelChange)="listDraft.set($event)"
+                                [disabled]="listSaving()" (keydown.enter)="submitAddList()" (keydown.escape)="cancelAddList()" />
+                            <div class="task-board__add-list-actions">
+                                <button nz-button nzType="primary" nzSize="small" (click)="submitAddList()"
+                                    [nzLoading]="listSaving()" [disabled]="!listDraft().trim()">Thêm đầu việc</button>
+                                <button nz-button nzType="text" nzSize="small" (click)="cancelAddList()" [disabled]="listSaving()">Hủy</button>
+                            </div>
+                        } @else {
+                            <button type="button" class="task-board__add-list-btn" (click)="startAddList()">
+                                <span nz-icon nzType="plus" nzTheme="outline"></span>
+                                {{ lists().length ? 'Thêm đầu việc khác' : 'Thêm đầu việc' }}
+                            </button>
+                        }
+                    </div>
+                }
+
+                @if (!lists().length && !canAddList()) {
+                    <p class="task-board__empty-hint">Bảng chưa có đầu việc nào. Bạn chỉ có quyền xem bảng này.</p>
                 }
             </div>
         }
@@ -142,9 +152,9 @@
 
 @if (cardId() && board()) {
     <app-card-detail [cardId]="cardId()!" (closed)="closeCard()" (changed)="onCardChanged($event)"
-        (deleted)="onCardDeleted($event)" (moved)="moveCard($event.card, $event.toStatus)" />
+        (deleted)="onCardDeleted($event)" (moved)="moveCard($event.card, $event.toListId)" />
 }
 
-@if (editOpen() && board()) {
-    <app-task-detail-drawer [open]="true" [taskId]="board()!.id" (closed)="onEditClosed()" (changed)="onEditChanged()" />
+@if (infoTaskId(); as id) {
+    <app-task-detail-drawer [open]="true" [taskId]="id" (closed)="infoTaskId.set(null)" (changed)="onInfoChanged()" />
 }

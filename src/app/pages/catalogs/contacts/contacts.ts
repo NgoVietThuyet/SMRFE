@@ -10,7 +10,7 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
@@ -27,6 +27,8 @@ import type {
 } from '../../../core/models/directory.models';
 import { SelectA11yDirective } from '../../../shared/a11y/select-a11y.directive';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
+import { ConfirmDialogService, confirmDiscard, focusFirstInvalid } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { HeaderAction, HeaderActions } from '../../../shared/ui/header-actions/header-actions';
 
 // Node cây mang thêm số liệu + trạng thái để template hiển thị (không hard-code org nào)
 interface OrgTreeNode extends NzTreeNodeOptions {
@@ -48,6 +50,7 @@ interface OrgTreeNode extends NzTreeNodeOptions {
     templateUrl: './contacts.html',
     styleUrl: './contacts.scss',
     imports: [
+        HeaderActions,
         Avatar,
         SelectA11yDirective,
         CommonModule,
@@ -73,7 +76,7 @@ export class Contacts implements OnInit {
     private readonly directory = inject(DirectoryService);
     private readonly fb = inject(FormBuilder);
     private readonly message = inject(NzMessageService);
-    private readonly modal = inject(NzModalService);
+    private readonly dialog = inject(ConfirmDialogService);
     private readonly destroyRef = inject(DestroyRef);
 
     // ── Nguồn dữ liệu ──
@@ -466,6 +469,56 @@ export class Contacts implements OnInit {
         this.detailOpen.set(false);
     }
 
+    // ── Nút header drawer (Plan_GiaoDien_Drawer.md) ──
+    readonly detailActions = computed<HeaderAction[]>(() => {
+        const d = this.detail();
+        if (!d) return [];
+        return [
+            { label: 'Đặt lại mật khẩu', icon: 'key', run: () => this.confirmResetPassword(d) },
+            {
+                label: d.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản',
+                icon: d.isActive ? 'lock' : 'unlock',
+                danger: d.isActive,
+                overflow: true,
+                run: () => this.confirmToggleStatus(d),
+            },
+            { label: 'Sửa', icon: 'edit', kind: 'primary', run: () => this.openEmpEdit(d) },
+        ];
+    });
+
+    readonly empFormActions = computed<HeaderAction[]>(() => [
+        { label: 'Hủy', run: () => void this.requestCloseEmpForm() },
+        {
+            label: this.editingUser() ? 'Lưu thay đổi' : 'Thêm nhân sự',
+            mobileLabel: this.editingUser() ? 'Lưu' : 'Thêm',
+            kind: 'primary',
+            submitForm: 'emp-form',
+            loading: this.empSaving(),
+        },
+    ]);
+
+    readonly orgFormActions = computed<HeaderAction[]>(() => [
+        { label: 'Hủy', run: () => void this.requestCloseOrgForm() },
+        {
+            label: this.editingOrgId() ? 'Lưu thay đổi' : 'Thêm phòng ban',
+            mobileLabel: this.editingOrgId() ? 'Lưu' : 'Thêm',
+            kind: 'primary',
+            submitForm: 'org-form',
+            loading: this.orgSaving(),
+        },
+    ]);
+
+    /** Hủy / Esc / bấm nền: hỏi trước nếu form đã sửa. */
+    async requestCloseEmpForm(): Promise<void> {
+        if (this.empSaving()) return;
+        if (await confirmDiscard(this.dialog, this.empForm.dirty)) this.closeEmpForm();
+    }
+
+    async requestCloseOrgForm(): Promise<void> {
+        if (this.orgSaving()) return;
+        if (await confirmDiscard(this.dialog, this.orgForm.dirty)) this.closeOrgForm();
+    }
+
     // ── Form nhân sự ──
 
     openEmpCreate(preselectOrg = true): void {
@@ -502,6 +555,7 @@ export class Contacts implements OnInit {
     submitEmpForm(): void {
         if (this.empForm.invalid) {
             this.empForm.markAllAsTouched();
+            focusFirstInvalid(document.getElementById('emp-form'));
             return;
         }
         const v = this.empForm.getRawValue();
@@ -550,14 +604,15 @@ export class Contacts implements OnInit {
 
     confirmToggleStatus(user: DirectoryEmployee): void {
         const action = user.isActive ? 'khóa' : 'mở khóa';
-        this.modal.confirm({
-            nzTitle: `${user.isActive ? 'Khóa' : 'Mở khóa'} tài khoản "${user.fullName}"?`,
-            nzContent: user.isActive
+        void this.dialog.open({
+            title: `${user.isActive ? 'Khóa' : 'Mở khóa'} tài khoản "${user.fullName}"?`,
+            content: user.isActive
                 ? 'Tài khoản bị khóa không thể đăng nhập cho đến khi được mở lại.'
                 : 'Tài khoản sẽ được phép đăng nhập trở lại.',
-            nzOkText: 'Xác nhận',
-            nzCancelText: 'Hủy',
-            nzOnOk: () =>
+            okText: user.isActive ? 'Khóa tài khoản' : 'Mở khóa',
+            cancelText: 'Hủy',
+            danger: user.isActive,
+            onOk: () =>
                 new Promise<void>((resolve, reject) => {
                     this.directory
                         .setStatus(user.userName, !user.isActive)
@@ -578,12 +633,12 @@ export class Contacts implements OnInit {
     }
 
     confirmResetPassword(user: DirectoryEmployee): void {
-        this.modal.confirm({
-            nzTitle: `Đặt lại mật khẩu cho "${user.fullName}"?`,
-            nzContent: 'Hệ thống sinh mật khẩu mới, nhân sự phải đổi ở lần đăng nhập tiếp theo.',
-            nzOkText: 'Xác nhận',
-            nzCancelText: 'Hủy',
-            nzOnOk: () =>
+        void this.dialog.open({
+            title: `Đặt lại mật khẩu cho "${user.fullName}"?`,
+            content: 'Hệ thống sinh mật khẩu mới, nhân sự phải đổi ở lần đăng nhập tiếp theo.',
+            okText: 'Đặt lại',
+            cancelText: 'Hủy',
+            onOk: () =>
                 new Promise<void>((resolve, reject) => {
                     this.directory.resetPassword(user.userName).subscribe({
                         next: () => {
@@ -633,6 +688,7 @@ export class Contacts implements OnInit {
     submitOrgForm(): void {
         if (this.orgForm.invalid) {
             this.orgForm.markAllAsTouched();
+            focusFirstInvalid(document.getElementById('org-form'));
             return;
         }
         const v = this.orgForm.getRawValue();
@@ -668,13 +724,13 @@ export class Contacts implements OnInit {
     }
 
     confirmDeleteOrg(org: OrganizationFlat): void {
-        this.modal.confirm({
-            nzTitle: `Xóa phòng ban "${org.name}"?`,
-            nzContent: 'Chỉ xóa được khi không còn đơn vị con và nhân sự.',
-            nzOkText: 'Xóa',
-            nzOkDanger: true,
-            nzCancelText: 'Hủy',
-            nzOnOk: () =>
+        void this.dialog.open({
+            title: `Xóa phòng ban "${org.name}"?`,
+            content: 'Chỉ xóa được khi không còn đơn vị con và nhân sự.',
+            okText: 'Xóa',
+            danger: true,
+            cancelText: 'Hủy',
+            onOk: () =>
                 new Promise<void>((resolve, reject) => {
                     this.directory.deleteOrganization(org.id).subscribe({
                         next: () => {

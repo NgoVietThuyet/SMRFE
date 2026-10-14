@@ -10,6 +10,7 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { provideA11yPatch } from './shared/a11y/a11y-patch';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import {
   DownloadOutline,
   FileOutline,
@@ -138,5 +139,7 @@ export const appConfig: ApplicationConfig = {
     provideNzDateFnsAdapter(),
     provideNzIcons(icons),
     provideA11yPatch(),
+    // ConfirmDialogService (root) mở popup xác nhận từ mọi nơi → NzModalService phải có ở root
+    NzModalService,
   ],
 };

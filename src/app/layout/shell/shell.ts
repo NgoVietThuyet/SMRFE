@@ -66,8 +66,7 @@ export class Shell {
   }
 
   // Conditional header — route con ghi đè qua data
-  // { showBack, showSearch, showHelp, breadcrumb }
-  showBack = signal<boolean>(false);
+  // { showSearch, showHelp, breadcrumb }
   showSearch = signal<boolean>(true);
   showHelp = signal<boolean>(false);
   breadcrumb = signal<BreadcrumbItem[]>([]);
@@ -112,7 +111,6 @@ export class Shell {
     while (deepest.firstChild) deepest = deepest.firstChild;
     const data = deepest.data;
 
-    this.showBack.set(data['showBack'] ?? false);
     this.showSearch.set(data['showSearch'] ?? true);
     this.showHelp.set(data['showHelp'] ?? false);
     this.breadcrumb.set((data['breadcrumb'] as BreadcrumbItem[] | undefined) ?? this.fromUrl());

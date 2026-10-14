@@ -5,18 +5,36 @@
 // Bell có thông báo chưa đọc — chấm primary góc phải
 .smr-top-header__bell {
     position: relative;
+}
 
-    &--unread::after {
-        content: '';
-        position: absolute;
-        top: 9px;
-        right: 9px;
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background-color: var(--primary-600);
-        border: 2px solid var(--bg-surface);
-    }
+// Badge số chưa đọc (1–99, "99+")
+.smr-top-header__badge {
+    position: absolute;
+    top: 3px;
+    right: 1px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--bg-surface);
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    box-sizing: border-box;
+    animation: smr-badge-pop 0.25s ease-out;
+}
+
+@keyframes smr-badge-pop {
+    from { transform: scale(0.6); }
+    to { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .smr-top-header__badge { animation: none; }
 }
 
 // Ô search trong header — cố định chiều rộng, không flex

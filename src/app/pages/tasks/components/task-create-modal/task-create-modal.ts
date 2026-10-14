@@ -15,6 +15,8 @@ import { CreateTaskRequest, TaskPriority, TaskStatus } from '../../../../core/mo
 import { MeetingListItemDto } from '../../../../core/models/dashboard.models';
 import { UserSearchItem } from '../../../../core/models/meeting.models';
 import { SelectA11yDirective } from '../../../../shared/a11y/select-a11y.directive';
+import { ConfirmDialogService, confirmDiscard, focusFirstInvalid } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
+import { HeaderAction, HeaderActions } from '../../../../shared/ui/header-actions/header-actions';
 
 // =====================================================
 // TaskCreateModal — popup tạo công việc (nhanh, ít field).
@@ -28,6 +30,7 @@ import { SelectA11yDirective } from '../../../../shared/a11y/select-a11y.directi
     templateUrl: './task-create-modal.html',
     styleUrl: './task-create-modal.scss',
     imports: [
+        HeaderActions,
         SelectA11yDirective,
         ReactiveFormsModule,
         NzModalModule,
@@ -40,6 +43,7 @@ import { SelectA11yDirective } from '../../../../shared/a11y/select-a11y.directi
 })
 export class TaskCreateModal {
     private readonly fb = inject(FormBuilder);
+    private readonly dialog = inject(ConfirmDialogService);
     private readonly taskService = inject(TaskService);
     private readonly meetingService = inject(MeetingService);
     private readonly auth = inject(AuthService);
@@ -181,6 +185,18 @@ export class TaskCreateModal {
         this.userSearch$.next(q);
     }
 
+    // ── Nút header popup (Plan_GiaoDien_Drawer.md) ──
+    readonly headerActions = computed<HeaderAction[]>(() => [
+        { label: 'Hủy', run: () => void this.requestClose() },
+        { label: 'Tạo công việc', mobileLabel: 'Tạo', kind: 'primary', loading: this.saving(), submitForm: 'tcm-form' },
+    ]);
+
+    /** Hủy / Esc: hỏi trước nếu đã nhập. */
+    async requestClose(): Promise<void> {
+        if (this.saving()) return;
+        if (await confirmDiscard(this.dialog, this.form.dirty)) this.close();
+    }
+
     close(): void {
         if (this.saving()) return;
         this.submitError.set(null);
@@ -191,6 +207,7 @@ export class TaskCreateModal {
         this.submitError.set(null);
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+            focusFirstInvalid(document.getElementById('tcm-form'));
             return;
         }
         const v = this.form.getRawValue();

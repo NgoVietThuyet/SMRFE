@@ -12,11 +12,13 @@ import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzModalService, NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { DirectoryService } from '../../../core/services/directory.service';
+import { ConfirmDialogService, confirmDiscard, focusFirstInvalid } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { HeaderAction, HeaderActions } from '../../../shared/ui/header-actions/header-actions';
 import { CustomIconComponent } from '../../../layout/shell/custom-icon/custom-icon.component';
 import type { DirectoryTitle, TitleRequest } from '../../../core/models/directory.models';
 import { SelectA11yDirective } from '../../../shared/a11y/select-a11y.directive';
@@ -29,6 +31,7 @@ import { friendlyError } from '../../../shared/utils/friendly-error';
     templateUrl: './titles.html',
     styleUrl: './titles.scss',
     imports: [
+        HeaderActions,
         NzDropdownModule,
         NzIconModule,
         SelectA11yDirective,
@@ -54,7 +57,7 @@ export class Titles implements OnInit {
     private readonly directory = inject(DirectoryService);
     private readonly fb = inject(FormBuilder);
     private readonly message = inject(NzMessageService);
-    private readonly modal = inject(NzModalService);
+    private readonly dialog = inject(ConfirmDialogService);
     private readonly destroyRef = inject(DestroyRef);
 
     // Data
@@ -174,6 +177,28 @@ export class Titles implements OnInit {
         this.showForm.set(true);
     }
 
+    // ── Nút header drawer (Plan_GiaoDien_Drawer.md) ──
+    readonly detailActions = computed<HeaderAction[]>(() => {
+        const t = this.detailTitle();
+        return t ? [{ label: 'Sửa chức danh', kind: 'primary', icon: 'edit', mobileLabel: 'Sửa', run: () => this.openEdit(t) }] : [];
+    });
+
+    readonly formActions = computed<HeaderAction[]>(() => [
+        { label: 'Hủy', run: () => void this.requestCloseForm() },
+        {
+            label: this.editingCode() ? 'Cập nhật' : 'Thêm',
+            kind: 'primary',
+            submitForm: 'title-form',
+            loading: this.saving(),
+        },
+    ]);
+
+    /** Hủy / Esc / bấm nền: hỏi trước nếu form đã sửa. */
+    async requestCloseForm(): Promise<void> {
+        if (this.saving()) return;
+        if (await confirmDiscard(this.dialog, this.form.dirty)) this.closeForm();
+    }
+
     openTitleDetail(item: DirectoryTitle): void {
         this.detailTitle.set(item);
     }
@@ -205,6 +230,7 @@ export class Titles implements OnInit {
     submitForm(): void {
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+            focusFirstInvalid(document.getElementById('title-form'));
             return;
         }
         const raw = this.form.getRawValue();
@@ -237,14 +263,16 @@ export class Titles implements OnInit {
     }
 
     confirmDelete(item: DirectoryTitle): void {
-        this.modal.confirm({
-            nzTitle: `Xóa chức danh "${item.name}"?`,
-            nzContent: item.employeeCount > 0 ? `Chức danh đang có ${item.employeeCount} nhân sự sử dụng, không thể xóa.` : 'Hành động này không thể hoàn tác.',
-            nzOkText: 'Xóa',
-            nzOkDanger: true,
-            nzCancelText: 'Hủy',
-            nzOkDisabled: item.employeeCount > 0,
-            nzOnOk: () =>
+        if (item.employeeCount > 0) {
+            this.message.warning(`Chức danh "${item.name}" đang có ${item.employeeCount} nhân sự sử dụng, không thể xóa.`);
+            return;
+        }
+        void this.dialog.open({
+            title: `Xóa chức danh "${item.name}"?`,
+            content: 'Hành động này không thể hoàn tác.',
+            okText: 'Xóa',
+            danger: true,
+            onOk: () =>
                 new Promise<void>((resolve, reject) => {
                     this.directory.deleteTitle(item.code).subscribe({
                         next: () => {
@@ -258,7 +286,7 @@ export class Titles implements OnInit {
                         },
                         error: (err: Error) => {
                             this.message.error(err.message || 'Xóa thất bại.');
-                            reject();
+                            reject(err);
                         },
                     });
                 }),

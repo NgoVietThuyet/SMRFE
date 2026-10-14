@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
@@ -10,7 +10,6 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
@@ -35,6 +34,8 @@ import { SelectA11yDirective } from '../../../../shared/a11y/select-a11y.directi
 import { Avatar } from '../../../../shared/ui/avatar/avatar';
 import { taskStatus } from '../../../../shared/utils/status-map';
 import { friendlyError } from '../../../../shared/utils/friendly-error';
+import { ConfirmDialogService, confirmDiscard, focusFirstInvalid } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
+import { HeaderAction, HeaderActions } from '../../../../shared/ui/header-actions/header-actions';
 
 // =====================================================
 // TaskDetailDrawer — chi tiết công việc (nz-drawer 480px,
@@ -57,7 +58,7 @@ import { friendlyError } from '../../../../shared/utils/friendly-error';
         NzEmptyModule,
         NzIconModule,
         NzInputModule,
-        NzModalModule,
+        HeaderActions,
         NzSelectModule,
         NzSpinModule,
         NzSwitchModule,
@@ -73,6 +74,8 @@ export class TaskDetailDrawer {
     private readonly auth = inject(AuthService);
     private readonly message = inject(NzMessageService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly router = inject(Router);
+    private readonly dialog = inject(ConfirmDialogService);
 
     open = input<boolean>(false);
     taskId = input<string | null>(null);
@@ -116,8 +119,39 @@ export class TaskDetailDrawer {
     removingShareUser = signal<string | null>(null);
 
     // Xóa task
-    deleteOpen = signal(false);
     deleteSaving = signal(false);
+
+    // ── Nút header (Plan_GiaoDien_Drawer.md): đổi theo chế độ xem / sửa ──
+    readonly headerActions = computed<HeaderAction[]>(() => {
+        const t = this.task();
+        if (!t || this.loading()) return [];
+        if (this.editing()) {
+            return [
+                { label: 'Hủy', run: () => void this.requestCancelEdit() },
+                { label: 'Lưu', kind: 'primary', submitForm: 'tdd-edit-form', loading: this.saving() },
+            ];
+        }
+        return [
+            {
+                label: 'Mở bảng',
+                icon: 'appstore',
+                hidden: t.level !== 0,
+                run: () => {
+                    this.closed.emit();
+                    void this.router.navigate(['/tasks', t.id]);
+                },
+            },
+            {
+                label: t.level === 0 ? 'Thêm đầu việc' : 'Thêm việc nhỏ',
+                icon: 'plus',
+                hidden: t.level >= 2,
+                overflow: true,
+                run: () => this.openSubCreate(t),
+            },
+            { label: 'Xóa', icon: 'delete', danger: true, overflow: true, hidden: !t.isCreator, run: () => this.openDelete() },
+            { label: 'Sửa', icon: 'edit', kind: 'primary', hidden: !t.canEdit, run: () => this.startEdit() },
+        ];
+    });
 
     // Tạo con (SubWork / Task)
     subCreateOpen = signal(false);
@@ -243,8 +277,10 @@ export class TaskDetailDrawer {
             });
     }
 
-    close(): void {
+    /** X / Esc / bấm nền. Đang sửa có thay đổi → hỏi trước. */
+    async close(): Promise<void> {
         if (this.saving() || this.deleteSaving()) return;
+        if (this.editing() && !(await confirmDiscard(this.dialog, this.editForm.dirty))) return;
         this.closed.emit();
     }
 
@@ -276,6 +312,11 @@ export class TaskDetailDrawer {
         this.editing.set(true);
     }
 
+    async requestCancelEdit(): Promise<void> {
+        if (this.saving()) return;
+        if (await confirmDiscard(this.dialog, this.editForm.dirty)) this.cancelEdit();
+    }
+
     cancelEdit(): void {
         this.editing.set(false);
         this.submitError.set(null);
@@ -287,6 +328,7 @@ export class TaskDetailDrawer {
         this.submitError.set(null);
         if (this.editForm.invalid) {
             this.editForm.markAllAsTouched();
+            focusFirstInvalid(document.getElementById('tdd-edit-form'));
             return;
         }
         const v = this.editForm.getRawValue();
@@ -433,34 +475,40 @@ export class TaskDetailDrawer {
     }
 
     openDelete(): void {
-        this.deleteOpen.set(true);
-    }
-
-    closeDelete(): void {
-        if (this.deleteSaving()) return;
-        this.deleteOpen.set(false);
-    }
-
-    confirmDelete(): void {
         const t = this.task();
-        if (!t || this.deleteSaving()) return;
+        if (!t) return;
+        void this.dialog.open({
+            title: 'Xóa công việc?',
+            content: `“${t.title}” sẽ bị xóa. Hành động này không thể hoàn tác.`,
+            okText: 'Xóa',
+            danger: true,
+            onOk: () => this.confirmDelete(),
+        });
+    }
+
+    private confirmDelete(): Promise<void> {
+        const t = this.task();
+        if (!t) return Promise.resolve();
         this.deleteSaving.set(true);
-        this.taskService
-            .remove(t.id)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-                next: () => {
-                    this.deleteSaving.set(false);
-                    this.deleteOpen.set(false);
-                    this.message.success('Đã xóa công việc.');
-                    this.closed.emit();
-                    this.changed.emit();
-                },
-                error: (err: Error) => {
-                    this.deleteSaving.set(false);
-                    this.message.error(err.message || 'Xóa công việc thất bại.');
-                },
-            });
+        return new Promise<void>((resolve, reject) => {
+            this.taskService
+                .remove(t.id)
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                    next: () => {
+                        this.deleteSaving.set(false);
+                        this.message.success('Đã xóa công việc.');
+                        this.closed.emit();
+                        this.changed.emit();
+                        resolve();
+                    },
+                    error: (err: Error) => {
+                        this.deleteSaving.set(false);
+                        this.message.error(err.message || 'Xóa công việc thất bại.');
+                        reject(err);
+                    },
+                });
+        });
     }
 
     // ── Hiển thị ──

@@ -10,46 +10,27 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzSelectModule } from 'ng-zorro-antd/select';
-import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { debounceTime, distinctUntilChanged, firstValueFrom, of, Subject, switchMap } from 'rxjs';
 import { UserSearchItem } from '../../../core/models/meeting.models';
-import {
-    TaskDetail,
-    TaskListItem,
-    TaskPriority,
-    TaskStatus,
-    UpdateTaskRequest,
-} from '../../../core/models/task.models';
+import { TaskDetail, TaskListItem, TaskPriority, TaskStatus, UpdateTaskRequest } from '../../../core/models/task.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { MeetingService } from '../../../core/services/meeting.service';
-import { classifyBoardError, TaskBoardStore } from '../../../core/services/task-board.store';
+import { classifyBoardError, TaskBoardStore, updatePayload } from '../../../core/services/task-board.store';
 import { TaskService } from '../../../core/services/task.service';
 import { SelectA11yDirective } from '../../../shared/a11y/select-a11y.directive';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { friendlyError } from '../../../shared/utils/friendly-error';
+import { ConfirmDialogService } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { HeaderAction, HeaderActions } from '../../../shared/ui/header-actions/header-actions';
+import { taskStatus } from '../../../shared/utils/status-map';
 import { dueClass } from '../../../shared/utils/task-format';
-import { SubtaskRow } from './subtask-row/subtask-row';
-
-function updatePayload(t: TaskListItem, patch: Partial<UpdateTaskRequest> = {}): UpdateTaskRequest {
-    return {
-        title: t.title,
-        description: t.description,
-        assigneeUserName: t.assigneeUserName,
-        dueDate: t.dueDate,
-        status: t.status,
-        priority: t.priority,
-        sourceRef: t.sourceRef ?? null,
-        ...patch,
-    };
-}
 
 // =====================================================
-// CardDetail — drawer Chi tiết đầu việc (level 1), 720px,
+// CardDetail — drawer chi tiết một Việc nhỏ (level 2), 720px,
 // full-screen trên mobile. URL /tasks/:workId/cards/:cardId.
-// Trái: mô tả + checklist Việc nhỏ (level 2) + hoạt động.
-// Phải: phụ trách, hạn, ưu tiên, chuyển cột, cuộc họp, xóa.
+// Trái: mô tả + hoạt động. Phải: đầu việc (cột), trạng thái,
+// phụ trách, hạn, ưu tiên, cuộc họp, xóa.
 // =====================================================
 @Component({
     selector: 'app-card-detail',
@@ -65,12 +46,10 @@ function updatePayload(t: TaskListItem, patch: Partial<UpdateTaskRequest> = {}):
         NzEmptyModule,
         NzIconModule,
         NzInputModule,
-        NzModalModule,
+        HeaderActions,
         NzSelectModule,
-        NzSpinModule,
         RouterLink,
         SelectA11yDirective,
-        SubtaskRow,
     ],
 })
 export class CardDetail {
@@ -85,9 +64,12 @@ export class CardDetail {
     readonly closed = output<void>();
     readonly changed = output<string>();
     readonly deleted = output<string>();
-    readonly moved = output<{ card: TaskListItem; toStatus: TaskStatus }>();
+    readonly moved = output<{ card: TaskListItem; toListId: string }>();
 
-    readonly TaskStatus = TaskStatus;
+    readonly statusOptions = [TaskStatus.NotStarted, TaskStatus.InProgress, TaskStatus.Completed].map((value) => ({
+        value,
+        label: taskStatus(value).label,
+    }));
     readonly priorityOptions = [
         { value: TaskPriority.Low, label: 'Thấp' },
         { value: TaskPriority.Medium, label: 'Trung bình' },
@@ -95,49 +77,47 @@ export class CardDetail {
     ];
 
     protected readonly task = signal<TaskDetail | null>(null);
-    protected readonly subtasks = signal<TaskListItem[]>([]);
     protected readonly loading = signal(false);
     protected readonly loadError = signal<string | null>(null);
     protected readonly saving = signal(false);
-    protected readonly pendingSubs = signal<ReadonlySet<string>>(new Set());
 
-    // Mô tả / tiêu đề sửa tại chỗ
+    // Tiêu đề / mô tả sửa tại chỗ
     protected readonly editingTitle = signal(false);
     protected readonly titleDraft = signal('');
     protected readonly editingDesc = signal(false);
     protected readonly descDraft = signal('');
     private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
 
-    // Thêm nhanh việc nhỏ
-    protected readonly newSubTitle = signal('');
-    protected readonly addingSub = signal(false);
-
-    protected readonly deleteOpen = signal(false);
     protected readonly deleting = signal(false);
+    private readonly dialog = inject(ConfirmDialogService);
+    /** Đã lưu ít nhất 1 thay đổi trong phiên mở drawer — để hiện "Đã lưu". */
+    private readonly savedOnce = signal(false);
 
-    /** Trạng thái lấy từ store khi thẻ có trên bảng — kéo thả ở bảng phản ánh ngay vào drawer. */
-    protected readonly status = computed(() => this.store.card(this.cardId())?.status ?? this.task()?.status ?? TaskStatus.NotStarted);
-    protected readonly statusPending = computed(() => this.store.pending().has(this.cardId()));
-    protected readonly doneCount = computed(() => this.subtasks().filter((s) => s.status === TaskStatus.Completed).length);
-    protected readonly percent = computed(() => {
-        const total = this.subtasks().length;
-        return total ? Math.round((this.doneCount() / total) * 100) : 0;
-    });
-    /** Gợi ý (không tự động) chuyển đầu việc sang Hoàn thành khi mọi việc nhỏ đã xong. */
-    protected readonly suggestComplete = computed(
-        () =>
-            !!this.task()?.canEdit &&
-            this.subtasks().length > 0 &&
-            this.doneCount() === this.subtasks().length &&
-            this.status() !== TaskStatus.Completed
+    // ── Header (Plan_GiaoDien_Drawer.md): mỗi trường lưu ngay → chỉ báo trạng thái, Xóa trong ⋯ ──
+    protected readonly saveStatus = computed(() =>
+        this.saving() || this.pending() ? 'Đang lưu…' : this.savedOnce() ? 'Đã lưu' : null
     );
+    protected readonly headerActions = computed<HeaderAction[]>(() => {
+        const t = this.task();
+        if (!t) return [];
+        return [
+            { label: 'Xóa việc nhỏ', icon: 'delete', danger: true, overflow: true, hidden: !t.isCreator, run: () => this.openDelete() },
+        ];
+    });
+
+    /** Bản trên bảng (store) là nguồn cho trạng thái + cột — kéo thả / tick ở bảng phản ánh ngay vào drawer. */
+    private readonly boardCard = computed(() => this.store.card(this.cardId()));
+    protected readonly status = computed(() => this.boardCard()?.status ?? this.task()?.status ?? TaskStatus.NotStarted);
+    protected readonly listId = computed(() => this.boardCard()?.parentId ?? this.task()?.parentId ?? null);
+    protected readonly listTitle = computed(() => this.store.list(this.listId() ?? '')?.title ?? '');
+    protected readonly pending = computed(() => this.store.pending().has(this.cardId()));
     protected readonly dueTone = computed(() => {
         const t = this.task();
         return t ? dueClass(t.dueDate, this.status()) : '';
     });
     protected readonly dueValue = computed(() => (this.task()?.dueDate ? new Date(this.task()!.dueDate!) : null));
 
-    // Người phụ trách đầu việc (server search)
+    // Người phụ trách (server search)
     private readonly userSearch$ = new Subject<string>();
     private readonly searchedUsers = signal<UserSearchItem[]>([]);
     protected readonly searchingUsers = signal(false);
@@ -185,14 +165,13 @@ export class CardDetail {
         try {
             const detail = await firstValueFrom(this.taskService.get(id));
             if (id !== this.cardId()) return;
-            if (detail.level !== 1 || detail.parentId !== this.store.workId()) {
-                this.loadError.set('Đầu việc này không thuộc bảng đang mở.');
+            if (detail.level !== 2 || !this.store.list(detail.parentId ?? '')) {
+                this.loadError.set('Việc nhỏ này không thuộc bảng đang mở.');
                 return;
             }
             this.task.set(detail);
-            this.subtasks.set(detail.children ?? []);
         } catch (err) {
-            if (id === this.cardId()) this.loadError.set(classifyBoardError(err).message.replace('Công việc', 'Đầu việc'));
+            if (id === this.cardId()) this.loadError.set(classifyBoardError(err).message.replace('Công việc', 'Việc nhỏ'));
         } finally {
             if (id === this.cardId()) this.loading.set(false);
         }
@@ -203,22 +182,23 @@ export class CardDetail {
         this.closed.emit();
     }
 
-    // ── Đầu việc ───────────────────────────────────
+    // ── Sửa ────────────────────────────────────────
 
-    private async saveCard(patch: Partial<UpdateTaskRequest>, okMessage?: string): Promise<boolean> {
+    private async save(patch: Partial<UpdateTaskRequest>): Promise<boolean> {
         const t = this.task();
         if (!t || !t.canEdit || this.saving()) return false;
         this.saving.set(true);
         try {
-            // status lấy theo store để PUT không ghi đè trạng thái vừa kéo thả.
-            const updated = await firstValueFrom(this.taskService.update(t.id, updatePayload({ ...t, status: this.status() }, patch)));
+            // status theo store để PUT không ghi đè thao tác vừa làm trên bảng; không gửi parentId → không đổi cột.
+            const base = { ...t, status: this.status() };
+            const updated = await firstValueFrom(this.taskService.update(t.id, updatePayload(base, patch)));
             this.task.update((cur) => (cur ? { ...cur, ...updated } : cur));
             this.store.patchCard(t.id, updated);
             this.changed.emit(t.id);
-            if (okMessage) this.message.success(okMessage);
+            this.savedOnce.set(true);
             return true;
         } catch (err) {
-            this.message.error(friendlyError(err, 'Cập nhật đầu việc thất bại.'));
+            this.message.error(friendlyError(err, 'Cập nhật việc nhỏ thất bại.'));
             return false;
         } finally {
             this.saving.set(false);
@@ -237,7 +217,7 @@ export class CardDetail {
         if (!this.editingTitle()) return;
         this.editingTitle.set(false);
         const title = this.titleDraft().trim();
-        if (title && title !== this.task()?.title) await this.saveCard({ title });
+        if (title && title !== this.task()?.title) await this.save({ title });
     }
 
     protected startDescEdit(): void {
@@ -251,7 +231,7 @@ export class CardDetail {
             this.editingDesc.set(false);
             return;
         }
-        if (await this.saveCard({ description })) this.editingDesc.set(false);
+        if (await this.save({ description })) this.editingDesc.set(false);
     }
 
     protected onAssigneeSearch(q: string): void {
@@ -260,145 +240,58 @@ export class CardDetail {
 
     protected onAssignee(userName: string | null): void {
         if ((userName || null) === this.task()?.assigneeUserName) return;
-        void this.saveCard({ assigneeUserName: userName || null });
+        void this.save({ assigneeUserName: userName || null });
     }
 
     protected onDue(date: Date | null): void {
         const cur = this.task()?.dueDate ? new Date(this.task()!.dueDate!).getTime() : null;
         if ((date?.getTime() ?? null) === cur) return;
-        void this.saveCard({ dueDate: date ? date.toISOString() : null });
+        void this.save({ dueDate: date ? date.toISOString() : null });
     }
 
     protected onPriority(priority: TaskPriority): void {
         if (priority === this.task()?.priority) return;
-        void this.saveCard({ priority });
+        void this.save({ priority });
     }
 
-    protected onStatus(toStatus: TaskStatus): void {
+    protected async onStatus(status: TaskStatus): Promise<void> {
+        const error = await this.store.setCardStatus(this.cardId(), status);
+        if (error) this.message.error(error);
+        else {
+            this.task.update((cur) => (cur ? { ...cur, status } : cur));
+            this.savedOnce.set(true);
+        }
+    }
+
+    protected onList(toListId: string): void {
         const t = this.task();
-        if (!t || toStatus === this.status()) return;
-        this.moved.emit({ card: this.store.card(t.id) ?? t, toStatus });
+        if (!t || toListId === this.listId()) return;
+        this.moved.emit({ card: this.boardCard() ?? t, toListId });
     }
 
     protected openDelete(): void {
-        this.deleteOpen.set(true);
-    }
-
-    protected async confirmDelete(): Promise<void> {
-        const t = this.task();
-        if (!t || this.deleting()) return;
-        this.deleting.set(true);
-        try {
-            await firstValueFrom(this.taskService.remove(t.id));
-            this.deleteOpen.set(false);
-            this.message.success('Đã xóa đầu việc.');
-            this.deleted.emit(t.id);
-        } catch (err) {
-            this.message.error(friendlyError(err, 'Xóa đầu việc thất bại.'));
-        } finally {
-            this.deleting.set(false);
-        }
-    }
-
-    // ── Việc nhỏ ───────────────────────────────────
-
-    private syncCounts(): void {
         const t = this.task();
         if (!t) return;
-        const patch = { childrenCount: this.subtasks().length, completedChildrenCount: this.doneCount() };
-        this.task.update((cur) => (cur ? { ...cur, ...patch } : cur));
-        this.store.patchCard(t.id, patch);
-    }
-
-    private setSubPending(id: string, on: boolean): void {
-        this.pendingSubs.update((s) => {
-            const next = new Set(s);
-            if (on) next.add(id);
-            else next.delete(id);
-            return next;
+        void this.dialog.open({
+            title: 'Xóa việc nhỏ?',
+            content: `“${t.title}” sẽ bị xóa. Hành động này không thể hoàn tác.`,
+            okText: 'Xóa',
+            danger: true,
+            onOk: () => this.confirmDelete(t),
         });
     }
 
-    private patchSub(id: string, patch: Partial<TaskListItem>): void {
-        this.subtasks.update((list) => list.map((s) => (s.id === id ? { ...s, ...patch } : s)));
-    }
-
-    async toggleSubtask(sub: TaskListItem, checked: boolean): Promise<void> {
-        const from = sub.status;
-        const to = checked ? TaskStatus.Completed : TaskStatus.NotStarted;
-        if (from === to || this.pendingSubs().has(sub.id)) return;
-        this.patchSub(sub.id, { status: to });
-        this.syncCounts();
-        this.setSubPending(sub.id, true);
+    private async confirmDelete(t: TaskDetail): Promise<void> {
+        this.deleting.set(true);
         try {
-            const updated = await firstValueFrom(this.taskService.updateStatus(sub.id, to));
-            this.patchSub(sub.id, updated);
-        } catch (err) {
-            this.patchSub(sub.id, { status: from });
-            this.syncCounts();
-            this.message.error(friendlyError(err, 'Không cập nhật được việc nhỏ.'));
-        } finally {
-            this.setSubPending(sub.id, false);
-        }
-    }
-
-    protected async updateSubtask(sub: TaskListItem, patch: Partial<UpdateTaskRequest>): Promise<void> {
-        if (this.pendingSubs().has(sub.id)) return;
-        this.setSubPending(sub.id, true);
-        try {
-            const updated = await firstValueFrom(this.taskService.update(sub.id, updatePayload(sub, patch)));
-            this.patchSub(sub.id, updated);
-        } catch (err) {
-            this.message.error(friendlyError(err, 'Không cập nhật được việc nhỏ.'));
-        } finally {
-            this.setSubPending(sub.id, false);
-        }
-    }
-
-    protected onSubDue(sub: TaskListItem, date: Date | null): void {
-        void this.updateSubtask(sub, { dueDate: date ? date.toISOString() : null });
-    }
-
-    protected async removeSubtask(sub: TaskListItem): Promise<void> {
-        this.setSubPending(sub.id, true);
-        try {
-            await firstValueFrom(this.taskService.remove(sub.id));
-            this.subtasks.update((list) => list.filter((s) => s.id !== sub.id));
-            this.syncCounts();
+            await firstValueFrom(this.taskService.remove(t.id));
+            this.message.success('Đã xóa việc nhỏ.');
+            this.deleted.emit(t.id);
         } catch (err) {
             this.message.error(friendlyError(err, 'Xóa việc nhỏ thất bại.'));
+            throw err;
         } finally {
-            this.setSubPending(sub.id, false);
-        }
-    }
-
-    async addSubtask(): Promise<void> {
-        const t = this.task();
-        const title = this.newSubTitle().trim();
-        if (!t || !title || this.addingSub()) return;
-        this.addingSub.set(true);
-        try {
-            const created = await firstValueFrom(
-                this.taskService.create({
-                    meetingId: t.meetingId,
-                    parentId: t.id,
-                    level: 2,
-                    title,
-                    description: null,
-                    assigneeUserName: null,
-                    dueDate: null,
-                    status: TaskStatus.NotStarted,
-                    priority: TaskPriority.Medium,
-                    isPublic: t.isPublic,
-                })
-            );
-            this.subtasks.update((list) => [...list, created]);
-            this.syncCounts();
-            this.newSubTitle.set('');
-        } catch (err) {
-            this.message.error(friendlyError(err, 'Không thêm được việc nhỏ.'));
-        } finally {
-            this.addingSub.set(false);
+            this.deleting.set(false);
         }
     }
 

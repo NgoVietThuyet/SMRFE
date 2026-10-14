@@ -20,7 +20,7 @@
     <!-- ── Content area phải ────────────────────────── -->
     <div class="smr-content" [class.smr-content--expanded]="collapsed()">
         <app-top-header [collapsed]="collapsed()" (collapseChange)="onCollapseChange($event)"
-            [showBack]="showBack()" [showSearch]="showSearch()" [showHelp]="showHelp()"
+            [showSearch]="showSearch()" [showHelp]="showHelp()"
             [breadcrumb]="breadcrumb()" (searchChange)="onSearchChange($event)" />
         <main class="smr-page" id="main-content">
             <router-outlet />

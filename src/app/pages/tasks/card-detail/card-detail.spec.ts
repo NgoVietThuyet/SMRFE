@@ -5,26 +5,19 @@ import { provideRouter } from '@angular/router';
 import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
 import { en_US, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { of, throwError } from 'rxjs';
-import { CreateTaskRequest, TaskDetail, TaskListItem, TaskStatus } from '../../../core/models/task.models';
+import { of } from 'rxjs';
+import { TaskDetail, TaskSearchRequest, TaskStatus, UpdateTaskRequest } from '../../../core/models/task.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { MeetingService } from '../../../core/services/meeting.service';
 import { TaskBoardStore } from '../../../core/services/task-board.store';
-import { BOARD, makeTask, TEST_ICONS } from '../../../core/services/task-board.testing';
+import { BOARD, makeTask, pageOf, TEST_ICONS } from '../../../core/services/task-board.testing';
 import { TaskService } from '../../../core/services/task.service';
 import { CardDetail } from './card-detail';
 
-const SUBS = [
-    makeTask({ id: 's1', parentId: 'c1', level: 2, title: 'Sửa URL', status: TaskStatus.Completed }),
-    makeTask({ id: 's2', parentId: 'c1', level: 2, title: 'Viết retry' }),
-];
-
-const CARD: TaskDetail = {
-    ...makeTask({ id: 'c1', title: 'Tích hợp API', childrenCount: 2, completedChildrenCount: 1 }),
-    shares: [],
-    children: SUBS,
-};
+const LIST = makeTask({ id: 'l1', level: 1, parentId: 'w1', title: 'Backend' });
+const CARD: TaskDetail = { ...makeTask({ id: 'c1', parentId: 'l1', title: 'Tích hợp API' }), shares: [], children: [] };
 
 @Component({
     imports: [CardDetail],
@@ -38,12 +31,10 @@ class Host {
 describe('CardDetail', () => {
     let fixture: ComponentFixture<Host>;
     let store: TaskBoardStore;
-    let statusFails: boolean;
-    let created: CreateTaskRequest[];
+    let updates: UpdateTaskRequest[];
 
     beforeEach(async () => {
-        statusFails = false;
-        created = [];
+        updates = [];
         await TestBed.configureTestingModule({
             imports: [Host, NoopAnimationsModule],
             providers: [
@@ -51,16 +42,16 @@ describe('CardDetail', () => {
                 provideNzI18n(en_US),
                 provideNzDateFnsAdapter(),
                 provideNzIcons(TEST_ICONS),
+                NzModalService,
                 {
                     provide: TaskService,
                     useValue: {
                         get: (id: string) => of(id === 'w1' ? BOARD : CARD),
-                        query: () => of({ items: [makeTask({ id: 'c1', childrenCount: 2, completedChildrenCount: 1 })], totalItems: 1, totalPages: 1, page: 1, pageSize: 100, summary: { total: 1, mine: 0, overdue: 0, today: 0 } }),
-                        updateStatus: (id: string, status: number) =>
-                            statusFails ? throwError(() => new Error('Lỗi')) : of(makeTask({ id, parentId: 'c1', level: 2, status })),
-                        create: (p: CreateTaskRequest) => {
-                            created.push(p);
-                            return of(makeTask({ id: 's3', parentId: p.parentId ?? null, level: 2, title: p.title }));
+                        query: (q: TaskSearchRequest) => of(pageOf(q.level === 1 ? [LIST] : [CARD])),
+                        updateStatus: (id: string, status: number) => of({ ...CARD, status }),
+                        update: (_id: string, p: UpdateTaskRequest) => {
+                            updates.push(p);
+                            return of({ ...CARD, ...p });
                         },
                     },
                 },
@@ -77,31 +68,23 @@ describe('CardDetail', () => {
         fixture.detectChanges();
     });
 
-    function detail(): CardDetail {
-        return fixture.debugElement.children[0].componentInstance as CardDetail;
+    function detail(): Record<string, (...args: unknown[]) => Promise<void> | void> {
+        return fixture.debugElement.children[0].componentInstance;
     }
 
-    function sub(id: string): TaskListItem {
-        return SUBS.find((s) => s.id === id)!;
-    }
-
-    it('tick việc nhỏ cập nhật ☑ x/y trên thẻ ngay', async () => {
-        await detail().toggleSubtask(sub('s2'), true);
-        expect(store.card('c1')?.completedChildrenCount).toBe(2);
-        expect(store.card('c1')?.childrenCount).toBe(2);
+    it('đổi trạng thái ở drawer cập nhật thẻ trên bảng', async () => {
+        await detail()['onStatus'](TaskStatus.Completed);
+        expect(store.card('c1')?.status).toBe(TaskStatus.Completed);
     });
 
-    it('lỗi khi tick thì hoàn tác số đếm', async () => {
-        statusFails = true;
-        await detail().toggleSubtask(sub('s2'), true);
-        expect(store.card('c1')?.completedChildrenCount).toBe(1);
+    it('sửa ưu tiên gửi PUT đủ field, không đổi đầu việc cha', async () => {
+        detail()['onPriority'](2);
+        await fixture.whenStable();
+        expect(updates[0]).toEqual(expect.objectContaining({ priority: 2, title: 'Tích hợp API' }));
+        expect(updates[0].parentId).toBeUndefined();
     });
 
-    it('thêm việc nhỏ tạo level=2, parentId=cardId', async () => {
-        const d = detail() as unknown as { newSubTitle: { set(v: string): void } };
-        d.newSubTitle.set('Test model');
-        await detail().addSubtask();
-        expect(created[0]).toEqual(expect.objectContaining({ level: 2, parentId: 'c1', title: 'Test model' }));
-        expect(store.card('c1')?.childrenCount).toBe(3);
+    it('hiện tên đầu việc chứa việc nhỏ', () => {
+        expect(document.body.textContent).toContain('trong đầu việc “Backend”');
     });
 });
