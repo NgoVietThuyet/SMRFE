@@ -1,0 +1,108 @@
+:host {
+    display: block;
+}
+
+.detail-loading {
+    padding: 24px;
+}
+
+.muted {
+    color: #8c8c8c;
+}
+
+.small {
+    font-size: 12px;
+}
+
+.pre-line {
+    white-space: pre-line;
+}
+
+.break-all {
+    word-break: break-all;
+}
+
+.overdue {
+    color: #ff4d4f;
+}
+
+.overview {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.overview-main {
+    flex: 1;
+    min-width: 0;
+
+    ::ng-deep .ant-descriptions-item-label {
+        width: 140px;
+        white-space: nowrap;
+    }
+}
+
+.overview-side {
+    width: 220px;
+    flex-shrink: 0;
+}
+
+.share-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+
+    .room-code {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 1px;
+    }
+}
+
+.agenda {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.add-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    .add-user {
+        flex: 1;
+        min-width: 220px;
+        max-width: 420px;
+    }
+
+    .add-role {
+        width: 140px;
+    }
+}
+
+.file-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.activity {
+    padding-top: 8px;
+}
+
+@media (max-width: 900px) {
+    .overview {
+        flex-direction: column;
+    }
+
+    .overview-side {
+        width: 100%;
+    }
+}

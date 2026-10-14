@@ -1,0 +1,250 @@
+@switch (phase) {
+
+<!-- ===================== Đang tải ===================== -->
+@case ('loading') {
+<div class="center-page"><nz-spin nzSimple nzSize="large"></nz-spin></div>
+}
+
+<!-- ===================== Lỗi / không có quyền ===================== -->
+@case ('error') {
+<div class="center-page">
+    <nz-result nzStatus="403" nzTitle="Không vào được phòng họp" [nzSubTitle]="errorText">
+        <div nz-result-extra><button nz-button nzType="primary" (click)="backToList()">Quay lại</button></div>
+    </nz-result>
+</div>
+}
+
+<!-- ===================== Đã kết thúc / bị hủy / nháp ===================== -->
+@case ('closed') {
+<div class="center-page">
+    <nz-result [nzStatus]="closedState === 'CANCELLED' ? 'warning' : 'info'"
+        [nzTitle]="closedState === 'CANCELLED' ? 'Cuộc họp đã bị hủy' : closedState === 'NOT_READY' ? 'Cuộc họp chưa được phát hành' : 'Cuộc họp đã kết thúc'"
+        [nzSubTitle]="closedText || meeting?.name || ''">
+        <div nz-result-extra>
+            <button nz-button nzType="primary" (click)="backToList()">{{ isGuest ? 'Đóng' : 'Xem chi tiết cuộc họp' }}</button>
+        </div>
+    </nz-result>
+</div>
+}
+
+<!-- ===================== Đã rời / bị mời ra ===================== -->
+@case ('left') {
+<div class="center-page">
+    <nz-result nzStatus="success" nzTitle="Bạn đã rời phòng họp" [nzSubTitle]="meeting?.name || ''">
+        <div nz-result-extra>
+            <button nz-button nzType="primary" (click)="rejoin()"><nz-icon nzType="login" /> Vào lại</button>
+            <button nz-button (click)="backToList()">{{ isGuest ? 'Đóng' : 'Về trang cuộc họp' }}</button>
+        </div>
+    </nz-result>
+</div>
+}
+@case ('kicked') {
+<div class="center-page">
+    <nz-result nzStatus="warning" nzTitle="Chủ trì đã mời bạn ra khỏi phòng"
+        nzSubTitle="Bạn có thể gửi yêu cầu vào lại — chủ trì sẽ duyệt.">
+        <div nz-result-extra>
+            <button nz-button nzType="primary" (click)="rejoin()">Xin vào lại</button>
+            <button nz-button (click)="backToList()">{{ isGuest ? 'Đóng' : 'Về trang cuộc họp' }}</button>
+        </div>
+    </nz-result>
+</div>
+}
+
+<!-- ===================== Chuẩn bị + chờ (cùng nhánh để giữ camera xem trước) / Trong phòng ===================== -->
+@default {
+@if (phase === 'prejoin' || phase === 'waiting') {
+<ng-container *ngTemplateOutlet="lobbyLayout"></ng-container>
+} @else {
+<div class="room">
+    <header class="room-top">
+        <div class="room-title">
+            <span class="name" [title]="meeting?.name">{{ meeting?.name }}</span>
+            @if (elapsed) { <span class="chip">{{ elapsed }}</span> }
+            @if (recording) { <span class="chip rec"><span class="dot"></span> Đang ghi hình</span> }
+            @if (isModerator) { <span class="chip host">Chủ trì</span> }
+            @if (isGuest) { <span class="chip">Khách</span> }
+        </div>
+        <div class="room-top-right">
+            <span class="chip"><nz-icon nzType="team" /> {{ onlineCount }}</span>
+            <span class="chip mono">{{ meeting?.roomCode }}</span>
+        </div>
+    </header>
+
+    <div class="room-body">
+        <main class="stage">
+            <div #jitsiHost class="jitsi-host" [class.behind]="whiteboardOpen"></div>
+            @if (phase === 'connecting') {
+            <div class="stage-overlay"><nz-spin nzSimple nzSize="large"></nz-spin><span>Đang vào phòng…</span></div>
+            }
+            @if (jitsiError) {
+            <div class="stage-overlay">
+                <nz-icon nzType="warning" class="big" />
+                <span>{{ jitsiError }}</span>
+                <button nz-button (click)="jitsiError = ''">Đóng</button>
+            </div>
+            }
+            @if (whiteboardOpen) {
+            <div class="whiteboard-layer">
+                <app-room-whiteboard [meetingId]="meetingId" [userName]="userName" [isModerator]="isModerator"
+                    (closed)="whiteboardOpen = false"></app-room-whiteboard>
+            </div>
+            }
+            @if (captions.length || captionHint) {
+            <div class="captions" aria-live="polite">
+                @for (c of captions; track c.speaker) {
+                <div class="caption"><b>{{ c.name }}:</b> {{ c.text }}</div>
+                }
+                @if (!captions.length && captionHint) {
+                <div class="caption caption-hint">{{ captionHint }}</div>
+                }
+            </div>
+            }
+        </main>
+
+        @if (panelOpen && phase === 'room') {
+        <aside class="side">
+            <div class="side-tabs" role="tablist">
+                <button role="tab" [class.active]="panelTab === 'people'" (click)="panelTab = 'people'">
+                    Người tham gia
+                    @if (lobbyCount && isModerator) { <nz-badge nzStandalone [nzCount]="lobbyCount" nzSize="small"></nz-badge> }
+                </button>
+                <button role="tab" [class.active]="panelTab === 'chat'" (click)="panelTab = 'chat'">
+                    Chat @if (unreadChat) { <nz-badge nzStandalone [nzCount]="unreadChat" nzSize="small"></nz-badge> }
+                </button>
+                <button role="tab" [class.active]="panelTab === 'files'" (click)="panelTab = 'files'">Tài liệu</button>
+                @if (!isGuest) {
+                <button role="tab" [class.active]="panelTab === 'tasks'" (click)="panelTab = 'tasks'">Công việc</button>
+                }
+                <button class="side-close" (click)="panelOpen = false" aria-label="Đóng panel"><nz-icon nzType="close" /></button>
+            </div>
+            <div class="side-body">
+                <!-- Giữ panel đã mở trong DOM để không mất tin nhắn / trạng thái khi chuyển tab -->
+                <app-room-people-panel [hidden]="panelTab !== 'people'" [meetingId]="meetingId" [userName]="userName"
+                    [isModerator]="isModerator" [isGuest]="isGuest" (privateChat)="onPrivateChat($event)"
+                    (counts)="onlineCount = $event.online; lobbyCount = $event.lobby"></app-room-people-panel>
+                <app-room-chat-panel [hidden]="panelTab !== 'chat'" [meetingId]="meetingId" [userName]="userName"
+                    [isGuest]="isGuest" [isModerator]="isModerator" [chatEnabled]="settings.chatEnabled"
+                    [active]="panelTab === 'chat'" [recipient]="privateTo" (unread)="unreadChat = $event"></app-room-chat-panel>
+                @if (panelTab === 'files') {
+                <app-room-files-panel [meetingId]="meetingId" [canUpload]="canUploadFiles"></app-room-files-panel>
+                }
+                @if (panelTab === 'tasks' && !isGuest) {
+                <app-room-tasks-panel [meetingId]="meetingId"></app-room-tasks-panel>
+                }
+            </div>
+        </aside>
+        }
+    </div>
+
+    <footer class="controls" role="toolbar" aria-label="Điều khiển cuộc họp">
+        <div class="controls-left">
+            <span class="clock">{{ now | date: 'HH:mm' }}</span>
+        </div>
+        <div class="controls-center">
+            <button class="ctl" [class.off]="audioMuted" (click)="toggleAudio()" nz-tooltip
+                [nzTooltipTitle]="audioMuted ? 'Bật micro' : 'Tắt micro'" [attr.aria-label]="audioMuted ? 'Bật micro' : 'Tắt micro'">
+                <nz-icon [nzType]="audioMuted ? 'audio-muted' : 'audio'" />
+            </button>
+            <button class="ctl" [class.off]="videoMuted" (click)="toggleVideo()" nz-tooltip
+                [nzTooltipTitle]="videoMuted ? 'Bật camera' : 'Tắt camera'" [attr.aria-label]="videoMuted ? 'Bật camera' : 'Tắt camera'">
+                <nz-icon [nzType]="videoMuted ? 'eye-invisible' : 'video-camera'" />
+            </button>
+            @if (canShare) {
+            <button class="ctl" [class.on]="sharing" (click)="toggleShare()" nz-tooltip nzTooltipTitle="Chia sẻ màn hình"
+                aria-label="Chia sẻ màn hình"><nz-icon nzType="desktop" /></button>
+            }
+            @if (canCaption) {
+            <button class="ctl" [class.on]="captionsOn" (click)="toggleCaptions()" nz-tooltip
+                [nzTooltipTitle]="captionsOn ? 'Tắt phụ đề' : 'Bật phụ đề (tiếng Việt)'" aria-label="Phụ đề">
+                <nz-icon nzType="font-size" />
+            </button>
+            }
+            @if (canWhiteboard) {
+            <button class="ctl" [class.on]="whiteboardOpen" (click)="toggleWhiteboard()" nz-tooltip nzTooltipTitle="Bảng trắng"
+                aria-label="Bảng trắng"><nz-icon nzType="highlight" /></button>
+            }
+            @if (canRecordHere) {
+            <button class="ctl" [class.rec]="recording" (click)="toggleRecording()" nz-tooltip
+                [nzTooltipTitle]="recording ? 'Dừng ghi hình' : 'Ghi hình'" aria-label="Ghi hình">
+                <nz-icon nzType="video-camera-add" />
+            </button>
+            }
+            <button class="ctl leave" nz-popconfirm nzPopconfirmTitle="Rời phòng họp?" (nzOnConfirm)="leave()"
+                nz-tooltip nzTooltipTitle="Rời phòng" aria-label="Rời phòng"><nz-icon nzType="logout" /></button>
+            @if (isModerator) {
+            <button nz-button nzDanger nzType="primary" class="end" nz-popconfirm
+                nzPopconfirmTitle="Kết thúc cuộc họp cho tất cả mọi người?" (nzOnConfirm)="endMeeting()">Kết thúc</button>
+            }
+        </div>
+        <div class="controls-right">
+            <button class="ctl small" [class.on]="panelOpen && panelTab === 'people'" (click)="openPanel('people')"
+                nz-tooltip nzTooltipTitle="Người tham gia" aria-label="Người tham gia">
+                <nz-badge [nzCount]="isModerator ? lobbyCount : 0" nzSize="small"><nz-icon nzType="team" class="w" /></nz-badge>
+            </button>
+            <button class="ctl small" [class.on]="panelOpen && panelTab === 'chat'" (click)="openPanel('chat')"
+                nz-tooltip nzTooltipTitle="Chat" aria-label="Chat">
+                <nz-badge [nzCount]="unreadChat" nzSize="small"><nz-icon nzType="message" class="w" /></nz-badge>
+            </button>
+            <button class="ctl small" [class.on]="panelOpen && panelTab === 'files'" (click)="openPanel('files')"
+                nz-tooltip nzTooltipTitle="Tài liệu" aria-label="Tài liệu"><nz-icon nzType="paper-clip" /></button>
+        </div>
+    </footer>
+</div>
+}
+}
+}
+
+<!-- Bố cục chung cho màn chuẩn bị và màn chờ -->
+<ng-template #lobbyLayout>
+    <div class="lobby-page">
+        <div class="lobby-card">
+            <div class="lobby-left">
+                <app-room-prejoin [displayName]="displayName" [busy]="busy" (choice)="onChoice($event)" #pre></app-room-prejoin>
+            </div>
+            <div class="lobby-right">
+                <div class="lobby-brand">SMART MEETING</div>
+                <h2 class="lobby-name">{{ meeting?.name }}</h2>
+                @if (startText) {
+                <div class="lobby-meta"><nz-icon nzType="clock-circle" /> {{ startText | date: 'HH:mm, dd/MM/yyyy' }}</div>
+                }
+                <div class="lobby-meta"><nz-icon nzType="user" /> Chủ trì: {{ meeting?.hostName || '---' }}</div>
+                <div class="lobby-meta"><nz-icon nzType="team" /> {{ meeting?.participantCount }} người được mời</div>
+                <div class="lobby-meta">Bạn vào với tên <b>{{ displayName }}</b> @if (isGuest) { (khách) }</div>
+
+                @if (phase === 'waiting') {
+                <div class="wait-box" [class.rejected]="waitState === 'REJECTED'">
+                    @if (waitState === 'REJECTED') {
+                    <nz-icon nzType="stop" class="wait-icon" />
+                    <div>
+                        <b>Chủ trì chưa cho bạn vào phòng.</b>
+                        <div class="muted">Bạn có thể gửi lại yêu cầu.</div>
+                    </div>
+                    } @else {
+                    <nz-spin nzSimple nzSize="small"></nz-spin>
+                    <div>
+                        <b>{{ waitState === 'WAIT_HOST' ? 'Đang chờ chủ trì bắt đầu cuộc họp' : 'Đang chờ chủ trì cho vào phòng' }}</b>
+                        <div class="muted">Trang sẽ tự vào phòng khi được phép. Đừng đóng trang này.</div>
+                    </div>
+                    }
+                </div>
+                <div class="lobby-actions">
+                    @if (waitState === 'REJECTED') {
+                    <button nz-button nzType="primary" nzSize="large" [nzLoading]="busy" (click)="requestAgain()">Xin vào lại</button>
+                    }
+                    <button nz-button nzSize="large" (click)="cancelWaiting()">Quay lại</button>
+                </div>
+                } @else {
+                @if (settings.lobbyEnabled && !isHost) {
+                <nz-alert class="mb" nzType="info" nzShowIcon nzMessage="Cuộc họp bật phòng chờ — chủ trì sẽ duyệt trước khi bạn vào."></nz-alert>
+                }
+                <div class="lobby-actions">
+                    <button nz-button nzType="primary" nzSize="large" [nzLoading]="busy" (click)="pre.join()">
+                        <nz-icon [nzType]="isHost && meeting?.status === MeetingStatus.Scheduled ? 'play-circle' : 'login'" /> {{ primaryLabel }}
+                    </button>
+                    <button nz-button nzSize="large" (click)="backToList()">Hủy</button>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</ng-template>

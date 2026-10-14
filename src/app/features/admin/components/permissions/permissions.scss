@@ -1,0 +1,125 @@
+.perm-layout {
+    display: flex;
+    height: 100vh;
+}
+
+.target-panel {
+    width: 300px;
+    flex-shrink: 0;
+    border-right: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    padding-top: 8px;
+}
+
+.target-search {
+    padding: 0 12px 8px;
+}
+
+.target-list {
+    height: calc(100vh - 110px);
+    overflow: auto;
+    padding: 0 6px;
+}
+
+.target-item {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &:hover {
+        background: #f5f5f5;
+    }
+
+    &.is-selected {
+        background: #E7E6E9;
+        font-weight: 600;
+    }
+}
+
+.target-name {
+    font-size: 13px;
+}
+
+.target-sub {
+    font-size: 12px;
+    color: #8c8c8c;
+    font-weight: 400;
+}
+
+.matrix-panel {
+    flex: 1;
+    min-width: 0;
+}
+
+.matrix-scroll {
+    height: calc(100vh - 230px);
+    overflow: auto;
+}
+
+.empty-state {
+    padding-top: 15vh;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.group-name {
+    font-weight: 600;
+}
+
+.group-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+}
+
+.perm-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 8px 6px 24px;
+    border-bottom: 1px dashed #f0f0f0;
+
+    &.is-changed {
+        background: #fffbe6;
+    }
+}
+
+.perm-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.perm-code {
+    font-size: 11px;
+    color: #8c8c8c;
+}
+
+:host ::ng-deep .target-tabs .ant-tabs-nav {
+    padding: 0 12px;
+}
+
+@media (max-width: 900px) {
+    .perm-layout {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .target-panel {
+        width: 100%;
+    }
+
+    .target-list {
+        height: 260px;
+    }
+}

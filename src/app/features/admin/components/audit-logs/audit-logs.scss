@@ -1,0 +1,45 @@
+.filter-category {
+    width: 140px;
+}
+
+.filter-result {
+    width: 130px;
+}
+
+.filter-actor {
+    width: 150px;
+}
+
+.filter-keyword {
+    width: 180px;
+}
+
+.clickable-row {
+    cursor: pointer;
+}
+
+.break-all {
+    word-break: break-all;
+}
+
+.raw-code {
+    margin-left: 6px;
+    font-size: 11px;
+    color: #8c8c8c;
+}
+
+.payload-title {
+    margin: 16px 0 8px;
+    font-weight: 600;
+}
+
+.payload {
+    background: #f5f5f5;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 12px;
+    max-height: 50vh;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}

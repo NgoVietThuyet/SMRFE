@@ -1,0 +1,111 @@
+<nz-page-header>
+    <nz-page-header-title>CẤU HÌNH HỆ THỐNG</nz-page-header-title>
+    <nz-page-header-subtitle>Giới hạn tài liệu, bản ghi và mẫu biên bản</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            @if (isDirty) {
+            <button *nzSpaceItem nz-button (click)="discard()"><nz-icon nzType="rollback" /> Bỏ thay đổi</button>
+            }
+            <button *nzSpaceItem nz-button nzType="primary" [disabled]="!isDirty" [nzLoading]="isSaving" (click)="save()">
+                <nz-icon nzType="save" /> Lưu cấu hình
+            </button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <div class="settings-body">
+            @if (settings) {
+            <div nz-row [nzGutter]="[16, 16]">
+                <div nz-col [nzXs]="24" [nzLg]="12">
+                    <nz-card nzTitle="Tài liệu cuộc họp" class="setting-card">
+                        <label class="text-control" for="max-upload">Dung lượng tối đa mỗi tệp (MB)</label>
+                        <nz-input-number id="max-upload" class="space-control full-width"
+                            [(ngModel)]="settings.maxUploadSizeMb" [nzMin]="1" [nzMax]="2048" [nzStep]="10"></nz-input-number>
+
+                        <label class="text-control">Loại tệp được phép tải lên</label>
+                        <nz-select class="space-control full-width" nzMode="tags" [(ngModel)]="settings.allowedExtensions"
+                            nzPlaceHolder="Chọn hoặc gõ đuôi tệp, ví dụ .pdf" aria-label="Loại tệp được phép">
+                            @for (ext of extensionOptions; track ext) {
+                            <nz-option [nzValue]="ext" [nzLabel]="ext"></nz-option>
+                            }
+                        </nz-select>
+                        <div class="hint">Đuôi có thể thực thi (.exe, .js, .html, .svg...) luôn bị chặn.</div>
+                    </nz-card>
+                </div>
+                <div nz-col [nzXs]="24" [nzLg]="12">
+                    <nz-card nzTitle="Bản ghi cuộc họp" class="setting-card">
+                        <label class="text-control" for="retention">Số ngày lưu bản ghi</label>
+                        <nz-input-number id="retention" class="space-control full-width"
+                            [(ngModel)]="settings.recordingRetentionDays" [nzMin]="1" [nzMax]="3650"></nz-input-number>
+                        <div class="hint">Bản ghi quá hạn sẽ được dọn khi có tác vụ dọn dẹp (làm cùng P10).</div>
+
+                        <nz-divider></nz-divider>
+                        <nz-alert nzType="info" nzShowIcon
+                            nzMessage="Cấu hình kết nối Jitsi, MinIO, LLM, cơ sở dữ liệu và khóa JWT nằm trong biến môi trường của máy chủ, không chỉnh ở đây."></nz-alert>
+                    </nz-card>
+                </div>
+            </div>
+            }
+
+            <nz-card nzTitle="Mẫu biên bản (DOCX)" [nzExtra]="uploadBtn" class="setting-card">
+                <ng-template #uploadBtn>
+                    <nz-upload nzAccept=".docx" [nzShowUploadList]="false" [nzBeforeUpload]="beforeUpload"
+                        [nzDisabled]="isUploading">
+                        <button nz-button [nzLoading]="isUploading"><nz-icon nzType="upload" /> Tải lên mẫu</button>
+                    </nz-upload>
+                </ng-template>
+
+                <div class="placeholder-line">
+                    Mẫu phải chứa đủ các trường:
+                    @for (p of placeholders; track p) {
+                    <code>{{ p }}</code>
+                    }
+                </div>
+
+                <nz-table #tpl nzBordered nzSize="small" [nzData]="templates" [nzShowPagination]="templates.length > 10"
+                    [nzPageSize]="10">
+                    <thead>
+                        <tr>
+                            <th nzAlign="center" nzWidth="60px">STT</th>
+                            <th>Tên tệp</th>
+                            <th nzAlign="right" nzWidth="100px">Dung lượng</th>
+                            <th nzWidth="150px">Người tải lên</th>
+                            <th nzWidth="150px">Ngày tải lên</th>
+                            <th nzAlign="center" nzWidth="120px">Mặc định</th>
+                            <th nzAlign="center" nzWidth="140px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (t of tpl.data; track t.id; let i = $index) {
+                        <tr>
+                            <td nzAlign="center">{{ i + 1 }}</td>
+                            <td><a (click)="download(t)">{{ t.fileName }}</a></td>
+                            <td nzAlign="right">{{ fileSize(t.fileSize) }}</td>
+                            <td>{{ t.createBy }}</td>
+                            <td>{{ createdAt(t) | date: 'dd/MM/yyyy HH:mm' }}</td>
+                            <td nzAlign="center">
+                                @if (t.isDefault) {
+                                <nz-tag nzColor="success"><nz-icon nzType="check-circle" /> Mặc định</nz-tag>
+                                } @else {
+                                <a (click)="setDefault(t)">Đặt mặc định</a>
+                                }
+                            </td>
+                            <td nzAlign="center">
+                                <button nz-button nzType="text" nzSize="small" nz-tooltip nzTooltipTitle="Tải xuống"
+                                    aria-label="Tải xuống" (click)="download(t)"><nz-icon nzType="download" /></button>
+                                @if (!t.isDefault) {
+                                <button nz-button nzType="text" nzSize="small" nzDanger nz-popconfirm
+                                    nzPopconfirmTitle="Xóa mẫu biên bản này?" (nzOnConfirm)="remove(t)"
+                                    aria-label="Xóa mẫu"><nz-icon nzType="delete" /></button>
+                                }
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </nz-table>
+                @if (!templates.length) {
+                <div class="hint">Chưa có mẫu nào. Mẫu đầu tiên tải lên sẽ tự thành mẫu mặc định.</div>
+                }
+            </nz-card>
+        </div>
+    </nz-page-header-content>
+</nz-page-header>

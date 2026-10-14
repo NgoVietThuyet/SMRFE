@@ -1,0 +1,145 @@
+<nz-page-header>
+    <nz-page-header-title>THỐNG KÊ</nz-page-header-title>
+    <nz-page-header-subtitle>Số liệu cuộc họp và công việc toàn hệ thống</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <nz-range-picker *nzSpaceItem [(ngModel)]="range" nzFormat="dd/MM/yyyy" [nzAllowClear]="false"
+                (ngModelChange)="load()" aria-label="Khoảng thời gian"></nz-range-picker>
+            <nz-tree-select *nzSpaceItem class="filter-org" [nzNodes]="orgTree" [(ngModel)]="organizationId"
+                (ngModelChange)="load()" nzAllowClear nzShowSearch nzPlaceHolder="Tất cả phòng ban"
+                [nzDropdownStyle]="{ 'max-height': '320px' }" aria-label="Lọc phòng ban"></nz-tree-select>
+            <nz-input-group *nzSpaceItem nzCompact class="export-group">
+                <input nz-input [(ngModel)]="exportCode" placeholder="Mã phòng" aria-label="Mã phòng cần xuất tham dự"
+                    (keydown.enter)="exportAttendance()" />
+                <button nz-button [nzLoading]="exporting" (click)="exportAttendance()" nz-tooltip
+                    nzTooltipTitle="Xuất XLSX lịch sử tham dự của một cuộc họp"><nz-icon nzType="file-excel" /> Xuất tham dự</button>
+            </nz-input-group>
+            <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới" (click)="reset()">
+                <nz-icon nzType="sync" nzTheme="outline" />
+            </button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <div class="dash-body">
+            <!-- ===== Thẻ số liệu ===== -->
+            <div nz-row [nzGutter]="[16, 16]">
+                <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+                    <nz-card class="stat-card stat-blue">
+                        <div class="stat-content">
+                            <div class="stat-icon"><nz-icon nzType="video-camera" /></div>
+                            <div>
+                                <div class="stat-value">{{ meeting?.meetingCount ?? 0 }}</div>
+                                <div class="stat-label">Cuộc họp</div>
+                            </div>
+                        </div>
+                    </nz-card>
+                </div>
+                <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+                    <nz-card class="stat-card stat-green">
+                        <div class="stat-content">
+                            <div class="stat-icon"><nz-icon nzType="clock-circle" /></div>
+                            <div>
+                                <div class="stat-value">{{ meeting?.totalHours ?? 0 }}</div>
+                                <div class="stat-label">Giờ họp thực tế</div>
+                            </div>
+                        </div>
+                    </nz-card>
+                </div>
+                <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+                    <nz-card class="stat-card stat-purple">
+                        <div class="stat-content">
+                            <div class="stat-icon"><nz-icon nzType="team" /></div>
+                            <div>
+                                <div class="stat-value">{{ meeting?.participantCount ?? 0 }}</div>
+                                <div class="stat-label">Người được mời · {{ attendanceRate }}% có tham dự</div>
+                            </div>
+                        </div>
+                    </nz-card>
+                </div>
+                <div nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+                    <nz-card class="stat-card stat-red">
+                        <div class="stat-content">
+                            <div class="stat-icon"><nz-icon nzType="warning" /></div>
+                            <div>
+                                <div class="stat-value">{{ task?.overdue ?? 0 }}</div>
+                                <div class="stat-label">Việc quá hạn / {{ task?.total ?? 0 }} việc</div>
+                            </div>
+                        </div>
+                    </nz-card>
+                </div>
+            </div>
+
+            @if (hr) {
+            <div class="hr-line">
+                <nz-icon nzType="apartment" /> {{ hr.organizationCount }} phòng ban ·
+                <nz-icon nzType="user" /> {{ hr.employeeCount }} nhân sự ·
+                {{ hr.activeAccountCount }} tài khoản hoạt động · {{ hr.lockedAccountCount }} tài khoản bị khóa
+            </div>
+            }
+
+            <!-- ===== Biểu đồ ===== -->
+            <div nz-row [nzGutter]="[16, 16]">
+                <div nz-col [nzXs]="24" [nzLg]="12">
+                    <nz-card nzTitle="Cuộc họp theo tuần" [nzLoading]="loading" class="chart-card">
+                        @if (meeting?.byWeek?.length) {
+                        <apx-chart [series]="weekSeries" [chart]="weekChart" [xaxis]="weekXAxis" [yaxis]="weekYAxis"
+                            [plotOptions]="weekPlot" [colors]="weekColors"></apx-chart>
+                        } @else {
+                        <nz-empty nzNotFoundContent="Không có cuộc họp trong khoảng thời gian này"></nz-empty>
+                        }
+                    </nz-card>
+                </div>
+                <div nz-col [nzXs]="24" [nzMd]="12" [nzLg]="6">
+                    <nz-card nzTitle="Trạng thái cuộc họp" [nzLoading]="loading" class="chart-card">
+                        @if (hasData(meetingStatusSeries)) {
+                        <apx-chart [series]="meetingStatusSeries" [chart]="donutChart" [labels]="meetingStatusLabels"
+                            [colors]="meetingStatusColors" [legend]="donutLegend" [dataLabels]="donutLabels"></apx-chart>
+                        } @else {
+                        <nz-empty nzNotFoundContent="Chưa có dữ liệu"></nz-empty>
+                        }
+                    </nz-card>
+                </div>
+                <div nz-col [nzXs]="24" [nzMd]="12" [nzLg]="6">
+                    <nz-card nzTitle="Công việc" [nzLoading]="loading" class="chart-card">
+                        @if (hasData(taskSeries)) {
+                        <apx-chart [series]="taskSeries" [chart]="donutChart" [labels]="taskLabels"
+                            [colors]="taskColors" [legend]="donutLegend" [dataLabels]="donutLabels"></apx-chart>
+                        } @else {
+                        <nz-empty nzNotFoundContent="Chưa có dữ liệu"></nz-empty>
+                        }
+                    </nz-card>
+                </div>
+            </div>
+
+            <!-- ===== Theo phòng ban ===== -->
+            <nz-card nzTitle="Theo phòng ban của chủ trì" [nzLoading]="loading">
+                <nz-table #org nzBordered nzSize="small" [nzData]="meeting?.byOrganization ?? []"
+                    [nzShowPagination]="(meeting?.byOrganization?.length ?? 0) > 10" [nzPageSize]="10">
+                    <thead>
+                        <tr>
+                            <th nzAlign="center" nzWidth="60px">STT</th>
+                            <th>Phòng ban</th>
+                            <th nzAlign="right" nzWidth="140px">Số cuộc họp</th>
+                            <th nzAlign="right" nzWidth="140px">Giờ họp</th>
+                            <th nzAlign="right" nzWidth="160px">Người tham gia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (row of org.data; track row.organizationId; let i = $index) {
+                        <tr>
+                            <td nzAlign="center">{{ i + 1 }}</td>
+                            <td>{{ row.organizationName }}</td>
+                            <td nzAlign="right">{{ row.meetingCount }}</td>
+                            <td nzAlign="right">{{ row.hours }}</td>
+                            <td nzAlign="right">{{ row.participantCount }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </nz-table>
+            </nz-card>
+
+            <nz-alert nzType="info" nzShowIcon
+                nzMessage="Xuất danh sách tham dự (XLSX) và tỷ lệ xử lý AI sẽ có khi làm xong phòng họp (P10) và biên bản (P13)."></nz-alert>
+        </div>
+    </nz-page-header-content>
+</nz-page-header>

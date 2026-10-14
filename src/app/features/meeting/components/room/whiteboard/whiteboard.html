@@ -1,0 +1,50 @@
+<div class="wb">
+    <div class="wb-toolbar" role="toolbar" aria-label="Công cụ bảng trắng">
+        <nz-radio-group [(ngModel)]="tool" nzButtonStyle="solid" nzSize="small" [nzDisabled]="!canDraw">
+            <label nz-radio-button nzValue="pen" nz-tooltip nzTooltipTitle="Bút"><nz-icon nzType="edit" /></label>
+            <label nz-radio-button nzValue="marker" nz-tooltip nzTooltipTitle="Bút dạ quang"><nz-icon nzType="highlight" /></label>
+            <label nz-radio-button nzValue="eraser" nz-tooltip nzTooltipTitle="Tẩy"><nz-icon nzType="clear" /></label>
+            <label nz-radio-button nzValue="line" nz-tooltip nzTooltipTitle="Đường thẳng"><nz-icon nzType="line" /></label>
+            <label nz-radio-button nzValue="rect" nz-tooltip nzTooltipTitle="Hình chữ nhật"><nz-icon nzType="border" /></label>
+            <label nz-radio-button nzValue="ellipse" nz-tooltip nzTooltipTitle="Hình tròn"><nz-icon nzType="clock-circle" /></label>
+        </nz-radio-group>
+
+        <div class="wb-colors">
+            @for (c of palette; track c) {
+            <button type="button" class="wb-color" [class.active]="color === c" [style.background]="c" [disabled]="!canDraw"
+                (click)="color = c; tool === 'eraser' && (tool = 'pen')" [attr.aria-label]="'Màu ' + c"></button>
+            }
+        </div>
+
+        <nz-select class="wb-size" nzSize="small" [(ngModel)]="size" [nzDisabled]="!canDraw" aria-label="Độ dày nét">
+            @for (s of sizes; track s.v) { <nz-option [nzValue]="s.v" [nzLabel]="s.label"></nz-option> }
+        </nz-select>
+
+        <span class="wb-spacer"></span>
+
+        <button nz-button nzSize="small" (click)="undo()" [disabled]="!canDraw" nz-tooltip nzTooltipTitle="Hoàn tác nét của tôi">
+            <nz-icon nzType="undo" />
+        </button>
+        @if (isModerator) {
+        <button nz-button nzSize="small" nzDanger nz-popconfirm nzPopconfirmTitle="Xoá toàn bộ bảng trắng?"
+            (nzOnConfirm)="clear()" nz-tooltip nzTooltipTitle="Xoá bảng"><nz-icon nzType="delete" /></button>
+        <button nz-button nzSize="small" (click)="toggleLock()" nz-tooltip
+            [nzTooltipTitle]="locked ? 'Mở khóa cho mọi người vẽ' : 'Khóa — chỉ chủ trì vẽ'">
+            <nz-icon [nzType]="locked ? 'lock' : 'unlock'" />
+        </button>
+        }
+        <button nz-button nzSize="small" [nzLoading]="savingPng" (click)="savePng()" nz-tooltip nzTooltipTitle="Lưu ảnh vào Tài liệu">
+            <nz-icon nzType="picture" />
+        </button>
+        <button nz-button nzSize="small" (click)="closed.emit()" aria-label="Đóng bảng trắng"><nz-icon nzType="close" /></button>
+    </div>
+
+    <div class="wb-stage" #stage>
+        <canvas #canvas [class.locked]="!canDraw" (pointerdown)="onDown($event)" (pointermove)="onMove($event)"
+            (pointerup)="onUp()" (pointercancel)="onUp()" aria-label="Bảng trắng"></canvas>
+        @if (loading) { <div class="wb-overlay"><nz-spin nzSimple></nz-spin></div> }
+        @if (locked) {
+        <div class="wb-lock-badge"><nz-icon nzType="lock" /> {{ isModerator ? 'Đã khóa — chỉ chủ trì vẽ' : 'Chủ trì đã khóa bảng trắng' }}</div>
+        }
+    </div>
+</div>

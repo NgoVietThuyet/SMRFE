@@ -1,0 +1,247 @@
+<div class="accounts-layout">
+    <!-- ===== Trái: cây phòng ban để lọc ===== -->
+    <aside class="org-panel">
+        <div class="org-panel-head">
+            <span class="org-panel-title">Phòng ban</span>
+            @if (filter.organizationId) {
+            <a (click)="clearOrg()">Tất cả</a>
+            }
+        </div>
+        <div class="org-panel-body">
+            <nz-tree [nzData]="orgTree" nzBlockNode [nzSelectedKeys]="filter.organizationId ? [filter.organizationId] : []"
+                (nzClick)="onOrgClick($event)"></nz-tree>
+        </div>
+    </aside>
+
+    <!-- ===== Phải: danh sách tài khoản ===== -->
+    <section class="account-panel">
+        <nz-page-header>
+            <nz-page-header-title>TÀI KHOẢN</nz-page-header-title>
+            <nz-page-header-subtitle>{{ selectedOrgName }}</nz-page-header-subtitle>
+            <nz-page-header-extra>
+                <nz-space>
+                    <nz-select *nzSpaceItem class="filter-title" [(ngModel)]="filter.titleCode"
+                        (ngModelChange)="searchFirstPage()" nzAllowClear nzShowSearch nzPlaceHolder="Chức danh"
+                        aria-label="Lọc chức danh">
+                        @for (t of titles; track t.code) {
+                        <nz-option [nzValue]="t.code" [nzLabel]="t.name"></nz-option>
+                        }
+                    </nz-select>
+                    <nz-select *nzSpaceItem class="filter-status" [(ngModel)]="filter.active"
+                        (ngModelChange)="searchFirstPage()" nzAllowClear nzPlaceHolder="Trạng thái"
+                        aria-label="Lọc trạng thái">
+                        <nz-option [nzValue]="true" nzLabel="Hoạt động"></nz-option>
+                        <nz-option [nzValue]="false" nzLabel="Đã khóa"></nz-option>
+                    </nz-select>
+                    <input *nzSpaceItem nz-input placeholder="Tài khoản, họ tên, email" aria-label="Tìm tài khoản"
+                        [(ngModel)]="filter.keyword" (keydown)="onKeydownSearch($event)" />
+                    <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới"
+                        (click)="reset()">
+                        <nz-icon nzType="sync" nzTheme="outline" />
+                    </button>
+                    <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Tìm kiếm" aria-label="Tìm kiếm"
+                        (click)="searchFirstPage()">
+                        <nz-icon nzType="search" nzTheme="outline" />
+                    </button>
+                    <button *nzSpaceItem nz-button nzType="primary" (click)="open(null)">
+                        <nz-icon nzType="plus" nzTheme="outline" />Thêm mới
+                    </button>
+                </nz-space>
+            </nz-page-header-extra>
+            <nz-page-header-content>
+                <nz-table #list nzBordered [nzData]="data.data" nzSize="small" [nzFrontPagination]="false"
+                    [nzShowPagination]="false" [nzScroll]="{ y: 'calc(100vh - 226px)', x: '1250px' }">
+                    <thead>
+                        <tr>
+                            <th nzAlign="center" nzWidth="56px">STT</th>
+                            <th nzWidth="150px">Tài khoản</th>
+                            <th nzWidth="180px">Họ tên</th>
+                            <th nzWidth="210px">Email</th>
+                            <th>Phòng ban</th>
+                            <th nzWidth="160px">Chức danh</th>
+                            <th nzAlign="center" nzWidth="100px">Vai trò</th>
+                            <th nzAlign="center" nzWidth="120px">Trạng thái</th>
+                            <th nzWidth="140px">Đăng nhập gần nhất</th>
+                            <th nzAlign="center" nzWidth="60px" nzRight></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of list.data; let i = index; trackBy: trackByUser">
+                            <td nzAlign="center">{{ (data.currentPage - 1) * data.pageSize + i + 1 }}</td>
+                            <td><a (click)="open(item)">{{ item.userName }}</a></td>
+                            <td>{{ item.fullName }}</td>
+                            <td class="break-all">{{ item.email }}</td>
+                            <td>{{ item.organizationName || '---' }}</td>
+                            <td>{{ item.titleName || '---' }}</td>
+                            <td nzAlign="center">
+                                <nz-tag [nzColor]="isAdmin(item) ? 'gold' : 'default'">{{ isAdmin(item) ? 'Admin' : 'User' }}</nz-tag>
+                            </td>
+                            <td nzAlign="center">
+                                <nz-tag [nzColor]="item.isActive ? 'success' : 'error'">
+                                    <nz-icon [nzType]="item.isActive ? 'check-circle' : 'close-circle'" />
+                                    <span>{{ item.isActive ? 'Hoạt động' : 'Đã khóa' }}</span>
+                                </nz-tag>
+                                @if (item.mustChangePassword) {
+                                <nz-icon nzType="key" class="must-change" nz-tooltip
+                                    nzTooltipTitle="Đang dùng mật khẩu tạm, phải đổi khi đăng nhập" />
+                                }
+                            </td>
+                            <td>{{ item.lastLoginAt ? (utc(item.lastLoginAt) | date: 'dd/MM/yyyy HH:mm') : 'Chưa đăng nhập' }}</td>
+                            <td nzAlign="center" nzRight>
+                                <button nz-button nzType="text" nzSize="small" nz-dropdown [nzDropdownMenu]="rowMenu"
+                                    nzTrigger="click" nzPlacement="bottomRight" aria-label="Thao tác">
+                                    <nz-icon nzType="more" />
+                                </button>
+                                <nz-dropdown-menu #rowMenu="nzDropdownMenu">
+                                    <ul nz-menu>
+                                        <li nz-menu-item (click)="open(item)"><nz-icon nzType="edit" />&nbsp; Sửa thông tin</li>
+                                        <li nz-menu-item (click)="openAction('transfer', item)"><nz-icon nzType="apartment" />&nbsp; Điều chuyển phòng ban</li>
+                                        <li nz-menu-item (click)="openAction('title', item)"><nz-icon nzType="idcard" />&nbsp; Đổi chức danh</li>
+                                        <li nz-menu-item nz-popconfirm nzPopconfirmTitle="Tạo mật khẩu tạm mới cho tài khoản này?"
+                                            (nzOnConfirm)="resetPassword(item)"><nz-icon nzType="key" />&nbsp; Đặt lại mật khẩu</li>
+                                        <li nz-menu-divider></li>
+                                        @if (item.isActive) {
+                                        <li nz-menu-item nzDanger [nzDisabled]="item.userName === currentUser"
+                                            (click)="item.userName !== currentUser && openAction('lock', item)">
+                                            <nz-icon nzType="lock" />&nbsp; {{ item.userName === currentUser ? 'Không thể tự khóa' : 'Khóa tài khoản' }}
+                                        </li>
+                                        } @else {
+                                        <li nz-menu-item (click)="openAction('unlock', item)"><nz-icon nzType="unlock" />&nbsp; Mở khóa</li>
+                                        }
+                                    </ul>
+                                </nz-dropdown-menu>
+                            </td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-page-header-content>
+        </nz-page-header>
+        <div class="paging-container">
+            <div>Tổng {{ data.totalRecord }} bản ghi</div>
+            <nz-pagination [nzPageIndex]="data.currentPage || 1" [nzTotal]="data.totalRecord" nzShowSizeChanger
+                [nzPageSize]="filter.pageSize" nzShowQuickJumper (nzPageIndexChange)="pageIndexChange($event)"
+                (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+        </div>
+    </section>
+</div>
+
+<!-- ===== Drawer thêm/sửa ===== -->
+<nz-drawer [nzWidth]="480" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzMask]="!isEdit"
+    [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA TÀI KHOẢN' : 'THÊM TÀI KHOẢN'" (nzOnClose)="close()">
+    <ng-container *nzDrawerContent>
+        @if (!isEdit) {
+        <nz-segmented class="space-control" [nzOptions]="[
+            { label: 'Tự đặt tên đăng nhập', value: 'manual' },
+            { label: 'Sinh từ họ tên', value: 'directory' }
+          ]" [(ngModel)]="createMode"></nz-segmented>
+        }
+
+        @if (isEdit || createMode === 'manual') {
+        <label class="text-control">Tên đăng nhập <span class="required-star">*</span></label>
+        <input nz-input [(ngModel)]="dto.userName" [disabled]="isEdit" maxlength="100" placeholder="nguyen.van.a"
+            aria-label="Tên đăng nhập" autocomplete="off" class="space-control" />
+        } @else {
+        <nz-alert class="mb-3" nzType="info" nzShowIcon
+            nzMessage="Tên đăng nhập được sinh từ họ tên (bỏ dấu), thêm số nếu trùng."></nz-alert>
+        }
+
+        <label class="text-control">Họ tên <span class="required-star">*</span></label>
+        <input nz-input [(ngModel)]="dto.fullName" maxlength="200" placeholder="Nguyễn Văn A" aria-label="Họ tên"
+            class="space-control" />
+
+        <label class="text-control">Email <span class="required-star">*</span></label>
+        <input nz-input type="email" [(ngModel)]="dto.email" maxlength="200" placeholder="a.nguyen@congty.vn"
+            aria-label="Email" class="space-control" />
+
+        <label class="text-control">Điện thoại</label>
+        <input nz-input [(ngModel)]="dto.phone" maxlength="50" placeholder="0901234567" aria-label="Điện thoại"
+            class="space-control" />
+
+        <label class="text-control">Địa chỉ</label>
+        <input nz-input [(ngModel)]="dto.address" maxlength="500" aria-label="Địa chỉ" class="space-control" />
+
+        <label class="text-control">Phòng ban <span class="required-star">*</span></label>
+        <nz-tree-select class="space-control" [nzNodes]="activeOrgTree" [(ngModel)]="dto.organizationId"
+            nzPlaceHolder="Chọn phòng ban" nzShowSearch [nzDropdownStyle]="{ 'max-height': '320px' }"
+            aria-label="Phòng ban"></nz-tree-select>
+
+        <label class="text-control">Chức danh <span class="required-star">*</span></label>
+        <nz-select class="space-control" [(ngModel)]="dto.titleCode" nzShowSearch nzPlaceHolder="Chọn chức danh"
+            aria-label="Chức danh">
+            @for (t of activeTitles; track t.code) {
+            <nz-option [nzValue]="t.code" [nzLabel]="t.name"></nz-option>
+            }
+        </nz-select>
+
+        @if (!isEdit) {
+        <nz-alert nzType="warning" nzShowIcon
+            nzMessage="Hệ thống tạo mật khẩu tạm ngẫu nhiên và chỉ hiển thị một lần. Người dùng phải đổi mật khẩu ở lần đăng nhập đầu."></nz-alert>
+        }
+    </ng-container>
+
+    <ng-template #extra>
+        <nz-space>
+            <button *nzSpaceItem nz-button (click)="close()">
+                <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="isSaving" (click)="save()">
+                <nz-icon nzType="save" nzTheme="outline" /> {{ isEdit ? 'Cập nhật' : 'Lưu' }}
+            </button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<!-- ===== Modal điều chuyển / đổi chức danh / khóa-mở ===== -->
+<nz-modal [(nzVisible)]="actionVisible" [nzTitle]="actionTitle" [nzOkText]="'Xác nhận'" nzCancelText="Huỷ"
+    [nzOkLoading]="isActing" [nzOkDanger]="actionKind === 'lock'" (nzOnOk)="confirmAction()"
+    (nzOnCancel)="actionVisible = false">
+    <ng-container *nzModalContent>
+        @if (actionTarget) {
+        <p>Tài khoản: <b>{{ actionTarget.fullName }}</b> ({{ actionTarget.userName }})</p>
+        @switch (actionKind) {
+        @case ('transfer') {
+        <p class="action-current">Hiện tại: {{ actionTarget.organizationName || '---' }}</p>
+        <label class="text-control">Phòng ban mới</label>
+        <nz-tree-select class="space-control full-width" [nzNodes]="activeOrgTree" [(ngModel)]="actionValue"
+            nzShowSearch nzPlaceHolder="Chọn phòng ban" aria-label="Phòng ban mới"></nz-tree-select>
+        <label class="text-control">Lý do</label>
+        <input nz-input [(ngModel)]="actionReason" maxlength="500" placeholder="Điều chuyển theo quyết định số..."
+            aria-label="Lý do điều chuyển" />
+        }
+        @case ('title') {
+        <p class="action-current">Hiện tại: {{ actionTarget.titleName || '---' }}</p>
+        <label class="text-control">Chức danh mới</label>
+        <nz-select class="full-width" [(ngModel)]="actionValue" nzShowSearch nzPlaceHolder="Chọn chức danh"
+            aria-label="Chức danh mới">
+            @for (t of activeTitles; track t.code) {
+            <nz-option [nzValue]="t.code" [nzLabel]="t.name"></nz-option>
+            }
+        </nz-select>
+        }
+        @default {
+        <nz-alert class="mb-3" [nzType]="actionKind === 'lock' ? 'warning' : 'info'" nzShowIcon
+            [nzMessage]="actionKind === 'lock' ? 'Tài khoản bị đăng xuất khỏi mọi thiết bị và không đăng nhập được nữa.' : 'Tài khoản đăng nhập lại được bằng mật khẩu hiện có.'"></nz-alert>
+        <label class="text-control">Lý do</label>
+        <input nz-input [(ngModel)]="actionReason" maxlength="500" aria-label="Lý do" />
+        }
+        }
+        }
+    </ng-container>
+</nz-modal>
+
+<!-- ===== Modal mật khẩu tạm (hiển thị một lần) ===== -->
+<nz-modal [(nzVisible)]="passwordVisible" nzTitle="MẬT KHẨU TẠM" [nzClosable]="false" [nzMaskClosable]="false"
+    [nzFooter]="passwordFooter">
+    <ng-container *nzModalContent>
+        <nz-alert class="mb-3" nzType="warning" nzShowIcon
+            nzMessage="Mật khẩu chỉ hiển thị một lần. Hãy gửi cho người dùng qua kênh an toàn."></nz-alert>
+        <p>Tài khoản: <b>{{ passwordUser }}</b></p>
+        <div class="temp-password">
+            <code>{{ temporaryPassword }}</code>
+            <button nz-button nzSize="small" (click)="copyPassword()"><nz-icon nzType="copy" /> Sao chép</button>
+        </div>
+    </ng-container>
+    <ng-template #passwordFooter>
+        <button nz-button nzType="primary" (click)="closePassword()">Đã lưu mật khẩu</button>
+    </ng-template>
+</nz-modal>

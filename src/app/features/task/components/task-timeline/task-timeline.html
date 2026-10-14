@@ -1,0 +1,142 @@
+<div class="gantt-view">
+  <div class="gantt-toolbar">
+    <div class="gantt-toolbar-left">
+      <span class="gantt-toolbar-title"><nz-icon nzType="schedule" /> Timeline</span>
+      <nz-tag class="task-count-badge">{{ allCards.length }} nhiệm vụ</nz-tag>
+    </div>
+    <div class="gantt-toolbar-right">
+      <button nz-button nzSize="small" (click)="scrollToToday()" class="mr-2"><nz-icon nzType="aim" /> Hôm nay</button>
+      <nz-date-picker [(ngModel)]="viewDate" (ngModelChange)="jumpToDate($event)" nzSize="small" class="mr-2"
+        nzFormat="dd/MM/yyyy" style="width: 120px;" aria-label="Đến ngày"></nz-date-picker>
+      <nz-radio-group [ngModel]="viewMode" (ngModelChange)="setMode($event)" nzSize="small" class="view-mode-switcher">
+        <label nz-radio-button nzValue="week">Tuần</label>
+        <label nz-radio-button nzValue="month">Tháng</label>
+      </nz-radio-group>
+    </div>
+  </div>
+
+  <div class="gantt-scroll-container" #timelineContainer (scroll)="onScroll($event)">
+    <div class="gantt-inner">
+      <div class="gantt-header-row">
+        <div class="gantt-sidebar-header-cell"><span>NHIỆM VỤ</span></div>
+        <div class="gantt-date-header">
+          @for (col of timelineCols; track col.date.getTime()) {
+          <div class="gantt-date-cell" [class.today-col]="col.isToday" [style.width.px]="colWidth">
+            <span class="date-label">{{ col.label }}</span>
+            @if (viewMode === 'month') { <span class="day-label">{{ col.dayNum }}</span> }
+            @else { <span class="day-label">{{ col.dayNum }}/{{ col.date.getMonth() + 1 }}</span> }
+          </div>
+          }
+        </div>
+      </div>
+
+      @for (list of groups; track list.id; let gi = $index) {
+      <div class="gantt-row">
+        <div class="gantt-sidebar-cell gantt-group-cell" (click)="toggleGroup(list.id)">
+          <nz-icon [nzType]="collapsedGroups.has(list.id) ? 'caret-right' : 'caret-down'" class="group-toggle" />
+          <span class="group-dot" [style.background]="ui.listColor(gi)"></span>
+          <span class="group-label">{{ list.name }}</span>
+          <span class="group-count">{{ list.cards.length }}</span>
+        </div>
+        <div class="gantt-timeline-cell" style="position: relative;">
+          @for (col of timelineCols; track col.date.getTime()) {
+          <div class="gantt-grid-line" [style.width.px]="colWidth" [class.today-grid]="col.isToday"></div>
+          }
+          @if (groupRange(list); as range) {
+          <div class="group-summary-bar" [style.left.px]="range.left" [style.width.px]="range.width" [style.background]="ui.listColor(gi)"></div>
+          }
+        </div>
+      </div>
+
+      @if (!collapsedGroups.has(list.id)) {
+      @for (card of list.cards; track card.id) {
+      <div class="gantt-row">
+        <div class="gantt-sidebar-cell gantt-task-cell" (click)="cardClicked.emit(card)">
+          <div class="task-status-dot" [class.done]="ui.isDone(card)"
+            (click)="$event.stopPropagation(); card.canWork && cardToggleComplete.emit(card)">
+            <nz-icon nzType="check" />
+          </div>
+          <span class="gantt-task-name" [class.text-completed]="ui.isDone(card)" nz-tooltip [nzTooltipTitle]="card.title">{{ card.title }}</span>
+          @if (card.assigneeUserName) {
+          <div class="task-sidebar-assignees">
+            <span class="sidebar-avatar" nz-tooltip [nzTooltipTitle]="card.assigneeFullName || card.assigneeUserName">
+              <nz-avatar nzSize="small" [nzText]="ui.initials(card.assigneeFullName || card.assigneeUserName)"
+                [style.background]="ui.colorOf(card.assigneeUserName)"></nz-avatar>
+            </span>
+          </div>
+          }
+        </div>
+        <div class="gantt-timeline-cell" style="position: relative;">
+          @for (col of timelineCols; track col.date.getTime()) {
+          <div class="gantt-grid-line" [style.width.px]="colWidth" [class.today-grid]="col.isToday"></div>
+          }
+          @if (card.dueDate) {
+          <div class="gantt-bar-wrap" [style.left.px]="barLeft(card)" [style.width.px]="barWidth(card)"
+            [style.background]="ui.listColor(gi)" (click)="$event.stopPropagation(); cardClicked.emit(card)"
+            nz-tooltip [nzTooltipTitle]="card.title + ' — ' + barRange(card)">
+            <span class="bar-label">{{ card.title }}</span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      @if (canEdit) {
+      <div class="gantt-row add-task-row-gv">
+        <div class="gantt-sidebar-cell gantt-add-task-cell">
+          @if (addingCardListId !== list.id) {
+          <div class="add-btn-trigger" (click)="startAddCard(list.id)"><nz-icon nzType="plus" /><span>Thêm nhiệm vụ</span></div>
+          } @else {
+          <div class="add-form-gv">
+            <input nz-input nzSize="small" [id]="'new-card-input-gv-' + list.id" [(ngModel)]="newCardTitle" placeholder="Tiêu đề..."
+              (keydown)="onKeydownCard($event, list.id)" />
+            <div class="form-actions">
+              <nz-icon nzType="check" (click)="submitAddCard(list.id)" />
+              <nz-icon nzType="close" (click)="addingCardListId = ''" />
+            </div>
+          </div>
+          }
+        </div>
+        <div class="gantt-timeline-cell">
+          @for (col of timelineCols; track col.date.getTime()) {
+          <div class="gantt-grid-line" [style.width.px]="colWidth" [class.today-grid]="col.isToday"></div>
+          }
+        </div>
+      </div>
+      }
+      }
+      }
+
+      @if (canEdit) {
+      <div class="gantt-row add-list-row-gv">
+        <div class="gantt-sidebar-cell gantt-add-list-cell">
+          @if (!isAddingList) {
+          <div class="add-btn-trigger" (click)="startAddList()"><nz-icon nzType="plus" /><span>Thêm danh sách</span></div>
+          } @else {
+          <div class="add-form-gv">
+            <input nz-input nzSize="small" id="new-list-input-gv" [(ngModel)]="newListName" placeholder="Tên danh sách..."
+              (keydown)="onKeydownList($event)" />
+            <div class="form-actions">
+              <nz-icon nzType="check" (click)="submitAddList()" />
+              <nz-icon nzType="close" (click)="isAddingList = false" />
+            </div>
+          </div>
+          }
+        </div>
+        <div class="gantt-timeline-cell">
+          @for (col of timelineCols; track col.date.getTime()) {
+          <div class="gantt-grid-line" [style.width.px]="colWidth" [class.today-grid]="col.isToday"></div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+
+  @if (!allCards.length) {
+  <div class="gantt-empty">
+    <nz-icon nzType="schedule" style="font-size: 48px; color: #c1c7d0;" />
+    <p>Chưa có nhiệm vụ nào trong bảng này</p>
+  </div>
+  }
+</div>

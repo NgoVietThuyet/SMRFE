@@ -1,0 +1,42 @@
+<div class="prejoin">
+    <div class="preview">
+        <video #video autoplay playsinline muted [class.hidden]="videoMuted"></video>
+        @if (videoMuted) {
+        <div class="no-video"><span class="avatar">{{ initials }}</span><span>Camera đang tắt</span></div>
+        }
+        <div class="preview-name">{{ displayName }}</div>
+        <div class="preview-controls">
+            <button type="button" class="round" [class.off]="audioMuted" (click)="toggleAudio()"
+                [attr.aria-label]="audioMuted ? 'Bật micro' : 'Tắt micro'" nz-tooltip [nzTooltipTitle]="audioMuted ? 'Bật micro' : 'Tắt micro'">
+                <nz-icon [nzType]="audioMuted ? 'audio-muted' : 'audio'" />
+            </button>
+            <button type="button" class="round" [class.off]="videoMuted" (click)="toggleVideo()"
+                [attr.aria-label]="videoMuted ? 'Bật camera' : 'Tắt camera'" nz-tooltip [nzTooltipTitle]="videoMuted ? 'Bật camera' : 'Tắt camera'">
+                <nz-icon [nzType]="videoMuted ? 'eye-invisible' : 'video-camera'" />
+            </button>
+        </div>
+        <div class="level" [style.width.%]="level"></div>
+    </div>
+
+    @if (error) {
+    <nz-alert class="mt" nzType="warning" nzShowIcon [nzMessage]="error"></nz-alert>
+    }
+
+    <div class="devices">
+        <label class="text-control">Micro</label>
+        <nz-select class="full" [(ngModel)]="micId" (ngModelChange)="open()" nzPlaceHolder="Mặc định" aria-label="Chọn micro">
+            @for (d of mics; track d.deviceId) { <nz-option [nzValue]="d.deviceId" [nzLabel]="d.label || 'Micro'"></nz-option> }
+        </nz-select>
+        <label class="text-control">Camera</label>
+        <nz-select class="full" [(ngModel)]="camId" (ngModelChange)="open()" nzPlaceHolder="Mặc định" aria-label="Chọn camera">
+            @for (d of cams; track d.deviceId) { <nz-option [nzValue]="d.deviceId" [nzLabel]="d.label || 'Camera'"></nz-option> }
+        </nz-select>
+        @if (speakers.length) {
+        <label class="text-control">Loa</label>
+        <nz-select class="full" [(ngModel)]="speakerId" nzPlaceHolder="Mặc định" aria-label="Chọn loa">
+            @for (d of speakers; track d.deviceId) { <nz-option [nzValue]="d.deviceId" [nzLabel]="d.label || 'Loa'"></nz-option> }
+        </nz-select>
+        }
+    </div>
+    <ng-content></ng-content>
+</div>

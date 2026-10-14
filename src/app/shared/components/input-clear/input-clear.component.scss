@@ -1,0 +1,16 @@
+.clear-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+}
+
+.ant-input-affix-wrapper-textarea-with-clear-btn {
+  position: relative;
+}
+
+.ant-input-affix-wrapper-textarea-with-clear-btn .ant-input-clear-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}

@@ -1,0 +1,385 @@
+<nz-modal [nzVisible]="visible" [nzWidth]="900" [nzFooter]="null" [nzBodyStyle]="{ padding: '0', overflow: 'hidden' }"
+  (nzOnCancel)="close()" nzClassName="card-detail-modal">
+  <ng-container *nzModalContent>
+    @if (!detail) {
+    <div class="card-loading"><nz-spin nzSimple></nz-spin></div>
+    } @else {
+    <div class="card-detail-layout">
+      <div class="card-content">
+        @if (card.isArchived) {
+        <div class="archive-banner"><nz-icon nzType="inbox" /> Thẻ này đã được lưu trữ</div>
+        }
+
+        <!-- Tiêu đề -->
+        <div class="card-section title-section">
+          <nz-icon nzType="credit-card" class="section-icon" />
+          <div class="section-body">
+            @if (!isEditingTitle) {
+            <div class="card-title" [class.readonly]="!canEdit" (click)="startEditTitle()">
+              {{ card.title || 'Chưa có tiêu đề' }}
+              @if (canEdit) { <nz-icon nzType="edit" class="edit-hint" /> }
+            </div>
+            } @else {
+            <div class="title-edit-form">
+              <textarea nz-input [(ngModel)]="editTitle" [nzAutosize]="{ minRows: 2 }" class="title-textarea" maxlength="300"
+                (keydown.escape)="isEditingTitle = false"></textarea>
+              <div class="edit-actions">
+                <button nz-button nzType="primary" nzSize="small" (click)="saveTitle()">Lưu</button>
+                <button nz-button nzSize="small" (click)="isEditingTitle = false">Hủy</button>
+              </div>
+            </div>
+            }
+            @if (detail.listTitle) {
+            <div class="card-list-name">trong danh sách <b>{{ detail.listTitle }}</b></div>
+            }
+          </div>
+        </div>
+
+        @if (cardLabels.length) {
+        <div class="card-labels-display">
+          @for (label of cardLabels; track label.id) {
+          <span class="card-label-chip" [style.background]="label.color">{{ label.name || '&nbsp;' }}</span>
+          }
+        </div>
+        }
+
+        <!-- Mô tả -->
+        <div class="card-section">
+          <nz-icon nzType="align-left" class="section-icon" />
+          <div class="section-body">
+            <div class="section-title">
+              Mô tả
+              @if (!isEditingDesc && card.description && canEdit) {
+              <button nz-button nzType="text" nzSize="small" (click)="startEditDesc()">Chỉnh sửa</button>
+              }
+            </div>
+            @if (!isEditingDesc) {
+            @if (card.description) {
+            <div class="desc-text" (click)="startEditDesc()">{{ card.description }}</div>
+            } @else {
+            <div class="desc-placeholder" (click)="startEditDesc()">{{ canEdit ? 'Thêm mô tả chi tiết hơn...' : 'Chưa có mô tả' }}</div>
+            }
+            } @else {
+            <div class="desc-edit-form">
+              <textarea nz-input [(ngModel)]="editDesc" [nzAutosize]="{ minRows: 3, maxRows: 12 }" maxlength="4000"
+                placeholder="Thêm mô tả..." (keydown.escape)="isEditingDesc = false"></textarea>
+              <div class="edit-actions">
+                <button nz-button nzType="primary" nzSize="small" (click)="saveDesc()">Lưu</button>
+                <button nz-button nzSize="small" (click)="isEditingDesc = false">Hủy</button>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Checklist -->
+        @if (detail.checklist.length || addingItem) {
+        <div class="card-section checklist-section">
+          <nz-icon nzType="check-square" class="section-icon" />
+          <div class="section-body">
+            <div class="checklist-header"><span class="section-title">Checklist</span></div>
+            <div class="checklist-progress">
+              <span class="progress-pct">{{ checklistPercent }}%</span>
+              <nz-progress [nzPercent]="checklistPercent" [nzShowInfo]="false" nzSize="small"
+                [nzStrokeColor]="checklistPercent === 100 ? '#52c41a' : '#1890ff'" style="flex:1"></nz-progress>
+            </div>
+            <div class="checklist-items">
+              @for (item of detail.checklist; track item.id) {
+              <div class="checklist-item" [class.done]="item.isDone">
+                <label nz-checkbox [ngModel]="item.isDone" [nzDisabled]="!canWork" (ngModelChange)="toggleItem(item)"></label>
+                <span class="item-content">{{ item.content }}</span>
+                @if (canWork) {
+                <button nz-button nzType="text" nzSize="small" nzDanger class="delete-item-btn" nz-popconfirm
+                  nzPopconfirmTitle="Xóa mục này?" (nzOnConfirm)="deleteItem(item)" aria-label="Xoá mục"><nz-icon nzType="delete" /></button>
+                }
+              </div>
+              }
+            </div>
+            @if (canWork) {
+            @if (!addingItem) {
+            <button nz-button nzType="text" nzSize="small" (click)="addingItem = true"><nz-icon nzType="plus" /> Thêm mục</button>
+            } @else {
+            <div class="add-item-form">
+              <input nz-input [(ngModel)]="newItemContent" placeholder="Nhập nội dung..." maxlength="500" (keydown)="onKeydownAddItem($event)" />
+              <div class="edit-actions">
+                <button nz-button nzType="primary" nzSize="small" (click)="addItem()">Thêm</button>
+                <button nz-button nzSize="small" (click)="addingItem = false">Hủy</button>
+              </div>
+            </div>
+            }
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Đính kèm -->
+        <div class="card-section">
+          <nz-icon nzType="paper-clip" class="section-icon" />
+          <div class="section-body">
+            <div class="section-title">Đính kèm</div>
+            <div class="attachment-area">
+              @if (canWork) {
+              <div class="attachment-placeholder-btn mb-2">
+                <nz-icon nzType="upload" class="me-2 cursor-pointer" style="font-size:20px;color:#bbb" (click)="isUploadVisible = true" />
+                <span><span class="cursor-pointer" style="color: #1890ff" (click)="isUploadVisible = true">Tải lên</span> tệp đính kèm</span>
+              </div>
+              }
+              <div class="file-list">
+                @for (file of detail.files; track file.id) {
+                <div class="file-item">
+                  <div class="file-main" (click)="download(file.id)" role="button" tabindex="0">
+                    <nz-icon [nzType]="fileIcon(file.fileName)" class="file-type-icon" />
+                    <div>
+                      <div class="file-title">{{ file.fileName }}</div>
+                      <small class="text-muted">{{ fileSize(file.fileSize) }} · {{ ui.dateTime(file.createDate) }}</small>
+                    </div>
+                  </div>
+                  @if (file.canDelete) {
+                  <button nz-button nzType="text" nzSize="small" nzDanger nz-popconfirm nzPopconfirmTitle="Xóa tệp này?"
+                    (nzOnConfirm)="removeFile(file.id)" aria-label="Xoá tệp"><nz-icon nzType="delete" /></button>
+                  }
+                </div>
+                }
+              </div>
+              @if (!detail.files.length) {
+              <div class="no-file"><nz-icon nzType="paper-clip" style="color:#d9d9d9;font-size:20px" /> <span>Chưa có tệp đính kèm nào</span></div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Bình luận -->
+        <div class="card-section">
+          <nz-icon nzType="comment" class="section-icon" />
+          <div class="section-body">
+            <div class="section-title">Bình luận</div>
+            @if (canWork) {
+            <div class="add-comment">
+              <nz-avatar nzSize="small" [nzText]="ui.initials(meName)" [style.background]="ui.colorOf(me)"></nz-avatar>
+              <div class="comment-input-area">
+                <textarea nz-input [(ngModel)]="newComment" placeholder="Viết bình luận... (Enter để gửi)" maxlength="2000"
+                  [nzAutosize]="{ minRows: 2, maxRows: 6 }" (keydown)="onKeydownComment($event)"></textarea>
+                @if (newComment.trim()) {
+                <div class="comment-actions">
+                  <button nz-button nzType="primary" nzSize="small" (click)="submitComment()">Gửi</button>
+                  <button nz-button nzSize="small" (click)="newComment = ''">Hủy</button>
+                </div>
+                }
+              </div>
+            </div>
+            }
+            <div class="comment-list">
+              @for (comment of detail.comments; track comment.id) {
+              <div class="comment-item">
+                <nz-avatar nzSize="small" [nzText]="ui.initials(comment.fullName)" [style.background]="ui.colorOf(comment.userName)"></nz-avatar>
+                <div class="comment-body">
+                  <div class="comment-meta">
+                    <strong>{{ comment.fullName || comment.userName }}</strong>
+                    <span class="comment-time">{{ ui.dateTime(comment.createDate) }}</span>
+                  </div>
+                  <div class="comment-text">{{ comment.content }}</div>
+                  @if (comment.canDelete) {
+                  <div class="comment-actions-row">
+                    <button nz-button nzType="link" nzSize="small" nzDanger nz-popconfirm nzPopconfirmTitle="Xóa bình luận?"
+                      (nzOnConfirm)="deleteComment(comment.id)">Xóa</button>
+                  </div>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Cột phải ===== -->
+      <div class="card-sidebar">
+        @if (canEdit || canWork) {
+        <div class="sidebar-group">
+          <div class="sidebar-label">THÊM VÀO THẺ</div>
+
+          @if (canEdit) {
+          <button nz-button nzType="default" nzBlock class="sidebar-btn" nz-popover nzPopoverTrigger="click"
+            [(nzPopoverVisible)]="isAssigneeVisible" (nzPopoverVisibleChange)="onAssigneeOpen($event)"
+            nzPopoverPlacement="bottomRight" [nzPopoverContent]="assigneePopover">
+            <nz-icon nzType="user" /> Người thực hiện
+          </button>
+          <ng-template #assigneePopover>
+            <div class="popover-content">
+              <div class="popover-title">Người thực hiện</div>
+              <input nz-input nzSize="small" placeholder="Tìm theo tên, email..." (ngModelChange)="search$.next($event)" [ngModel]="''" />
+              <div class="member-scroll">
+                @if (searching) { <nz-spin nzSimple nzSize="small" class="member-spin"></nz-spin> }
+                @for (u of users; track u.userName) {
+                <div class="member-option" (click)="setAssignee(u.userName)">
+                  <nz-avatar nzSize="small" [nzText]="ui.initials(u.fullName)" [style.background]="ui.colorOf(u.userName)"></nz-avatar>
+                  <span>{{ u.fullName || u.userName }}</span>
+                  @if (card.assigneeUserName === u.userName) { <nz-icon nzType="check" style="color:#52c41a;margin-left:auto" /> }
+                </div>
+                }
+                @if (!searching && !users.length) { <div class="empty-msg">Không tìm thấy</div> }
+              </div>
+              @if (card.assigneeUserName) {
+              <button nz-button nzType="text" nzSize="small" nzDanger nzBlock (click)="setAssignee(null)">Bỏ giao việc</button>
+              }
+            </div>
+          </ng-template>
+
+          <button nz-button nzType="default" nzBlock class="sidebar-btn" nz-popover nzPopoverTrigger="click"
+            [(nzPopoverVisible)]="isLabelPopoverVisible" nzPopoverPlacement="bottomRight" [nzPopoverContent]="labelsPopover">
+            <nz-icon nzType="tag" /> Nhãn
+          </button>
+          <ng-template #labelsPopover>
+            <div class="popover-content">
+              <div class="popover-title">Nhãn</div>
+              @for (label of detail.labels; track label.id) {
+              <div class="label-option" (click)="toggleLabel(label)">
+                <span class="label-color-dot" [style.background]="label.color"></span>
+                <span>{{ label.name || '(không tên)' }}</span>
+                @if (isLabelActive(label)) { <nz-icon nzType="check" style="color:#52c41a;margin-left:auto" /> }
+                <nz-icon nzType="close" class="label-remove" nz-tooltip nzTooltipTitle="Xoá nhãn khỏi bảng" (click)="deleteLabel(label, $event)" />
+              </div>
+              }
+              <nz-divider nzText="Tạo nhãn mới" nzOrientation="left" style="margin:8px 0 4px"></nz-divider>
+              <div class="create-label-form">
+                <input nz-input [(ngModel)]="newLabelName" placeholder="Tên nhãn..." nzSize="small" maxlength="50" />
+                <div class="label-color-picker">
+                  @for (lc of labelColors; track lc.color) {
+                  <span class="label-color-swatch" [style.background]="lc.color" [class.selected]="newLabelColor === lc.color"
+                    nz-tooltip [nzTooltipTitle]="lc.name" (click)="newLabelColor = lc.color"></span>
+                  }
+                </div>
+                <button nz-button nzType="primary" nzSize="small" nzBlock (click)="createLabel()">Tạo nhãn</button>
+              </div>
+            </div>
+          </ng-template>
+          }
+
+          @if (canWork) {
+          <button nz-button nzType="default" nzBlock class="sidebar-btn" nz-popover nzPopoverTrigger="click"
+            [(nzPopoverVisible)]="isChecklistPopoverVisible" nzPopoverPlacement="bottomRight" [nzPopoverContent]="checklistPopover">
+            <nz-icon nzType="check-square" /> Checklist
+          </button>
+          <ng-template #checklistPopover>
+            <div class="popover-content">
+              <div class="popover-title">Thêm mục checklist</div>
+              <input nz-input [(ngModel)]="newChecklistItem" placeholder="Nội dung..." maxlength="500"
+                (keydown.enter)="addItem(newChecklistItem)" (keydown.escape)="isChecklistPopoverVisible = false" />
+              <button nz-button nzType="primary" nzSize="small" nzBlock style="margin-top:8px" (click)="addItem(newChecklistItem)">Thêm</button>
+            </div>
+          </ng-template>
+          }
+
+          @if (canEdit) {
+          <button nz-button nzType="default" nzBlock class="sidebar-btn" nz-popover nzPopoverTrigger="click"
+            [(nzPopoverVisible)]="isDueDateVisible" nzPopoverPlacement="bottomRight" [nzPopoverContent]="duePopover">
+            <nz-icon nzType="calendar" /> Thời gian
+          </button>
+          <ng-template #duePopover>
+            <div class="popover-content" style="width: 320px;">
+              <div class="popover-title">Thời gian thực hiện</div>
+              <nz-range-picker [(ngModel)]="selectedDateRange" (ngModelChange)="onDateRangeChange($event)" nzShowTime
+                nzFormat="dd/MM/yyyy HH:mm" nzSize="small" style="width: 100%;"></nz-range-picker>
+              @if (card.startDate || card.dueDate) {
+              <button nz-button nzType="text" nzSize="small" nzDanger style="margin-top:8px;width:100%" (click)="removeDateRange()">
+                <nz-icon nzType="delete" /> Xóa thời gian
+              </button>
+              }
+            </div>
+          </ng-template>
+
+          <button nz-button nzType="default" nzBlock class="sidebar-btn" nz-popover nzPopoverTrigger="click"
+            [(nzPopoverVisible)]="isPriorityVisible" nzPopoverPlacement="bottomRight" [nzPopoverContent]="priorityPopover"
+            [style.border-color]="priorityMeta(card.priority)?.color" [style.color]="priorityMeta(card.priority)?.color">
+            <nz-icon nzType="flag" nzTheme="fill" /> {{ priorityMeta(card.priority)?.label || 'Ưu tiên' }}
+          </button>
+          <ng-template #priorityPopover>
+            <div class="popover-content">
+              <div class="popover-title">Mức độ ưu tiên</div>
+              @for (p of priorityList; track p.value) {
+              <div class="priority-option" [class.active]="card.priority === p.value" (click)="setPriority(p.value)">
+                <span class="priority-dot" [style.background]="p.color"></span>
+                <span>{{ p.label }}</span>
+                @if (card.priority === p.value) { <nz-icon nzType="check" style="margin-left:auto" /> }
+              </div>
+              }
+            </div>
+          </ng-template>
+          }
+        </div>
+        }
+
+        <div class="sidebar-group">
+          <div class="sidebar-label">THÔNG TIN</div>
+          <div class="info-row">
+            <span class="info-label">Trạng thái</span>
+            <nz-select nzSize="small" [ngModel]="card.status" (ngModelChange)="setStatus($event)" [nzDisabled]="!canWork"
+              class="status-select" aria-label="Trạng thái">
+              <nz-option [nzValue]="TaskStatus.NotStarted" nzLabel="Chưa bắt đầu"></nz-option>
+              <nz-option [nzValue]="TaskStatus.InProgress" nzLabel="Đang làm"></nz-option>
+              <nz-option [nzValue]="TaskStatus.Completed" nzLabel="Hoàn thành"></nz-option>
+            </nz-select>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Người thực hiện</span>
+            @if (card.assigneeUserName) {
+            <span class="info-person">
+              <nz-avatar nzSize="small" [nzText]="ui.initials(card.assigneeFullName || card.assigneeUserName)"
+                [style.background]="ui.colorOf(card.assigneeUserName)"></nz-avatar>
+              {{ card.assigneeFullName || card.assigneeUserName }}
+            </span>
+            } @else { <span class="text-muted">Chưa giao</span> }
+          </div>
+          @if (card.startDate || card.dueDate) {
+          <div class="info-row">
+            <span class="info-label">Thời gian</span>
+            <div class="date-tags-container">
+              @if (card.startDate) { <div class="date-tag-wrapper"><nz-tag nzColor="blue">Bắt đầu: {{ ui.dateTime(card.startDate) }}</nz-tag></div> }
+              @if (card.dueDate) {
+              <div class="date-tag-wrapper"><nz-tag [nzColor]="ui.isOverdue(card) ? 'red' : 'default'">Hết hạn: {{ ui.dateTime(card.dueDate) }}</nz-tag></div>
+              }
+            </div>
+          </div>
+          }
+          <div class="info-row">
+            <span class="info-label">Người tạo</span>
+            <span>{{ detail.createByFullName }} · {{ ui.dateTime(detail.createDate) }}</span>
+          </div>
+          @if (detail.sourceRef?.startsWith('minutes:')) {
+          <div class="info-row"><nz-tag nzColor="purple"><nz-icon nzType="file-text" /> Từ biên bản</nz-tag></div>
+          }
+        </div>
+
+        @if (canEdit) {
+        <div class="sidebar-group">
+          <div class="sidebar-label">THAO TÁC</div>
+          <button nz-button nzType="default" nzBlock class="sidebar-btn" (click)="archiveCard()">
+            <nz-icon nzType="inbox" /> {{ card.isArchived ? 'Khôi phục thẻ' : 'Lưu trữ' }}
+          </button>
+          <button nz-button nzType="default" nzBlock nzDanger class="sidebar-btn" nz-popconfirm
+            nzPopconfirmTitle="Xóa vĩnh viễn thẻ này?" (nzOnConfirm)="deleteCard()">
+            <nz-icon nzType="delete" /> Xóa thẻ
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </ng-container>
+</nz-modal>
+
+<nz-modal [(nzVisible)]="isUploadVisible" nzTitle="Tải tệp lên" [nzFooter]="uploadFooter" (nzOnCancel)="isUploadVisible = false" [nzWidth]="520">
+  <ng-container *nzModalContent>
+    <nz-upload nzType="drag" [nzMultiple]="true" [nzFileList]="uploadFileList" [nzBeforeUpload]="beforeUpload" class="upload-area">
+      <p class="ant-upload-drag-icon"><nz-icon nzType="inbox" /></p>
+      <p class="ant-upload-text">Kéo thả tệp vào đây hoặc nhấp để chọn tệp</p>
+      <p class="ant-upload-hint">Hỗ trợ tải lên nhiều tệp. Giới hạn dung lượng theo cấu hình hệ thống.</p>
+    </nz-upload>
+  </ng-container>
+  <ng-template #uploadFooter>
+    <button nz-button (click)="isUploadVisible = false; uploadFileList = []">Hủy</button>
+    <button nz-button nzType="primary" [nzLoading]="uploading" [disabled]="!uploadFileList.length" (click)="confirmUpload()">
+      Tải lên {{ uploadFileList.length ? '(' + uploadFileList.length + ' tệp)' : '' }}
+    </button>
+  </ng-template>
+</nz-modal>

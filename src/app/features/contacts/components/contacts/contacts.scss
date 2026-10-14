@@ -1,0 +1,113 @@
+// Bố cục giống trang Tài khoản (P3): cây phòng ban trái + bảng phải.
+.contacts-layout {
+    display: flex;
+    height: 100vh;
+}
+
+.org-panel {
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+}
+
+.org-panel-head {
+    height: 50px;
+    padding: 0 12px 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #f0f0f0;
+
+    .org-panel-title {
+        font-weight: 600;
+    }
+}
+
+.org-panel-body {
+    flex: 1;
+    overflow: auto;
+    padding: 8px 4px;
+}
+
+.contact-panel {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+
+.search-box {
+    width: 320px;
+}
+
+.contact-row {
+    cursor: pointer;
+}
+
+.person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    nz-avatar {
+        flex-shrink: 0;
+    }
+}
+
+.person-main {
+    min-width: 0;
+}
+
+.person-name {
+    font-weight: 500;
+}
+
+.muted {
+    color: #8c8c8c;
+    font-size: 12px;
+}
+
+.break-all {
+    word-break: break-all;
+}
+
+.profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 16px;
+
+    .profile-avatar {
+        font-size: 26px;
+        margin-bottom: 8px;
+    }
+
+    .profile-name {
+        font-size: 18px;
+        font-weight: 600;
+    }
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.copy {
+    margin-left: 8px;
+    color: #8c8c8c;
+}
+
+@media (max-width: 900px) {
+    .org-panel {
+        display: none;
+    }
+
+    .search-box {
+        width: 200px;
+    }
+}

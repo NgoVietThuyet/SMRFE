@@ -1,0 +1,201 @@
+<nz-drawer [nzWidth]="720" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzTitle]="title"
+    [nzExtra]="extra" [nzFooter]="footer" [nzMaskClosable]="!isSaving" (nzOnClose)="close()" nzWrapClassName="meeting-form-drawer">
+    <ng-container *nzDrawerContent>
+        <nz-spin [nzSpinning]="isLoading">
+            @if (isOngoing) {
+            <nz-alert class="mb-3" nzType="info" nzShowIcon
+                nzMessage="Cuộc họp đang diễn ra: chỉ sửa được mô tả, cài đặt phòng và mời thêm người."></nz-alert>
+            }
+
+            <nz-tabset [(nzSelectedIndex)]="tabIndex" nzSize="small">
+                <!-- ===== Thông tin ===== -->
+                <nz-tab [nzTitle]="infoTitle">
+                    <ng-template #infoTitle>
+                        <span [class.tab-error]="infoTabInvalid"><nz-icon nzType="info-circle" /> Thông tin</span>
+                    </ng-template>
+
+                    <label class="text-control" for="mf-name">Tên cuộc họp <span class="required-star">*</span></label>
+                    <input id="mf-name" nz-input class="space-control" maxlength="200" [(ngModel)]="name"
+                        [disabled]="isOngoing" placeholder="VD: Giao ban tuần 41" [class.input-error]="!!nameError" />
+                    @if (nameError) {
+                    <div class="field-error">{{ nameError }}</div>
+                    }
+
+                    <div nz-row [nzGutter]="12">
+                        <div nz-col [nzXs]="24" [nzSm]="10">
+                            <label class="text-control">Ngày <span class="required-star">*</span></label>
+                            <nz-date-picker class="space-control full-width" nzFormat="dd/MM/yyyy" [(ngModel)]="date"
+                                (ngModelChange)="queueConflictCheck()" [nzDisabled]="isOngoing" [nzAllowClear]="false"
+                                aria-label="Ngày họp"></nz-date-picker>
+                        </div>
+                        <div nz-col [nzXs]="12" [nzSm]="7">
+                            <label class="text-control">Bắt đầu <span class="required-star">*</span></label>
+                            <nz-time-picker class="space-control full-width" nzFormat="HH:mm" [nzMinuteStep]="5"
+                                [ngModel]="startTime" (ngModelChange)="onStartChange($event)" [nzDisabled]="isOngoing"
+                                [nzAllowEmpty]="false" aria-label="Giờ bắt đầu"></nz-time-picker>
+                        </div>
+                        <div nz-col [nzXs]="12" [nzSm]="7">
+                            <label class="text-control">Kết thúc <span class="required-star">*</span></label>
+                            <nz-time-picker class="space-control full-width" nzFormat="HH:mm" [nzMinuteStep]="5"
+                                [(ngModel)]="endTime" (ngModelChange)="queueConflictCheck()" [nzDisabled]="isOngoing"
+                                [nzAllowEmpty]="false" aria-label="Giờ kết thúc"></nz-time-picker>
+                        </div>
+                    </div>
+                    <div class="duration-row">
+                        @if (timeError) {
+                        <span class="field-error">{{ timeError }}</span>
+                        } @else if (durationText) {
+                        <span class="muted">Thời lượng: {{ durationText }}</span>
+                        }
+                        @if (!isOngoing) {
+                        <span class="duration-presets">
+                            @for (d of [30, 60, 90, 120]; track d) {
+                            <a (click)="setDuration(d)">{{ d < 60 ? d + ' phút' : (d / 60) + ' giờ' }}</a>
+                            }
+                        </span>
+                        }
+                    </div>
+
+                    @if (conflictGroups.length) {
+                    <nz-alert class="mb-3" nzType="warning" nzShowIcon [nzMessage]="'Trùng lịch với ' + conflictGroups.length + ' cuộc họp khác'"
+                        [nzDescription]="conflictTpl"></nz-alert>
+                    <ng-template #conflictTpl>
+                        <ul class="conflict-list">
+                            @for (g of conflictGroups; track g.meetingId) {
+                            <li>
+                                <b>{{ g.start | date: 'HH:mm' }}–{{ g.end | date: 'HH:mm dd/MM' }}</b> · {{ g.meetingName }}
+                                <span class="muted">({{ g.people.join(', ') }})</span>
+                            </li>
+                            }
+                        </ul>
+                        <span class="muted">Vẫn có thể lưu; hãy báo những người bị trùng.</span>
+                    </ng-template>
+                    }
+
+                    <label class="text-control">Múi giờ</label>
+                    <nz-select class="space-control full-width" [(ngModel)]="timeZone" aria-label="Múi giờ">
+                        @for (tz of timeZones; track tz.value) {
+                        <nz-option [nzValue]="tz.value" [nzLabel]="tz.label"></nz-option>
+                        }
+                    </nz-select>
+
+                    <label class="text-control">Chế độ hiển thị</label>
+                    <nz-radio-group class="space-control visibility-group" [(ngModel)]="visibility" [nzDisabled]="isOngoing"
+                        aria-label="Chế độ hiển thị">
+                        @for (v of visibilityOptions; track v.value) {
+                        <label nz-radio [nzValue]="v.value" nz-tooltip [nzTooltipTitle]="v.hint">{{ v.label }}</label>
+                        }
+                    </nz-radio-group>
+
+                    <label class="text-control" for="mf-desc">Mô tả</label>
+                    <textarea id="mf-desc" nz-input class="space-control" rows="3" maxlength="2000" [(ngModel)]="description"
+                        placeholder="Mục tiêu, bối cảnh cuộc họp"></textarea>
+
+                    <label class="text-control" for="mf-agenda">Chương trình</label>
+                    <textarea id="mf-agenda" nz-input rows="4" maxlength="4000" [(ngModel)]="agenda" [disabled]="isOngoing"
+                        placeholder="Mỗi dòng một nội dung, VD:&#10;1. Báo cáo tiến độ&#10;2. Kế hoạch tuần tới"></textarea>
+                </nz-tab>
+
+                <!-- ===== Thành phần ===== -->
+                <nz-tab [nzTitle]="peopleTitle">
+                    <ng-template #peopleTitle><nz-icon nzType="team" /> Thành phần ({{ participants.length }})</ng-template>
+
+                    <label class="text-control">Mời thêm người</label>
+                    <nz-select class="space-control full-width" nzShowSearch nzServerSearch nzAllowClear
+                        nzPlaceHolder="Gõ tên hoặc email để tìm" [nzLoading]="searching" [(ngModel)]="pickedUser"
+                        (ngModelChange)="addPicked($event)" (nzOnSearch)="search$.next($event)" aria-label="Mời thêm người">
+                        @for (u of searchOptions; track u.userName) {
+                        <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName + ' · ' + u.email"></nz-option>
+                        }
+                    </nz-select>
+
+                    <nz-table #people [nzData]="participants" nzSize="small" nzBordered [nzFrontPagination]="false"
+                        [nzShowPagination]="false" [nzScroll]="{ y: 'calc(100vh - 330px)' }">
+                        <thead>
+                            <tr>
+                                <th nzWidth="44px" nzAlign="center">#</th>
+                                <th>Họ tên</th>
+                                <th nzWidth="160px">Vai trò</th>
+                                <th nzWidth="52px" nzAlign="center"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (p of people.data; track p.userName; let i = $index) {
+                            <tr>
+                                <td nzAlign="center">{{ i + 1 }}</td>
+                                <td>
+                                    <div>{{ p.fullName }} @if (p.isMe) {<nz-tag>Bạn</nz-tag>}</div>
+                                    <div class="muted small">{{ p.email || p.userName }}</div>
+                                </td>
+                                <td>
+                                    @if (p.isMe || p.existing) {
+                                    <nz-tag [nzColor]="roleMeta(p.role).color" nz-tooltip
+                                        [nzTooltipTitle]="p.existing && !p.isMe ? 'Đổi vai trò trong phòng họp (P10)' : null">
+                                        {{ roleMeta(p.role).label }}
+                                    </nz-tag>
+                                    } @else {
+                                    <nz-select class="full-width" nzSize="small" [(ngModel)]="p.role" aria-label="Vai trò">
+                                        @for (r of roleOptions; track r.value) {
+                                        <nz-option [nzValue]="r.value" [nzLabel]="r.label"></nz-option>
+                                        }
+                                    </nz-select>
+                                    }
+                                </td>
+                                <td nzAlign="center">
+                                    @if (canRemove(p)) {
+                                    <button nz-button nzType="text" nzSize="small" nzDanger (click)="removeParticipant(p)"
+                                        aria-label="Bỏ người này"><nz-icon nzType="close" /></button>
+                                    }
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </nz-table>
+                    @if (coHostCount > 0) {
+                    <div class="muted small mt-2">Có {{ coHostCount }} đồng chủ trì — có quyền sửa, hủy, bắt đầu cuộc họp và thêm bớt thành viên như chủ trì.</div>
+                    }
+                </nz-tab>
+
+                <!-- ===== Cài đặt phòng ===== -->
+                <nz-tab [nzTitle]="settingsTitle">
+                    <ng-template #settingsTitle><nz-icon nzType="setting" /> Cài đặt phòng</ng-template>
+                    <div class="settings-list">
+                        @for (s of settingItems; track s.key) {
+                        <div class="setting-item">
+                            <div>
+                                <div>{{ s.label }}</div>
+                                @if (s.hint) {
+                                <div class="muted small">{{ s.hint }}</div>
+                                }
+                            </div>
+                            <nz-switch [(ngModel)]="$any(settings)[s.key]" [attr.aria-label]="s.label"></nz-switch>
+                        </div>
+                        }
+                    </div>
+                </nz-tab>
+            </nz-tabset>
+        </nz-spin>
+    </ng-container>
+
+    <ng-template #extra>
+        <button nz-button nzType="text" (click)="close()" aria-label="Đóng"><nz-icon nzType="close" /></button>
+    </ng-template>
+
+    <ng-template #footer>
+        <div class="form-footer">
+            <button nz-button (click)="close()" [disabled]="isSaving">Huỷ</button>
+            @if (isDraft) {
+            <button nz-button [nzLoading]="isSaving" (click)="save('draft')">
+                <nz-icon nzType="save" /> Lưu nháp
+            </button>
+            <button nz-button nzType="primary" [nzLoading]="isSaving" (click)="save('publish')">
+                <nz-icon nzType="send" /> {{ isEdit ? 'Phát hành và gửi lời mời' : 'Lưu và gửi lời mời' }}
+            </button>
+            } @else {
+            <button nz-button nzType="primary" [nzLoading]="isSaving" (click)="save('update')">
+                <nz-icon nzType="save" /> Cập nhật
+            </button>
+            }
+        </div>
+    </ng-template>
+</nz-drawer>

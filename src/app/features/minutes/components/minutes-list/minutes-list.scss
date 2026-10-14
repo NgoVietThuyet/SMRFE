@@ -1,0 +1,26 @@
+:host {
+    display: block;
+    position: relative;
+    height: 100vh;
+}
+
+.search-box {
+    width: 320px;
+}
+
+.row {
+    cursor: pointer;
+}
+
+.name {
+    font-weight: 500;
+}
+
+.muted {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+
+    nz-tag {
+        margin-left: 6px;
+    }
+}

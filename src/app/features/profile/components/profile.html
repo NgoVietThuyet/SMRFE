@@ -1,0 +1,162 @@
+<div class="profile-wrapper">
+
+  <!-- ===== LEFT: Profile Card ===== -->
+  <div class="profile-sidebar">
+    <nz-card class="profile-card" [nzBordered]="true">
+
+      <div class="avatar-section">
+        <div class="avatar-ring">
+          <nz-avatar
+            [nzSize]="96"
+            [nzText]="getInitials()"
+            [ngStyle]="{ 'background-color': getAvatarColor(), 'font-size': '32px', 'font-weight': '700', 'letter-spacing': '1px' }">
+          </nz-avatar>
+        </div>
+
+        <div class="profile-name">{{ dto.fullName || '---' }}</div>
+        <div class="profile-username">
+          <nz-icon nzType="user" nzTheme="outline" />
+          {{ dto.userName }}
+        </div>
+
+        <div class="profile-badges">
+          @if (dto.titleName) {
+          <nz-tag nzColor="blue">
+            <nz-icon nzType="idcard" nzTheme="outline" />
+            {{ dto.titleName }}
+          </nz-tag>
+          }
+          <nz-tag [nzColor]="accountInfo?.isAdmin ? 'gold' : 'default'">
+            <nz-icon [nzType]="accountInfo?.isAdmin ? 'crown' : 'user'" />
+            {{ accountInfo?.isAdmin ? 'Quản trị viên' : 'Người dùng' }}
+          </nz-tag>
+        </div>
+      </div>
+
+      <nz-divider></nz-divider>
+
+      <div class="quick-info-list">
+        <div class="info-row">
+          <span class="info-icon"><nz-icon nzType="phone" nzTheme="outline" /></span>
+          <div class="info-body">
+            <span class="info-label">Điện thoại</span>
+            <span class="info-value">{{ dto.phone || '---' }}</span>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-icon"><nz-icon nzType="mail" nzTheme="outline" /></span>
+          <div class="info-body">
+            <span class="info-label">Email</span>
+            <span class="info-value break-all">{{ dto.email || '---' }}</span>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-icon"><nz-icon nzType="environment" nzTheme="outline" /></span>
+          <div class="info-body">
+            <span class="info-label">Địa chỉ</span>
+            <span class="info-value">{{ dto.address || '---' }}</span>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-icon"><nz-icon nzType="apartment" nzTheme="outline" /></span>
+          <div class="info-body">
+            <span class="info-label">Đơn vị</span>
+            <span class="info-value">{{ dto.organizationName || '---' }}</span>
+          </div>
+        </div>
+      </div>
+    </nz-card>
+  </div>
+
+  <!-- ===== RIGHT: Content ===== -->
+  <div class="profile-content">
+    <nz-card class="content-card" [nzBordered]="true">
+      <nz-tabs [nzTabBarGutter]="0">
+        <nz-tab [nzTitle]="titleInfo">
+          <ng-template #titleInfo>
+            <span class="tab-label">
+              <nz-icon nzType="profile" nzTheme="outline" />
+              Thông tin cá nhân
+            </span>
+          </ng-template>
+
+          <div class="tab-body">
+            <div class="section-header">
+              <div class="section-title">
+                <nz-icon nzType="profile" nzTheme="outline" />
+                <span>Thông tin cá nhân</span>
+              </div>
+              <div class="section-actions">
+                @if (!isEditMode) {
+                <button nz-button nzType="primary" (click)="isEditMode = true">
+                  <nz-icon nzType="edit" nzTheme="outline" /> Chỉnh sửa
+                </button>
+                } @else {
+                <button nz-button nzType="default" (click)="cancelEdit()">
+                  <nz-icon nzType="rollback" nzTheme="outline" /> Hủy bỏ
+                </button>
+                <button nz-button nzType="primary" (click)="saveProfile()" [nzLoading]="isSaving" class="btn-save">
+                  <nz-icon nzType="save" nzTheme="outline" /> Lưu thay đổi
+                </button>
+                }
+              </div>
+            </div>
+
+            <div nz-row [nzGutter]="[12, 0]">
+              <div nz-col [nzXs]="24" [nzMd]="12">
+                <div class="form-field">
+                  <label class="field-label">Tài khoản</label>
+                  <input nz-input [ngModel]="dto.userName" [disabled]="true" aria-label="Tài khoản" />
+                </div>
+              </div>
+              <div nz-col [nzXs]="24" [nzMd]="12">
+                <div class="form-field">
+                  <label class="field-label required">Họ và tên</label>
+                  <input nz-input [(ngModel)]="dto.fullName" [disabled]="!isEditMode" maxlength="200"
+                    placeholder="Nguyễn Văn A" aria-label="Họ và tên" />
+                </div>
+              </div>
+              <div nz-col [nzXs]="24" [nzMd]="12">
+                <div class="form-field">
+                  <label class="field-label">Số điện thoại</label>
+                  <input nz-input [(ngModel)]="dto.phone" [disabled]="!isEditMode" maxlength="50"
+                    placeholder="0901234567" aria-label="Số điện thoại" />
+                </div>
+              </div>
+              <div nz-col [nzXs]="24" [nzMd]="12">
+                <div class="form-field">
+                  <label class="field-label required">Email</label>
+                  <input nz-input type="email" [(ngModel)]="dto.email" [disabled]="!isEditMode" maxlength="200"
+                    placeholder="email@congty.vn" aria-label="Email" />
+                </div>
+              </div>
+              <div nz-col [nzXs]="24" [nzMd]="12">
+                <div class="form-field">
+                  <label class="field-label">Đơn vị</label>
+                  <input nz-input [ngModel]="dto.organizationName" [disabled]="true" aria-label="Đơn vị" />
+                </div>
+              </div>
+              <div nz-col [nzXs]="24" [nzMd]="12">
+                <div class="form-field">
+                  <label class="field-label">Chức danh</label>
+                  <input nz-input [ngModel]="dto.titleName" [disabled]="true" aria-label="Chức danh" />
+                </div>
+              </div>
+              <div nz-col [nzSpan]="24">
+                <div class="form-field">
+                  <label class="field-label">Địa chỉ</label>
+                  <input nz-input [(ngModel)]="dto.address" [disabled]="!isEditMode" maxlength="500"
+                    placeholder="Số nhà, đường, quận/huyện, tỉnh/thành" aria-label="Địa chỉ" />
+                </div>
+              </div>
+            </div>
+
+            <nz-alert nzType="info" nzShowIcon class="mt-3"
+              nzMessage="Đơn vị và chức danh do quản trị viên cập nhật. Đổi mật khẩu ở menu tài khoản cuối thanh bên trái.">
+            </nz-alert>
+          </div>
+        </nz-tab>
+      </nz-tabs>
+    </nz-card>
+  </div>
+</div>

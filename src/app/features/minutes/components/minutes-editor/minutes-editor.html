@@ -1,0 +1,293 @@
+@if (loadError) {
+<nz-result [nzStatus]="loadError === 403 ? '403' : '404'"
+    [nzTitle]="loadError === 403 ? 'Bạn không phải thành viên cuộc họp này' : 'Không tìm thấy cuộc họp'">
+    <div nz-result-extra><button nz-button nzType="primary" (click)="back()">Về danh sách biên bản</button></div>
+</nz-result>
+} @else if (!detail) {
+<div class="loading"><nz-spin nzSimple></nz-spin></div>
+} @else {
+<div class="editor">
+    <!-- ===== Thanh trên ===== -->
+    <header class="bar">
+        <button nz-button nzType="text" aria-label="Về danh sách" (click)="back()"><nz-icon nzType="arrow-left" /></button>
+        <div class="bar-title">
+            <div class="meeting-name" [title]="detail.meetingName">{{ detail.meetingName }}</div>
+            <div class="muted">{{ when }}</div>
+        </div>
+        @if (current; as c) {
+        <nz-tag [nzColor]="statusMeta[c.status].color">{{ statusMeta[c.status].label }}</nz-tag>
+        @if (dirty) { <nz-tag nzColor="warning">Chưa lưu</nz-tag> }
+        }
+        <span class="spacer"></span>
+
+        @if (detail.versions.length > 1) {
+        <nz-select class="version-select" [ngModel]="current?.version" (ngModelChange)="selectVersion($event)" aria-label="Phiên bản">
+            @for (v of detail.versions; track v.version) {
+            <nz-option [nzValue]="v.version" [nzLabel]="versionLabel(v)"></nz-option>
+            }
+        </nz-select>
+        }
+
+        @if (detail.canGenerate) {
+        <button nz-button [nzLoading]="generating" [disabled]="detail.transcriptCount === 0" (click)="generate()"
+            nz-tooltip [nzTooltipTitle]="detail.transcriptCount === 0 ? 'Cuộc họp chưa có transcript' : ''">
+            <nz-icon nzType="robot" /> {{ current ? 'Sinh lại bằng AI' : 'Sinh bằng AI' }}
+        </button>
+        }
+        @if (editable) {
+        <button nz-button [disabled]="!dirty" [nzLoading]="saving" (click)="save()"><nz-icon nzType="save" /> Lưu</button>
+        @if (current?.status === Status.Draft || dirty) {
+        <button nz-button nzType="primary" (click)="submit()"><nz-icon nzType="send" /> Gửi duyệt</button>
+        }
+        }
+        @if (detail.canApprove && current?.status === Status.Submitted) {
+        <button nz-button nzDanger (click)="openReject()"><nz-icon nzType="close" /> Từ chối</button>
+        <button nz-button nzType="primary" (click)="approve()"><nz-icon nzType="check" /> Duyệt</button>
+        }
+        @if (detail.canApprove && current?.status === Status.Approved) {
+        <button nz-button nzType="primary" (click)="publish()"><nz-icon nzType="notification" /> Phát hành</button>
+        }
+        @if (detail.canEdit && current && !editable) {
+        <button nz-button (click)="newDraft()" nz-tooltip nzTooltipTitle="Chép bản này sang phiên bản nháp mới để sửa">
+            <nz-icon nzType="copy" /> Tạo bản nháp mới
+        </button>
+        }
+        @if (current) {
+        <button nz-button (click)="download()"><nz-icon nzType="file-word" /> Tải DOCX</button>
+        }
+    </header>
+
+    <!-- ===== Thông báo ===== -->
+    <div class="banners">
+        @if (generating) {
+        <nz-alert nzType="info" nzShowIcon nzMessage="AI đang soạn biên bản từ transcript. Trang sẽ tự cập nhật khi xong."></nz-alert>
+        } @else if (detail.job?.status === JobStatus.Failed) {
+        <nz-alert nzType="error" nzShowIcon [nzMessage]="'Lần sinh biên bản gần nhất thất bại: ' + (detail.job?.error || 'không rõ lỗi')"></nz-alert>
+        }
+        @if (current; as c) {
+        @if (c.source === 'AI' && c.status !== Status.Published) {
+        <nz-alert nzType="warning" nzShowIcon
+            nzMessage="Biên bản do AI tạo, cần người kiểm tra và duyệt trước khi phát hành. Bấm chip ⏱ để đối chiếu với transcript."></nz-alert>
+        }
+        @if (c.status === Status.Rejected && c.rejectReason) {
+        <nz-alert nzType="error" nzShowIcon [nzMessage]="'Chủ trì từ chối: ' + c.rejectReason"></nz-alert>
+        }
+        @if (c.status === Status.Published) {
+        <nz-alert nzType="success" nzShowIcon
+            [nzMessage]="'Đã phát hành lúc ' + timeOf(c.publishedAt) + '. Bản phát hành không sửa được.'"></nz-alert>
+        }
+        @if (liveWarnings.length && c.status !== Status.Published && detail.canEdit) {
+        <nz-alert nzType="warning" nzShowIcon [nzMessage]="warnTitle" [nzDescription]="warnList"></nz-alert>
+        <ng-template #warnTitle>Chưa phát hành được: {{ liveWarnings.length }} mục thiếu nguồn</ng-template>
+        <ng-template #warnList>
+            <ul class="warn-list">@for (w of liveWarnings; track w) { <li>{{ w }}</li> }</ul>
+        </ng-template>
+        }
+        }
+    </div>
+
+    <div class="panes">
+        <!-- ===== Trái: transcript ===== -->
+        <aside class="transcript">
+            <div class="pane-head">
+                <span class="pane-title">Transcript ({{ segments.length }})</span>
+                <nz-input-group [nzPrefix]="searchIcon" class="transcript-search">
+                    <input nz-input placeholder="Tìm trong transcript" aria-label="Tìm trong transcript" [(ngModel)]="transcriptKeyword" />
+                </nz-input-group>
+                <ng-template #searchIcon><nz-icon nzType="search" /></ng-template>
+            </div>
+            @if (pick) {
+            <div class="pick-hint">
+                <nz-icon nzType="link" /> Bấm vào đoạn transcript để gắn làm nguồn.
+                <a (click)="pick = null">Xong</a>
+            </div>
+            }
+            <div class="pane-body">
+                @for (s of filteredSegments; track s.id) {
+                <div class="seg" [attr.data-seg]="s.id" [class.active]="activeSegmentId === s.id" [class.pickable]="!!pick"
+                    (click)="onSegmentClick(s)">
+                    @if (editingSegmentId === s.id) {
+                    <div (click)="$event.stopPropagation()">
+                        <input nz-input class="mb-2" placeholder="Người nói" aria-label="Người nói" [(ngModel)]="editSpeaker" list="speakers" />
+                        <textarea nz-input rows="3" aria-label="Nội dung đoạn" [(ngModel)]="editText"></textarea>
+                        <div class="seg-edit-actions">
+                            <button nz-button nzSize="small" (click)="editingSegmentId = null">Hủy</button>
+                            <button nz-button nzSize="small" nzType="primary" (click)="saveSegment(s)">Lưu</button>
+                        </div>
+                    </div>
+                    } @else {
+                    <div class="seg-head">
+                        <span class="seg-time">⏱ {{ offset(s) }}</span>
+                        <span class="seg-speaker">{{ s.speakerName || 'Người tham gia' }}</span>
+                        @if (detail.canEdit) {
+                        <a class="seg-edit" aria-label="Sửa đoạn" nz-tooltip nzTooltipTitle="Sửa nội dung / người nói"
+                            (click)="editSegment(s, $event)"><nz-icon nzType="edit" /></a>
+                        }
+                    </div>
+                    <div class="seg-text">{{ s.text }}</div>
+                    }
+                </div>
+                } @empty {
+                <nz-empty [nzNotFoundContent]="segments.length ? 'Không có đoạn nào khớp' : 'Chưa có transcript. Bật phụ đề trong phòng họp để ghi lại nội dung.'"></nz-empty>
+                }
+                <datalist id="speakers">
+                    @for (p of detail.participants; track p.userName) { <option [value]="p.fullName"></option> }
+                </datalist>
+            </div>
+        </aside>
+
+        <!-- ===== Phải: biên bản ===== -->
+        <section class="minutes">
+            <div class="pane-body">
+                @if (!current || !draft) {
+                <nz-empty class="no-minutes" [nzNotFoundContent]="noMinutes"></nz-empty>
+                <ng-template #noMinutes>
+                    @if (detail.canEdit) {
+                    <div>Chưa có biên bản cho cuộc họp này.</div>
+                    <div class="empty-actions">
+                        @if (detail.canGenerate) {
+                        <button nz-button nzType="primary" [nzLoading]="generating" [disabled]="detail.transcriptCount === 0"
+                            (click)="generate()"><nz-icon nzType="robot" /> Sinh bằng AI</button>
+                        }
+                        <button nz-button (click)="newDraft()"><nz-icon nzType="edit" /> Soạn tay</button>
+                    </div>
+                    } @else {
+                    <div>Biên bản chưa được phát hành.</div>
+                    }
+                </ng-template>
+                } @else {
+
+                <!-- Tóm tắt -->
+                <div class="block">
+                    <div class="block-head"><span class="block-title">Tóm tắt</span></div>
+                    @if (editable) {
+                    <textarea nz-input [nzAutosize]="{ minRows: 3, maxRows: 12 }" aria-label="Tóm tắt" placeholder="Tóm tắt nội dung cuộc họp"
+                        [(ngModel)]="draft.summary" (ngModelChange)="markDirty()"></textarea>
+                    } @else {
+                    <div class="text">{{ draft.summary || 'Chưa có tóm tắt' }}</div>
+                    }
+                    <ng-container *ngTemplateOutlet="chips; context: { sources: draft.summarySources, target: summaryTarget }"></ng-container>
+                </div>
+
+                <!-- Quyết định -->
+                <div class="block">
+                    <div class="block-head">
+                        <span class="block-title">Quyết định ({{ draft.decisions.length }})</span>
+                        @if (editable) { <button nz-button nzSize="small" (click)="addDecision()"><nz-icon nzType="plus" /> Thêm</button> }
+                    </div>
+                    @for (d of draft.decisions; track $index; let i = $index) {
+                    <div class="item" [class.warn]="!d.sources.length">
+                        <div class="item-no">{{ i + 1 }}</div>
+                        <div class="item-main">
+                            @if (editable) {
+                            <textarea nz-input [nzAutosize]="{ minRows: 1, maxRows: 6 }" [attr.aria-label]="'Quyết định ' + (i + 1)"
+                                placeholder="Nội dung quyết định" [(ngModel)]="d.text" (ngModelChange)="markDirty()"></textarea>
+                            } @else {
+                            <div class="text">{{ d.text }}</div>
+                            }
+                            <ng-container *ngTemplateOutlet="chips; context: { sources: d.sources, target: decisionTarget(i) }"></ng-container>
+                        </div>
+                        @if (editable) {
+                        <a class="item-del" aria-label="Xóa quyết định" nz-popconfirm nzPopconfirmTitle="Xóa quyết định này?"
+                            (nzOnConfirm)="removeDecision(i)"><nz-icon nzType="delete" /></a>
+                        }
+                    </div>
+                    } @empty { <div class="muted">Không có quyết định nào.</div> }
+                </div>
+
+                <!-- Việc cần làm -->
+                <div class="block">
+                    <div class="block-head">
+                        <span class="block-title">Việc cần làm ({{ draft.actions.length }})</span>
+                        @if (editable) { <button nz-button nzSize="small" (click)="addAction()"><nz-icon nzType="plus" /> Thêm</button> }
+                    </div>
+                    @for (a of draft.actions; track $index; let i = $index) {
+                    <div class="item" [class.warn]="!a.sources.length">
+                        <div class="item-no">{{ i + 1 }}</div>
+                        <div class="item-main">
+                            @if (editable) {
+                            <textarea nz-input [nzAutosize]="{ minRows: 1, maxRows: 6 }" [attr.aria-label]="'Việc cần làm ' + (i + 1)"
+                                placeholder="Nội dung công việc" [(ngModel)]="a.text" (ngModelChange)="markDirty()"></textarea>
+                            <div class="action-meta">
+                                <nz-select class="assignee" nzAllowClear nzShowSearch nzPlaceHolder="Phụ trách: chưa xác định"
+                                    [ngModel]="a.assignee" (ngModelChange)="onAssigneeChange(a, $event)">
+                                    @for (p of detail.participants; track p.userName) {
+                                    <nz-option [nzValue]="p.userName" [nzLabel]="p.fullName"></nz-option>
+                                    }
+                                </nz-select>
+                                <nz-date-picker nzFormat="dd/MM/yyyy" nzPlaceHolder="Hạn: chưa xác định" [ngModel]="dueAsDate(a)"
+                                    (ngModelChange)="onDueChange(a, $event)"></nz-date-picker>
+                                <label nz-checkbox [(ngModel)]="a.confirmed" (ngModelChange)="markDirty()"
+                                    nz-tooltip nzTooltipTitle="Khi phát hành, mục này thành một công việc trên bảng của cuộc họp">Tạo công việc</label>
+                            </div>
+                            } @else {
+                            <div class="text">{{ a.text }}</div>
+                            <div class="action-meta muted">
+                                <span><nz-icon nzType="user" /> {{ a.assigneeName || a.assignee || 'Chưa xác định' }}</span>
+                                <span><nz-icon nzType="calendar" /> {{ a.dueDate ? (dueAsDate(a) | date: 'dd/MM/yyyy') : 'Chưa xác định' }}</span>
+                                @if (a.taskId) { <a (click)="openTask(a.taskId)"><nz-icon nzType="carry-out" /> Mở công việc</a> }
+                            </div>
+                            }
+                            <ng-container *ngTemplateOutlet="chips; context: { sources: a.sources, target: actionTarget(i) }"></ng-container>
+                        </div>
+                        @if (editable) {
+                        <a class="item-del" aria-label="Xóa việc cần làm" nz-popconfirm nzPopconfirmTitle="Xóa việc này?"
+                            (nzOnConfirm)="removeAction(i)"><nz-icon nzType="delete" /></a>
+                        }
+                    </div>
+                    } @empty { <div class="muted">Không có việc cần làm nào.</div> }
+                </div>
+
+                <div class="meta muted">
+                    Phiên bản {{ current.version }} · {{ current.source === 'AI' ? 'AI tạo' : 'Soạn tay' }}
+                    @if (current.model) { · mô hình {{ current.model }} ({{ current.promptVersion }}) }
+                    · tạo bởi {{ current.createdBy }} lúc {{ timeOf(current.createdAt) }}
+                    @if (current.approvedBy) { · duyệt bởi {{ current.approvedBy }} }
+                </div>
+                }
+
+                <!-- Bản ghi -->
+                @if (recordings.length) {
+                <div class="block">
+                    <div class="block-head"><span class="block-title">Bản ghi hình</span></div>
+                    @for (r of recordings; track r.file.id) {
+                    <div class="recording">
+                        <div class="muted">{{ r.file.fileName }}</div>
+                        @if (r.url) { <video controls preload="metadata" [src]="r.url"></video> }
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- Chip nguồn dùng chung -->
+<ng-template #chips let-sources="sources" let-target="target">
+    <div class="chips">
+        @for (id of sources; track id) {
+        <nz-tag class="chip" nzColor="blue" [nzMode]="editable ? 'closeable' : 'default'" nz-tooltip [nzTooltipTitle]="chipTooltip(id)"
+            (click)="jumpTo(id)" (nzOnClose)="removeSource(target, id); $event.stopPropagation()">{{ chipLabel(id) }}</nz-tag>
+        }
+        @if (!sources.length && target.kind !== 'summary') {
+        <span class="no-source"><nz-icon nzType="warning" /> Chưa có nguồn</span>
+        }
+        @if (editable) {
+        <a class="add-source" [class.picking]="isPicking(target)" (click)="startPick(target)">
+            <nz-icon nzType="link" /> {{ isPicking(target) ? 'Đang chọn nguồn…' : 'Gắn nguồn' }}
+        </a>
+        }
+    </div>
+</ng-template>
+
+<!-- Từ chối -->
+<nz-modal [(nzVisible)]="rejectVisible" nzTitle="Từ chối biên bản" nzOkText="Từ chối" nzCancelText="Hủy" [nzOkDanger]="true"
+    [nzOkDisabled]="!rejectReason.trim()" (nzOnCancel)="rejectVisible = false" (nzOnOk)="confirmReject()">
+    <ng-container *nzModalContent>
+        <p>Biên bản sẽ trả về cho người soạn để sửa. Hãy nêu rõ cần sửa gì.</p>
+        <textarea nz-input rows="4" maxlength="1000" aria-label="Lý do từ chối" placeholder="Lý do từ chối"
+            [(ngModel)]="rejectReason"></textarea>
+    </ng-container>
+</nz-modal>
+}

@@ -1,0 +1,323 @@
+<nz-layout class="main-root-layout">
+  <nz-sider
+    [nzWidth]="246"
+    [nzCollapsedWidth]="68"
+    nzCollapsible
+    [nzCollapsed]="sidebarCollapsed"
+    [nzTrigger]="null"
+  >
+    <div class="logo">
+      @if (!sidebarCollapsed) {
+      <img src="img/d2s_logo.png" alt="Smart Meeting" class="logo-img" />
+      } @else {
+      <img src="img/d2s_favicon.png" alt="Smart Meeting" class="logo-img" />
+      }
+    </div>
+
+    @if (!sidebarCollapsed) {
+    <div class="input-search">
+      <nz-input-group [nzSuffix]="suffixIconSearch">
+        <input
+          type="text"
+          nz-input
+          placeholder="Tìm kiếm chức năng"
+          aria-label="Tìm kiếm chức năng"
+          [(ngModel)]="searchMenu"
+          (ngModelChange)="onSearchChangeMenu()"
+        />
+      </nz-input-group>
+      <ng-template #suffixIconSearch>
+        <nz-icon nzType="search" />
+      </ng-template>
+    </div>
+    }
+
+    <ul
+      nz-menu
+      nzTheme="light"
+      nzMode="inline"
+      [nzInlineCollapsed]="sidebarCollapsed"
+      class="overflow-menu"
+    >
+      <ng-container
+        *ngTemplateOutlet="menuTpl; context: { $implicit: displayedMenuTree }"
+      ></ng-container>
+
+      <ng-template #menuTpl let-menus>
+        @for (menu of menus; track menu.id) {
+        @if (!menu.children) {
+        <li
+          nz-menu-item
+          nz-tooltip
+          nzTooltipPlacement="right"
+          [nzTooltipTitle]="sidebarCollapsed ? menu.name : null"
+          [nzPaddingLeft]="menu.level * 24"
+          [routerLink]="menu.url"
+          [nzSelected]="isMenuItemActive(menu)"
+        >
+          @if (menu.icon) {
+          <i [class]="'bi bi-' + menu.icon"></i>
+          }
+          <span
+            [style.display]="!(sidebarCollapsed && menu.pId == MENU_PARENT_ROOT) ? 'inline' : 'none'"
+            >{{ menu.name }}</span
+          >
+        </li>
+        } @else {
+        <li
+          nz-submenu
+          nz-tooltip
+          nzTooltipPlacement="right"
+          [nzTooltipTitle]="sidebarCollapsed ? menu.name : null"
+          [nzOpen]="!sidebarCollapsed && menu.open"
+          (nzOpenChange)="onOpenChange(menu, $event)"
+          [nzTitle]="submenuTitle"
+        >
+          <ng-template #submenuTitle>
+            @if (menu.icon) {
+            <i [class]="'bi bi-' + menu.icon"></i>
+            }
+            <span class="submenu-label" [style.display]="sidebarCollapsed ? 'none' : 'inline'">{{ menu.name }}</span>
+          </ng-template>
+          <ul>
+            <ng-container
+              *ngTemplateOutlet="menuTpl; context: { $implicit: menu.children }"
+            ></ng-container>
+          </ul>
+        </li>
+        }
+        }
+      </ng-template>
+    </ul>
+
+    @if (!sidebarCollapsed && displayedMenuTree.length === 0) {
+    <div class="menu-empty">Không tìm thấy chức năng</div>
+    }
+
+    <div
+      class="sidebar-footer"
+      [ngClass]="{ 'has-border': !sidebarCollapsed, 'is-collapsed': sidebarCollapsed }"
+    >
+      @if (sidebarCollapsed) {
+      <button
+        type="button"
+        class="sidebar-toggle-btn"
+        nz-tooltip
+        nzTooltipTitle="Mở menu"
+        nzTooltipPlacement="right"
+        aria-label="Mở menu"
+        (click)="toggleSidebar()"
+      >
+        <nz-icon nzType="menu-unfold" />
+      </button>
+      }
+      <div class="sidebar-footer-main">
+        <div
+          class="user-profile-trigger"
+          nz-dropdown
+          [nzDropdownMenu]="userMenu"
+          nzTrigger="hover"
+          [nzPlacement]="userDropdownPlacement"
+          nzOverlayClassName="sidebar-user-dropdown"
+          nz-popover
+          [nzPopoverContent]="notificationPopover"
+          nzPopoverTrigger="click"
+          [(nzPopoverVisible)]="isNotificationPopoverVisible"
+          (nzPopoverVisibleChange)="onNotificationPopoverVisibleChange($event)"
+          nzPopoverPlacement="rightBottom"
+          nzPopoverOverlayClassName="notification-popover"
+        >
+          <nz-badge
+            [nzCount]="unreadNotificationCount"
+            [nzOverflowCount]="99"
+            nzSize="small"
+            [nzOffset]="[-2, 2]"
+            class="user-avatar-badge"
+          >
+            <nz-avatar
+              [nzText]="userAvatarText"
+              [nzSize]="sidebarCollapsed ? 32 : 36"
+              [ngStyle]="{ 'background-color': userAvatarColor }"
+            ></nz-avatar>
+          </nz-badge>
+          @if (!sidebarCollapsed) {
+          <div class="user-info">
+            <span class="user-name">{{ displayFullName }}</span>
+            <span class="user-sub">{{ displaySubtitle }}</span>
+          </div>
+          }
+        </div>
+        @if (!sidebarCollapsed) {
+        <button
+          type="button"
+          class="sidebar-toggle-btn"
+          nz-tooltip
+          nzTooltipTitle="Đóng menu"
+          nzTooltipPlacement="right"
+          aria-label="Đóng menu"
+          (click)="toggleSidebar()"
+        >
+          <nz-icon nzType="menu-fold" />
+        </button>
+        }
+      </div>
+    </div>
+
+    <nz-dropdown-menu #userMenu="nzDropdownMenu">
+      <ul nz-menu class="sidebar-user-menu">
+        <li nz-menu-item (click)="navigateRoute('/profile')">
+          <nz-icon nzType="user" />
+          <span>Thông tin cá nhân</span>
+        </li>
+        <li nz-menu-item (click)="openNotifications()">
+          <nz-icon nzType="bell" />
+          <span>Thông báo</span>
+          @if (unreadNotificationCount > 0) {
+          <span class="menu-badge">{{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}</span>
+          }
+        </li>
+        <li nz-menu-item (click)="changePassOpen()">
+          <nz-icon nzType="key" />
+          <span>Đổi mật khẩu</span>
+        </li>
+        <li nz-menu-divider></li>
+        <li nzDanger nz-menu-item class="menu-logout" (click)="logOut()">
+          <nz-icon nzType="logout" />
+          <span>Đăng xuất</span>
+        </li>
+      </ul>
+    </nz-dropdown-menu>
+  </nz-sider>
+
+  <nz-layout>
+    <nz-content>
+      <router-outlet></router-outlet>
+    </nz-content>
+  </nz-layout>
+</nz-layout>
+
+<nz-modal
+  [(nzVisible)]="isVisibleChangePass"
+  [nzTitle]="forceChangePassword ? 'ĐỔI MẬT KHẨU LẦN ĐẦU' : 'ĐỔI MẬT KHẨU'"
+  [nzClosable]="!forceChangePassword"
+  [nzMaskClosable]="!forceChangePassword"
+  [nzKeyboard]="!forceChangePassword"
+  [nzFooter]="actionChangePass"
+  (nzOnCancel)="changePassCancel()"
+>
+  <ng-container *nzModalContent>
+    <div class="mx-4">
+      @if (forceChangePassword) {
+      <nz-alert
+        class="mb-3"
+        nzType="warning"
+        nzShowIcon
+        nzMessage="Tài khoản đang dùng mật khẩu tạm. Vui lòng đổi mật khẩu để tiếp tục."
+      ></nz-alert>
+      }
+      <input
+        nz-input
+        class="input-change-pass"
+        [(ngModel)]="modelChangePass.currentPassword"
+        placeholder="Mật khẩu hiện tại"
+        aria-label="Mật khẩu hiện tại"
+        type="password"
+        autocomplete="current-password"
+      />
+      <input
+        nz-input
+        class="input-change-pass"
+        [(ngModel)]="modelChangePass.newPassword"
+        placeholder="Mật khẩu mới (ít nhất 8 ký tự)"
+        aria-label="Mật khẩu mới"
+        type="password"
+        autocomplete="new-password"
+      />
+      <input
+        nz-input
+        class="input-change-pass"
+        [(ngModel)]="modelChangePass.confirmNewPassword"
+        placeholder="Xác nhận lại mật khẩu mới"
+        aria-label="Xác nhận mật khẩu mới"
+        type="password"
+        autocomplete="new-password"
+        (keydown.enter)="changePassOk()"
+      />
+    </div>
+  </ng-container>
+  <ng-template #actionChangePass>
+    @if (forceChangePassword) {
+    <button nz-button nzType="default" (click)="logOut()">Đăng xuất</button>
+    } @else {
+    <button nz-button nzType="default" (click)="changePassCancel()">Huỷ</button>
+    }
+    <button nz-button nzType="primary" [nzLoading]="isChangingPassword" (click)="changePassOk()">
+      Xác nhận
+    </button>
+  </ng-template>
+</nz-modal>
+
+<ng-template #notificationPopover>
+  <div class="notification-panel">
+    <div class="notification-header">
+      <span class="notification-title">Thông báo</span>
+      <div class="notification-actions">
+        @if (unreadNotificationCount > 0) {
+        <a (click)="markAllNotificationsAsRead()">Đánh dấu tất cả đã đọc</a>
+        }
+        <button type="button" class="notification-close" aria-label="Đóng" (click)="closeNotificationPopover($event)">
+          <nz-icon nzType="close" />
+        </button>
+      </div>
+    </div>
+    <div class="notification-list" (scroll)="onNotificationScroll($event)">
+      @if (notifications.length === 0 && !isLoadingMoreNotifications) {
+      <div class="notification-empty">
+        <nz-icon nzType="bell" nzTheme="outline" />
+        <span>Không có thông báo</span>
+      </div>
+      }
+      @for (noti of notifications; track noti.id) {
+      <div
+        class="notification-item"
+        [class.unread]="!noti.isRead"
+        (click)="onNotificationClick(noti)"
+      >
+        <div class="notification-icon">
+          <nz-icon [nzType]="getNotificationIcon(noti.type)" nzTheme="outline" />
+        </div>
+        <div class="notification-content">
+          <div class="notification-item-title">{{ noti.title }}</div>
+          @if (noti.body) {
+          <div class="notification-item-desc">{{ noti.body }}</div>
+          }
+          <div class="notification-item-time">
+            {{ noti.createDate | date: 'dd/MM/yyyy HH:mm' }}
+            @if (noti.actorFullName) { · {{ noti.actorFullName }} }
+          </div>
+        </div>
+        @if (!noti.isRead) {
+        <div class="notification-dot"></div>
+        }
+        <button
+          type="button"
+          class="notification-remove"
+          nz-tooltip
+          nzTooltipTitle="Xóa"
+          aria-label="Xóa thông báo"
+          (click)="removeNotification(noti, $event)"
+        >
+          <nz-icon nzType="delete" />
+        </button>
+      </div>
+      }
+
+      @if (isLoadingMoreNotifications) {
+      <div class="loading-more">
+        <nz-spin nzSimple></nz-spin>
+        <span>Đang tải...</span>
+      </div>
+      }
+    </div>
+  </div>
+</ng-template>

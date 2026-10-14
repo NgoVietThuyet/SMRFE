@@ -1,0 +1,307 @@
+:host {
+    display: block;
+    height: 100vh;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    padding-top: 120px;
+}
+
+.editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px 8px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+
+    .bar-title {
+        min-width: 0;
+        max-width: 420px;
+    }
+
+    .meeting-name {
+        font-weight: 600;
+        font-size: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .spacer {
+        flex: 1;
+    }
+
+    .version-select {
+        width: 230px;
+    }
+}
+
+.banners {
+    padding: 0 16px;
+
+    nz-alert {
+        display: block;
+        margin-top: 8px;
+    }
+
+    .warn-list {
+        margin: 0;
+        padding-left: 18px;
+    }
+}
+
+.panes {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    margin-top: 8px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.transcript {
+    width: 40%;
+    min-width: 300px;
+    border-right: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+}
+
+.minutes {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pane-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+
+    .pane-title {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .transcript-search {
+        flex: 1;
+    }
+}
+
+.pane-body {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+}
+
+.pick-hint {
+    padding: 6px 12px;
+    background: #e6f4ff;
+    color: #0958d9;
+    font-size: 13px;
+
+    a {
+        float: right;
+    }
+}
+
+.seg {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    margin-bottom: 4px;
+
+    &:hover {
+        background: #fafafa;
+
+        .seg-edit {
+            visibility: visible;
+        }
+    }
+
+    &.pickable {
+        cursor: copy;
+    }
+
+    &.active {
+        background: #e6f4ff;
+        border-color: #91caff;
+    }
+}
+
+.seg-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.seg-time {
+    color: #0958d9;
+    font-variant-numeric: tabular-nums;
+}
+
+.seg-speaker {
+    font-weight: 600;
+    flex: 1;
+}
+
+.seg-edit {
+    visibility: hidden;
+}
+
+.seg-text {
+    margin-top: 2px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.seg-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.block {
+    margin-bottom: 20px;
+}
+
+.block-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.block-title {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.text {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.item {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+
+    &.warn {
+        border-color: #ffd591;
+        background: #fffbe6;
+    }
+}
+
+.item-no {
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    border-radius: 50%;
+    background: #f0f0f0;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.item-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-del {
+    color: rgba(0, 0, 0, 0.45);
+
+    &:hover {
+        color: #ff4d4f;
+    }
+}
+
+.action-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 8px;
+
+    .assignee {
+        width: 240px;
+    }
+}
+
+.chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 0;
+    margin-top: 8px;
+
+    .chip {
+        cursor: pointer;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .no-source {
+        color: #d46b08;
+        font-size: 12px;
+        margin-right: 12px;
+    }
+
+    .add-source {
+        font-size: 12px;
+
+        &.picking {
+            font-weight: 600;
+        }
+    }
+}
+
+.muted {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+}
+
+.meta {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 8px;
+    margin-bottom: 16px;
+}
+
+.no-minutes {
+    margin-top: 80px;
+}
+
+.empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.recording video {
+    width: 100%;
+    max-height: 420px;
+    border-radius: 8px;
+    background: #000;
+    margin-top: 4px;
+}
+
+.mb-2 {
+    margin-bottom: 8px;
+}

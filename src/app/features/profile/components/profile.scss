@@ -1,0 +1,335 @@
+@use 'sass:color';
+
+// ─── Variables ────────────────────────────────────────────────
+$primary:         #189AD6;
+$primary-hover:   #1488bf;
+$primary-light:   rgba(24, 154, 214, 0.08);
+$primary-border:  rgba(24, 154, 214, 0.30);
+$radius:          6px;
+$sp:              12px;          // base spacing
+$text-dark:       #262626;
+$text-body:       #595959;
+$text-muted:      #8c8c8c;
+$border:          #f0f0f0;
+$bg-page:         #f4f6f8;
+
+// ─── Layout wrapper ───────────────────────────────────────────
+.profile-wrapper {
+  display: flex;
+  gap: $sp;
+  padding: $sp;
+  min-height: calc(100vh - 50px);
+  background: $bg-page;
+  align-items: flex-start;
+}
+
+// ─── LEFT Sidebar ─────────────────────────────────────────────
+.profile-sidebar {
+  width: 288px;
+  flex-shrink: 0;
+
+  .profile-card {
+    border-radius: $radius;
+
+    ::ng-deep .ant-card-body {
+      padding: $sp;
+    }
+
+    // ── Avatar block
+    .avatar-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: $sp 0 $sp 0;
+      text-align: center;
+
+      .avatar-ring {
+        padding: 3px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $primary 0%, color.adjust($primary, $lightness: 18%) 100%);
+        display: inline-flex;
+        box-shadow: 0 4px 16px rgba(24, 154, 214, 0.28);
+
+        ::ng-deep .ant-avatar {
+          border: 2px solid #fff;
+        }
+      }
+
+      .account-avatar-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .profile-name {
+        font-size: 17px;
+        font-weight: 700;
+        color: $text-dark;
+        line-height: 1.35;
+        margin: 0;
+        word-break: break-word;
+      }
+
+      .profile-username {
+        font-size: 13px;
+        color: $text-muted;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .profile-badges {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+      }
+    }
+
+    // ── Quick info list
+    .quick-info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .info-row {
+        display: flex;
+        align-items: flex-start;
+        gap: $sp;
+
+        .info-icon {
+          width: 32px;
+          height: 32px;
+          flex-shrink: 0;
+          border-radius: $radius;
+          background: $primary-light;
+          border: 1px solid $primary-border;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: $primary;
+          font-size: 14px;
+        }
+
+        .info-body {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-width: 0;
+          padding-top: 2px;
+
+          .info-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: $text-muted;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+          }
+
+          .info-value {
+            font-size: 13px;
+            color: $text-dark;
+            font-weight: 500;
+            margin-top: 2px;
+            word-break: break-word;
+
+            &.break-all {
+              word-break: break-all;
+            }
+          }
+        }
+      }
+    }
+
+    // ── Group tags
+    .divider-label {
+      font-size: 12px;
+      color: $text-muted;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .group-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-bottom: 4px;
+    }
+  }
+}
+
+// ─── RIGHT Content ────────────────────────────────────────────
+.profile-content {
+  flex: 1;
+  min-width: 0;
+
+  .content-card {
+    border-radius: $radius;
+
+    ::ng-deep .ant-card-body {
+      padding: $sp;
+    }
+
+    // Tab label icon + text
+    ::ng-deep .ant-tabs-tab {
+      padding: $sp 16px;
+    }
+
+    ::ng-deep .ant-tabs-tab-active .tab-label {
+      color: $primary;
+      font-weight: 600;
+    }
+
+    ::ng-deep .ant-tabs-ink-bar {
+      background: $primary;
+    }
+  }
+}
+
+// ─── Tab label ────────────────────────────────────────────────
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+// ─── Tab body (all tabs share) ────────────────────────────────
+.tab-body {
+  padding: $sp 0 0 0;
+}
+
+// ─── Section header ───────────────────────────────────────────
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $sp;
+  padding-bottom: $sp;
+  border-bottom: 1px solid $border;
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-dark;
+
+    nz-icon {
+      color: $primary;
+      font-size: 16px;
+    }
+  }
+
+  .section-actions {
+    display: flex;
+    gap: $sp;
+  }
+}
+
+// ─── Form fields ──────────────────────────────────────────────
+.form-field {
+  margin-bottom: $sp;
+
+  .field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-body;
+    margin-bottom: 6px;
+
+    &.required::after {
+      content: ' *';
+      color: #ff4d4f;
+    }
+  }
+
+  input[nz-input] {
+    width: 100%;
+    border-radius: $radius;
+
+    &:not([disabled]):focus {
+      border-color: $primary;
+      box-shadow: 0 0 0 2px rgba(24, 154, 214, 0.15);
+    }
+  }
+
+  nz-select {
+    width: 100%;
+  }
+
+  nz-input-group {
+    width: 100%;
+
+    ::ng-deep .ant-input-affix-wrapper {
+      border-radius: $radius;
+
+      &:focus,
+      &-focused {
+        border-color: $primary;
+        box-shadow: 0 0 0 2px rgba(24, 154, 214, 0.15);
+      }
+    }
+  }
+}
+
+// ─── Change password wrapper ──────────────────────────────────
+.change-pass-wrapper {
+  max-width: 640px;
+
+  .security-tip {
+    margin-bottom: $sp;
+  }
+}
+
+// ─── Form action buttons ──────────────────────────────────────
+.form-actions {
+  display: flex;
+  gap: $sp;
+  margin-top: 16px;
+  padding-top: $sp;
+  border-top: 1px solid $border;
+}
+
+// ─── Primary button override ──────────────────────────────────
+.btn-save {
+  background-color: $primary !important;
+  border-color: $primary !important;
+
+  &:hover {
+    background-color: $primary-hover !important;
+    border-color: $primary-hover !important;
+  }
+}
+
+// ─── History paging ───────────────────────────────────────────
+.history-paging {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $sp;
+  padding-top: $sp;
+  border-top: 1px solid $border;
+
+  .paging-total {
+    font-size: 13px;
+    color: $text-muted;
+  }
+}
+
+// ─── Responsive: collapse sidebar on smaller screens ──────────
+@media (max-width: 1024px) {
+  .profile-wrapper {
+    flex-direction: column;
+  }
+
+  .profile-sidebar {
+    width: 100%;
+  }
+}

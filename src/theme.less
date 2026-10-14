@@ -1,0 +1,53 @@
+@import "../node_modules/ng-zorro-antd/ng-zorro-antd.less";
+
+// Font + radius — khai báo trước :root (LESS dùng @font-family trong biến CSS)
+@font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+@primary-color: #189AD6;
+@system-primary-hover: darken(@primary-color, 8%);
+@system-primary-light: lighten(@primary-color, 12%);
+
+@border-radius-sm: 6px;
+@border-radius-lg: 6px;
+@border-radius-md: 6px;
+@border-radius-base: 6px;
+
+:root {
+  --system-primary: @primary-color;
+  --system-primary-hover: @system-primary-hover;
+  --system-primary-light: @system-primary-light;
+  --app-font-family: @font-family;
+}
+
+
+.ant-tree-switcher {
+  line-height: 28px !important;
+}
+
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  background-color: #F1F0F3 !important;
+}
+
+.ant-tree-checkbox {
+  top: initial;
+  margin: 7px 8px 0 0;
+}
+
+.card-calender .ant-picker-calendar-date {
+  height: 40px !important;
+  width: 40px !important;
+  line-height: 40px !important;
+}
+
+.card-calender .ant-picker-calendar-date-content {
+  min-height: 40px !important;
+}
+
+.card-calender .ant-picker-cell-inner {
+  height: 50px !important;
+  line-height: 50px !important;
+}
+
+.card-calender .ant-picker-content {
+  text-align: center !important;
+}

@@ -1,0 +1,245 @@
+<div class="landing-login" (mousemove)="onMouseMove($event)">
+    <!-- ===================== Animated AI Background ===================== -->
+    <div class="bg-layer bg-mesh" aria-hidden="true">
+        <div class="mesh-blob blob-1"></div>
+        <div class="mesh-blob blob-2"></div>
+        <div class="mesh-blob blob-3"></div>
+        <div class="mesh-blob blob-4"></div>
+    </div>
+
+    <div class="bg-layer bg-aurora" aria-hidden="true">
+        <span class="aurora aurora-a"></span>
+        <span class="aurora aurora-b"></span>
+        <span class="aurora aurora-c"></span>
+    </div>
+
+    <div class="bg-layer bg-rays" aria-hidden="true">
+        <span class="ray ray-1"></span>
+        <span class="ray ray-2"></span>
+        <span class="ray ray-3"></span>
+    </div>
+
+    <!-- Neural Network SVG lines -->
+    <svg class="bg-layer bg-neural" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 800">
+        <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.55" />
+                <stop offset="50%" stop-color="#a78bfa" stop-opacity="0.45" />
+                <stop offset="100%" stop-color="#22d3ee" stop-opacity="0.4" />
+            </linearGradient>
+            <radialGradient id="nodeGrad">
+                <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.9" />
+                <stop offset="100%" stop-color="#60a5fa" stop-opacity="0" />
+            </radialGradient>
+        </defs>
+        <g stroke="url(#lineGrad)" stroke-width="1" fill="none" opacity="0.55">
+            <path class="nn-line nn-1" d="M50,120 C300,40 500,260 750,160 S1100,400 1180,260" />
+            <path class="nn-line nn-2" d="M80,420 C320,300 540,500 780,380 S1080,620 1180,520" />
+            <path class="nn-line nn-3" d="M40,720 C260,640 520,760 760,640 S1060,800 1180,720" />
+            <path class="nn-line nn-4" d="M120,40 C260,260 460,140 700,360 S1060,200 1180,440" />
+        </g>
+        <g fill="url(#nodeGrad)">
+            <circle class="nn-node" cx="160" cy="120" r="22" />
+            <circle class="nn-node" cx="540" cy="220" r="28" />
+            <circle class="nn-node" cx="820" cy="180" r="20" />
+            <circle class="nn-node" cx="260" cy="420" r="24" />
+            <circle class="nn-node" cx="700" cy="380" r="30" />
+            <circle class="nn-node" cx="1020" cy="540" r="22" />
+            <circle class="nn-node" cx="380" cy="680" r="26" />
+            <circle class="nn-node" cx="880" cy="700" r="22" />
+        </g>
+    </svg>
+
+    <!-- Floating particles -->
+    <div class="bg-layer bg-particles" aria-hidden="true">
+        @for (p of particles; track $index) {
+        <span class="particle" [style.left.%]="p.x" [style.top.%]="p.y" [style.animation-delay.s]="p.delay"
+            [style.animation-duration.s]="p.duration" [style.width.px]="p.size" [style.height.px]="p.size"></span>
+        }
+    </div>
+
+    <!-- Noise texture -->
+    <div class="bg-layer bg-noise" aria-hidden="true"></div>
+
+    <!-- Parallax mouse layer -->
+    <div class="bg-layer bg-parallax" aria-hidden="true"
+        [style.transform]="'translate3d(' + parallaxX + 'px,' + parallaxY + 'px,0)'">
+        <span class="orb orb-a"></span>
+        <span class="orb orb-b"></span>
+    </div>
+
+    <!-- ===================== Main Split Layout ===================== -->
+    <main class="landing-main">
+        <!-- ============ Left: Hero / Product Showcase ============ -->
+        <section class="hero-pane">
+            <h1 class="hero-title">
+                <span class="gradient-text">{{ typedText }}</span><span class="caret">|</span>
+            </h1>
+
+            <p class="hero-sub">
+                <b>Smart Meeting</b> — Nền tảng tổ chức, vận hành và tổng hợp cuộc họp trực tuyến thông minh.
+            </p>
+
+            <p class="hero-sub">
+                Quản lý trọn vòng đời cuộc họp <b>trước họp</b>, <b>trong họp</b> và <b>sau họp</b>: phòng họp trực tuyến,
+                cộng tác thời gian thực và <b>AI</b> tóm tắt, sinh biên bản, giao việc.
+            </p>
+
+            <!-- Stats counters -->
+            <div class="hero-stats">
+                @for (s of stats; track s.label) {
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <nz-icon [nzType]="s.icon" nzTheme="outline" />
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-value">
+                            <span>{{ s.current | number }}</span><em>{{ s.suffix }}</em>
+                        </div>
+                        <div class="stat-label">{{ s.label }}</div>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Feature carousel -->
+            <div class="feature-carousel">
+                <div class="feature-slide" [class.is-active]="true">
+                    <!-- Left column: badge + identity -->
+                    <div class="slide-left">
+                        <span class="feature-badge">
+                            <img [src]="features[activeSlide].img" width="42" />
+                        </span>
+                        <h3 class="slide-title">{{ features[activeSlide].title }}</h3>
+                        <p class="slide-sub">{{ features[activeSlide].subtitle }}</p>
+                    </div>
+                    <!-- Right column: items + tags -->
+                    <div class="slide-right">
+                        <ul class="feature-list">
+                            @for (item of features[activeSlide].items; track item) {
+                            <li>
+                                <nz-icon nzType="check-circle" nzTheme="fill" />
+                                <span>{{ item }}</span>
+                            </li>
+                            }
+                        </ul>
+                        <div class="feature-tags">
+                            @for (tag of features[activeSlide].tags; track tag) {
+                            <span class="feature-tag">{{ tag }}</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-progress">
+                    <div class="bar" [style.width.%]="slideProgress"></div>
+                </div>
+
+                <div class="dot-nav">
+                    @for (f of features; track f.title; let i = $index) {
+                    <button type="button" class="dot" [class.active]="i === activeSlide" [attr.aria-label]="f.title"
+                        (click)="goToSlide(i)">
+                        <span class="dot-inner"></span>
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Module tag cloud -->
+            <div class="module-cloud">
+                @for (m of modules; track m) {
+                <span class="module-chip">{{ m }}</span>
+                }
+            </div>
+        </section>
+
+        <!-- ============ Right: Login form pane ============ -->
+        <section class="login-pane">
+            <div class="login-card">
+                <div class="login-card-head">
+                    <h2>Đăng nhập hệ thống</h2>
+                    <p>Chào mừng bạn quay lại Smart Meeting.</p>
+                </div>
+
+                <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="loginByAccount()">
+                    <nz-form-item style="margin-bottom: 12px;">
+                        <nz-form-control nzErrorTip="Vui lòng nhập tên đăng nhập!">
+                            <nz-input-group nzPrefixIcon="user" nzSize="large">
+                                <input type="text" nz-input formControlName="username" placeholder="Tên đăng nhập hoặc email" aria-label="Tên đăng nhập hoặc email" autocomplete="username" />
+                            </nz-input-group>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-control nzErrorTip="Vui lòng nhập mật khẩu!">
+                            <nz-input-group nzPrefixIcon="lock" nzSize="large" [nzSuffix]="passwordToggle">
+                                <input [type]="isPasswordVisible ? 'text' : 'password'" nz-input
+                                    formControlName="password" placeholder="Mật khẩu" aria-label="Mật khẩu"
+                                    autocomplete="current-password" />
+                                <ng-template #passwordToggle>
+                                    <nz-icon [nzType]="isPasswordVisible ? 'eye-invisible' : 'eye'" nzTheme="outline"
+                                        class="password-toggle" role="button"
+                                        [attr.aria-label]="isPasswordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+                                        (click)="togglePasswordVisibility()" />
+                                </ng-template>
+                            </nz-input-group>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <div class="forgot">
+                        <span></span>
+                        <a class="login-form-forgot" (click)="openForgotModal()">Quên mật khẩu?</a>
+                    </div>
+
+                    <button nz-button class="btn-primary" [nzType]="'primary'" nzSize="large" [nzLoading]="isLoggingIn">
+                        <nz-icon nzType="login" nzTheme="outline" />
+                        <span>Đăng nhập an toàn</span>
+                    </button>
+
+                </form>
+
+                <div class="login-card-foot">
+                    <div class="trust-row">
+                        <span class="trust-item">
+                            <nz-icon nzType="safety-certificate" nzTheme="outline" /> Phân quyền theo vai trò
+                        </span>
+                        <span class="trust-item">
+                            <nz-icon nzType="cloud-server" nzTheme="outline" /> Hạ tầng tự triển khai
+                        </span>
+                        <span class="trust-item">
+                            <nz-icon nzType="audit" nzTheme="outline" /> Tuân thủ bảo mật
+                        </span>
+                    </div>
+
+                    <div class="welcome-back">
+                        <p class="welcome-message">{{ welcomeMessage }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forgot password modal -->
+            <nz-modal [(nzVisible)]="isForgotModalVisible" nzTitle="Quên mật khẩu" (nzOnCancel)="closeForgotModal()"
+                [nzFooter]="null">
+                <ng-container *nzModalContent>
+                    <p>Nhập email đã đăng ký để nhận mã đặt lại mật khẩu.</p>
+                    <nz-input-group nzPrefixIcon="mail" nzSize="large">
+                        <input type="email" nz-input [(ngModel)]="forgotEmail" [ngModelOptions]="{standalone: true}"
+                            placeholder="email@congty.vn" aria-label="Email" (keydown.enter)="requestReset()" />
+                    </nz-input-group>
+                    <button nz-button nzType="primary" nzBlock nzSize="large" class="mt-4"
+                        (click)="requestReset()" [nzLoading]="isForgotLoading">
+                        Gửi mã đặt lại
+                    </button>
+                </ng-container>
+            </nz-modal>
+        </section>
+    </main>
+
+    <!-- Footer removed - logo and copyright moved into login card -->
+    <div class="card-footer-logo-copyright">
+        <div class="card-footer-copyright">
+            <span class="copyright-year">Copyright© {{ currentYear }}</span>
+            <span>Smart Meeting — Khóa luận tốt nghiệp</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,67 @@
+<nz-page-header>
+    <nz-page-header-title>BIÊN BẢN HỌP</nz-page-header-title>
+    <nz-page-header-subtitle>Cuộc họp bạn tham gia đã hoặc đang diễn ra</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <nz-input-group *nzSpaceItem [nzPrefix]="searchIcon" class="search-box">
+                <input nz-input placeholder="Tên cuộc họp hoặc mã phòng" aria-label="Tìm cuộc họp"
+                    [(ngModel)]="keyword" (ngModelChange)="onKeywordChange()" />
+            </nz-input-group>
+            <ng-template #searchIcon><nz-icon nzType="search" /></ng-template>
+            <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới" (click)="reset()">
+                <nz-icon nzType="sync" />
+            </button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <nz-table #list nzBordered [nzData]="items" nzSize="small" [nzLoading]="loading" [nzFrontPagination]="false"
+            [nzShowPagination]="false" [nzScroll]="{ y: 'calc(100vh - 226px)', x: '960px' }" [nzNoResult]="empty">
+            <thead>
+                <tr>
+                    <th nzAlign="center" nzWidth="56px">STT</th>
+                    <th>Cuộc họp</th>
+                    <th nzWidth="210px">Thời gian</th>
+                    <th nzWidth="170px">Chủ trì</th>
+                    <th nzWidth="120px">Transcript</th>
+                    <th nzWidth="170px">Biên bản</th>
+                    <th nzAlign="center" nzWidth="90px">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let m of list.data; let i = index; trackBy: trackById" class="row" (click)="open(m)" tabindex="0"
+                    (keydown.enter)="open(m)">
+                    <td nzAlign="center">{{ (page - 1) * pageSize + i + 1 }}</td>
+                    <td>
+                        <div class="name">{{ m.meetingName }}</div>
+                        <div class="muted">
+                            Mã phòng {{ m.roomCode }}
+                            <nz-tag [nzColor]="meetingMeta(m.meetingStatus).color">{{ meetingMeta(m.meetingStatus).label }}</nz-tag>
+                        </div>
+                    </td>
+                    <td>{{ when(m) }}</td>
+                    <td>{{ m.hostName || '---' }}</td>
+                    <td>
+                        @if (m.transcriptCount > 0) { {{ m.transcriptCount }} đoạn } @else { <span class="muted">Chưa có</span> }
+                    </td>
+                    <td>
+                        @if (minutesMeta(m.minutesStatus); as meta) {
+                        <nz-tag [nzColor]="meta.color">{{ meta.label }}</nz-tag><span class="muted">v{{ m.minutesVersion }}</span>
+                        } @else { <span class="muted">Chưa tạo</span> }
+                    </td>
+                    <td nzAlign="center">
+                        <button nz-button nzType="link" nzSize="small" (click)="open(m); $event.stopPropagation()">Mở</button>
+                    </td>
+                </tr>
+            </tbody>
+        </nz-table>
+        <ng-template #empty>
+            <nz-empty [nzNotFoundContent]="keyword ? 'Không có cuộc họp phù hợp với từ khóa' : 'Chưa có cuộc họp nào đã diễn ra'"></nz-empty>
+        </ng-template>
+    </nz-page-header-content>
+</nz-page-header>
+<div class="paging-container">
+    <div>Tổng {{ total }} cuộc họp</div>
+    <nz-pagination [nzPageIndex]="page" [nzTotal]="total" nzShowSizeChanger [nzPageSize]="pageSize"
+        [nzPageSizeOptions]="[20, 50, 100]" (nzPageIndexChange)="pageIndexChange($event)"
+        (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+</div>

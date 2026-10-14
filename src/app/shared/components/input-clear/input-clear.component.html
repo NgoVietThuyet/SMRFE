@@ -1,0 +1,46 @@
+<nz-input-group *ngIf="!control" [ngClass]="textArea ? 'ant-input-affix-wrapper-textarea-with-clear-btn' : ''"
+  [nzSuffix]="inputClearTpl3" [nzStatus]="status" [ngClass]="classWraper">
+  <input #inputNoControl [disabled]="disabled" *ngIf="!textArea" (input)="onInput($event)" (click)="onClick($event)"
+    (blur)="onBlur()" [appAutofocus]="focus" [type]="type" [ngClass]="class" (keyup.enter)="onEnter()" nz-input
+    [ngModel]="value" (ngModelChange)="onValueChange($event)" [placeholder]="placeholder" />
+  <textarea [disabled]="disabled" [nzAutosize]="nzAutosize" (input)="onInput($event)" (click)="onClick($event)"
+    (blur)="onBlur()" [appAutofocus]="focus" *ngIf="textArea" [ngClass]="class" (keyup.enter)="onEnter()" nz-input
+    [ngModel]="value" (ngModelChange)="onValueChange($event)" [placeholder]="placeholder"></textarea>
+</nz-input-group>
+
+<nz-form-item *ngIf="control" [ngClass]="formItemClass">
+  <nz-form-label [nzRequired]="required">{{ label }}</nz-form-label>
+  <nz-form-control [nzErrorTip]="ErrorTpl">
+    <nz-input-group [ngClass]="textArea ? 'ant-input-affix-wrapper-textarea-with-clear-btn' : ''"
+      [nzSuffix]="inputClearTpl3" [nzStatus]="status">
+      <input #inputControl [disabled]="disabled" *ngIf="!textArea" (input)="onInput($event)" (click)="onClick($event)"
+        (blur)="onBlur()" (keyup.enter)="onEnter()" [appAutofocus]="focus" [type]="type" [ngClass]="class"
+        [formControl]="control" nz-input [placeholder]="placeholder" />
+      <textarea [disabled]="disabled" [nzAutosize]="nzAutosize" (input)="onInput($event)" (click)="onClick($event)"
+        (blur)="onBlur()" (keyup.enter)="onEnter()" [appAutofocus]="focus" *ngIf="textArea" [ngClass]="class"
+        [formControl]="control" nz-input [placeholder]="placeholder"></textarea>
+    </nz-input-group>
+  </nz-form-control>
+</nz-form-item>
+
+<ng-template #ErrorTpl>
+  <ng-container *ngIf="control?.hasError('required')">
+    Không được để trống
+  </ng-container>
+  <ng-container *ngIf="control?.hasError('email') && !control?.hasError('required')">
+    Địa chỉ email không hợp lệ
+  </ng-container>
+  <ng-container *ngIf="control?.hasError('pattern') && !control?.hasError('email') && !control?.hasError('required')">
+    Sai định dạng
+  </ng-container>
+  <ng-container *ngIf="checkError()">
+    {{nzErrorTip}}
+  </ng-container>
+</ng-template>
+
+<ng-template #inputClearTpl3>
+  <span nz-icon class="ant-input-clear-icon clear-icon" nzTheme="fill" nzType="close-circle"
+    *ngIf="!control && value && value != '' && !disabled" (click)="onValueChange('')"></span>
+  <span *ngIf="control && value && value != '' && !disabled" nz-icon class="ant-input-clear-icon clear-icon"
+    nzTheme="fill" nzType="close-circle" (click)="ClearAll('')"></span>
+</ng-template>

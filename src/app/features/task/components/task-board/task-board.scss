@@ -1,0 +1,590 @@
+.board-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
+  flex-shrink: 0;
+
+  .board-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .board-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .back-btn {
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  .board-title {
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  .visibility-tag {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 12px;
+  }
+}
+
+.view-switcher {
+  ::ng-deep {
+    .ant-segmented {
+      background: rgba(0, 0, 0, 0.1) !important;
+      border-radius: 8px !important;
+      padding: 2px !important;
+      border: none !important;
+
+      .ant-segmented-item {
+        color: rgba(255, 255, 255, 0.8) !important;
+        border-radius: 6px !important;
+        transition: all 0.2s;
+
+        &:hover:not(.ant-segmented-item-selected) {
+          color: #fff !important;
+        }
+      }
+
+      .ant-segmented-item-selected {
+        background: #fff !important;
+        color: #189AD6 !important;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2) !important; // Hiệu ứng thụt vào
+      }
+
+      .ant-segmented-thumb {
+        background: #fff !important;
+        border-radius: 6px !important;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2) !important; // Hiệu ứng thụt vào cho thanh trượt
+      }
+    }
+  }
+}
+
+.board-spin {
+  flex: 1;
+  overflow: hidden;
+
+  ::ng-deep .ant-spin-container {
+    height: 100%;
+  }
+}
+
+.board-body {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+  box-sizing: border-box;
+
+  &::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+  }
+}
+
+.list-wrapper {
+  flex-shrink: 0;
+  width: 272px;
+  position: relative;
+
+  &.cdk-drag-preview {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    opacity: 0.95;
+  }
+
+  &.cdk-drag-placeholder {
+    opacity: 0.3;
+  }
+}
+
+.list-drag-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  cursor: grab;
+  z-index: 1;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.list-column {
+  background: #ebecf0;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 140px);
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 6px;
+  flex-shrink: 0;
+
+  .list-title-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    min-width: 0;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  .list-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #172b4d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .list-card-count {
+    font-size: 12px;
+    color: #97a0af;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
+    padding: 0 6px;
+    min-width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .list-name-input {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 6px;
+    background: white;
+    border: 2px solid #0079bf;
+  }
+
+  .list-actions {
+    flex-shrink: 0;
+
+    .list-action-btn {
+      border-radius: 6px;
+      color: #97a0af;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.08);
+        color: #172b4d;
+      }
+    }
+  }
+}
+
+.cards-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 8px;
+  flex: 1;
+  min-height: 10px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c7d0;
+    border-radius: 6px;
+  }
+
+  &.cdk-drop-list-dragging .card-item:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.card-item {
+  background: white;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.15s, transform 0.15s;
+  position: relative;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+  }
+
+  &.cdk-drag-preview {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    transform: rotate(2deg);
+    opacity: 0.95;
+  }
+
+  &.cdk-drag-animating {
+    transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.card-placeholder {
+  background: #c1c7d0;
+  border-radius: 6px;
+  height: 60px;
+  margin-bottom: 8px;
+}
+
+.card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+
+  .card-label {
+    height: 8px;
+    min-width: 40px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.task-status-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #97a0af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background: transparent;
+  cursor: pointer;
+
+  i {
+    font-size: 7px;
+    color: #fff;
+    display: none;
+  }
+
+  &.done {
+    background: #26C55F;
+    border-color: #26C55F;
+
+    i {
+      display: block;
+      color: #fff;
+      font-weight: bold;
+    }
+  }
+
+  &:hover {
+    border-color: #1890ff;
+    background: rgba(24, 144, 255, 0.05);
+
+    i {
+      display: block;
+      color: #1890ff;
+      opacity: 0.5;
+    }
+  }
+
+  &.done:hover {
+    background: color-mix(in srgb, #26C55F, black 5%);
+    border-color: color-mix(in srgb, #26C55F, black 5%);
+
+    i {
+      opacity: 1;
+      color: #fff;
+    }
+  }
+}
+
+.card-title {
+  font-size: 14px;
+  color: #172b4d;
+  line-height: 1.4;
+  word-break: break-word;
+
+  &.text-completed {
+    color: #97a0af;
+  }
+}
+
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #f0f1f4;
+    color: #5e6c84;
+
+    i {
+      font-size: 11px;
+    }
+
+    &.badge-date {
+      &.overdue {
+        background: #ffebe6;
+        color: #d04437;
+      }
+
+      &.due-soon {
+        background: #fff9e6;
+        color: #b8860b;
+      }
+    }
+
+    &.badge-checklist.done {
+      background: #e6f4ea;
+      color: #1a7f37;
+    }
+
+    &.badge-comment {
+      background: transparent;
+    }
+  }
+}
+
+.card-members {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.add-card-area {
+  padding: 6px 8px 10px;
+  flex-shrink: 0;
+}
+
+.add-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #5e6c84;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #172b4d;
+  }
+}
+
+.add-card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  textarea {
+    border-radius: 6px;
+    border: 2px solid #0079bf !important;
+    resize: none;
+    font-size: 14px;
+  }
+
+  .add-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.add-list-wrapper {
+  flex-shrink: 0;
+  width: 272px;
+}
+
+.add-list-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  backdrop-filter: blur(4px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+.add-list-form {
+  background: #ebecf0;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  input {
+    border-radius: 6px;
+    font-size: 14px;
+  }
+
+  .add-list-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+// ===== Bổ sung cho 3.FrontEnd (P12) =====
+.board-view-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.board-panel {
+  height: 100%;
+  background: #fff;
+}
+
+.board-header {
+  .meeting-tag {
+    cursor: pointer;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-btn {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+
+    &:hover,
+    &:focus {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    &.icon {
+      border: none;
+    }
+  }
+
+  .members {
+    margin-right: 4px;
+  }
+}
+
+.task-status-dot.disabled {
+  cursor: default;
+}
+
+.board-empty {
+  color: rgba(255, 255, 255, 0.9);
+  padding: 16px;
+}
+
+.archived-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+@media (max-width: 768px) {
+  .board-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+// Tên bảng dài / màn hẹp: một dòng, cắt "…" thay vì ngắt từng chữ.
+.board-header {
+  gap: 12px;
+
+  .board-header-left {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .board-header-right {
+    flex-shrink: 0;
+  }
+
+  .board-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .visibility-tag {
+    flex-shrink: 0;
+  }
+}

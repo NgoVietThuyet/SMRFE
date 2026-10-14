@@ -1,0 +1,551 @@
+// ─── Design tokens (sync with system) ────────────────────────────────────────
+$primary: #189AD6;
+$primary-light: rgba(24, 154, 214, 0.08);
+$primary-hover: rgba(24, 154, 214, 0.12);
+$text-primary: #172b4d;
+$text-secondary: #5e6c84;
+$text-muted: #97a0af;
+$border-color: #ebecf0;
+$bg-page: #f5f6f8;
+$bg-white: #ffffff;
+$bg-hover: #f7f8fa;
+$radius: 6px;
+$overdue-bg: #ffebe6;
+$overdue-color: #d04437;
+$due-soon-bg: #fff9e6;
+$due-soon-color: #b8860b;
+
+// Group accent colors (cycle through)
+$group-colors: #189AD6, #7C3AED, #059669, #D97706, #DC2626, #0891B2, #7C3AED;
+
+// ─── Container ────────────────────────────────────────────────────────────────
+.list-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: $bg-white;
+  overflow: hidden;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+// ─── Toolbar ─────────────────────────────────────────────────────────────────
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+  background: $bg-white;
+
+  &-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    i { color: $primary; }
+  }
+}
+
+.task-count-badge {
+  font-size: 11px;
+  color: $text-muted;
+  background: $bg-page;
+  border: none;
+  border-radius: 12px;
+  padding: 0 8px;
+  height: 20px;
+  line-height: 20px;
+}
+
+.toolbar-btn {
+  color: $text-secondary;
+  font-size: 12px;
+
+  &:hover {
+    background: $primary-light;
+    color: $primary;
+  }
+}
+
+// ─── Table wrapper ────────────────────────────────────────────────────────────
+.list-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  min-width: 700px;
+}
+
+// ─── Sticky header row ────────────────────────────────────────────────────────
+.list-header-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 160px 130px 100px;
+  align-items: center;
+  padding: 0 16px;
+  height: 36px;
+  background: $bg-page;
+  border-bottom: 1px solid $border-color;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  > div {
+    font-size: 11px;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 8px;
+  }
+
+  .col-expand { padding: 0; }
+}
+
+// ─── Column widths (shared) ───────────────────────────────────────────────────
+%row-grid {
+  display: grid;
+  grid-template-columns: 32px 1fr 160px 130px 100px;
+  align-items: center;
+  padding: 0 16px;
+}
+
+// ─── Group ────────────────────────────────────────────────────────────────────
+.list-group {
+  &:not(:last-child) {
+    margin-bottom: 4px;
+  }
+}
+
+.group-header {
+  @extend %row-grid;
+  height: 38px;
+  cursor: pointer;
+  border-bottom: 1px solid $border-color;
+  background: $bg-white;
+  transition: background 0.15s;
+  user-select: none;
+
+  // span entire row
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+
+  &:hover {
+    background: $bg-hover;
+
+    .group-add-btn {
+      opacity: 1;
+    }
+  }
+
+  &-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &-right {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.group-toggle-icon {
+  font-size: 10px;
+  color: $text-muted;
+  transition: transform 0.2s;
+}
+
+.group-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.group-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.group-count {
+  font-size: 11px;
+  color: $text-muted;
+  background: rgba(0,0,0,0.06);
+  border-radius: 10px;
+  padding: 0 7px;
+  height: 18px;
+  line-height: 18px;
+}
+
+.group-add-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+  color: $text-muted;
+
+  &:hover {
+    color: $primary;
+    background: $primary-light;
+  }
+}
+
+// ─── Task row ─────────────────────────────────────────────────────────────────
+.task-row {
+  @extend %row-grid;
+  height: 40px;
+  border-bottom: 1px solid $border-color;
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+
+  &:hover {
+    background: $bg-hover;
+
+    .task-title-text {
+      color: $primary;
+    }
+  }
+
+  &-last {
+    border-bottom: 2px solid $border-color;
+  }
+}
+
+// ─── Columns ──────────────────────────────────────────────────────────────────
+.col-expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 4px;
+}
+
+.col-title {
+  padding: 0 8px;
+  overflow: hidden;
+}
+
+.col-assignee,
+.col-due,
+.col-priority,
+.col-badges {
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+}
+
+// ─── Status dot ───────────────────────────────────────────────────────────────
+.task-status-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid $text-muted;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  cursor: pointer;
+  background: transparent;
+
+  i {
+    font-size: 7px;
+    color: #fff;
+    display: none;
+  }
+
+  &.done {
+    background: #26C55F;
+    border-color: #26C55F;
+
+    i {
+      display: block;
+      color: #fff;
+      font-weight: bold;
+    }
+  }
+
+  &:hover {
+    border-color: $primary;
+    background: rgba(24, 154, 214, 0.05);
+    
+    i {
+      display: block;
+      color: $primary;
+      opacity: 0.5;
+    }
+  }
+
+  &.done:hover {
+    background: color-mix(in srgb, #26C55F, black 5%);
+    border-color: color-mix(in srgb, #26C55F, black 5%);
+    
+    i {
+      opacity: 1;
+      color: #fff;
+    }
+  }
+}
+
+.task-row:hover .task-status-dot:not(.done) {
+  border-color: $primary;
+}
+
+// ─── Task title ───────────────────────────────────────────────────────────────
+.task-title-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.task-title-text {
+  font-size: 13px;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.12s;
+
+  &.text-completed {
+    color: $text-muted;
+  }
+}
+
+.task-labels {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.task-label-chip {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+// ─── Member avatars ───────────────────────────────────────────────────────────
+.member-avatar {
+  background: $primary !important;
+  font-size: 10px !important;
+
+  &-more {
+    background: #ebecf0 !important;
+    color: $text-secondary !important;
+  }
+}
+
+// ─── Due date badge ───────────────────────────────────────────────────────────
+.due-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: $text-secondary;
+  white-space: nowrap;
+
+  &.overdue {
+    color: $overdue-color;
+    background: $overdue-bg;
+    padding: 2px 7px;
+    border-radius: $radius;
+  }
+
+  &.due-soon {
+    color: $due-soon-color;
+    background: $due-soon-bg;
+    padding: 2px 7px;
+    border-radius: $radius;
+  }
+}
+
+// ─── Priority badge ───────────────────────────────────────────────────────────
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: $radius;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+// ─── Meta badges ─────────────────────────────────────────────────────────────
+.task-meta-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: $text-muted;
+
+  i { font-size: 11px; }
+}
+
+// ─── No value placeholder ─────────────────────────────────────────────────────
+.no-value {
+  color: $text-muted;
+  font-size: 13px;
+}
+
+// ─── Add Task Container ───────────────────────────────────────────────────────
+.add-task-container {
+  padding: 4px 0 8px 48px;
+
+  .add-task-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #6b778c;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #091e420f;
+      color: #172b4d;
+    }
+
+    .add-task-icon {
+      font-size: 14px;
+    }
+
+    .add-task-text {
+      font-size: 13px;
+      font-weight: 500;
+    }
+  }
+
+  .add-task-form {
+    background: white;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px #091e4240, 0 0 1px #091e424f;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-right: 20px;
+
+    input {
+      border-radius: 4px;
+    }
+
+    .add-task-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}
+
+// ─── Add List Section ─────────────────────────────────────────────────────────
+.add-list-section {
+  padding: 16px 24px;
+  border-top: 1px solid $border-color;
+  background: $bg-hover;
+
+  .add-list-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: #091e420f;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #42526e;
+    font-weight: 500;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #091e4214;
+      color: #172b4d;
+    }
+  }
+
+  .add-list-form {
+    background: #ebecf0;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 300px;
+
+    input {
+      border-radius: 4px;
+    }
+
+    .add-list-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}
+
+
+// ─── Checklist Column ────────────────────────────────────────────────────────
+.col-checklist {
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+
+  .checklist-progress {
+    font-size: 11px;
+    color: $text-secondary;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    background: #ebecf0;
+    border-radius: 4px;
+
+    &.done {
+      background: #26C55F22;
+      color: #26C55F;
+    }
+
+    i { font-size: 12px; }
+  }
+}
+
+// ===== Bổ sung cho 3.FrontEnd (P12) =====
+.list-empty {
+  margin: 32px 0;
+}
+
+.task-status-dot.disabled {
+  cursor: default;
+  opacity: 0.6;
+}

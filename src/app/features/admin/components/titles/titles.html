@@ -1,0 +1,112 @@
+<nz-page-header>
+    <nz-page-header-title>CHỨC DANH</nz-page-header-title>
+    <nz-page-header-subtitle>Danh mục chức danh</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <nz-select *nzSpaceItem [(ngModel)]="statusFilter" (ngModelChange)="pageIndex = 1" nzAllowClear
+                nzPlaceHolder="Trạng thái" class="filter-status" aria-label="Lọc trạng thái">
+                <nz-option [nzValue]="true" nzLabel="Kích hoạt"></nz-option>
+                <nz-option [nzValue]="false" nzLabel="Khoá"></nz-option>
+            </nz-select>
+            <input *nzSpaceItem nz-input placeholder="Tìm mã, tên chức danh" aria-label="Tìm chức danh"
+                [(ngModel)]="keyword" (ngModelChange)="pageIndex = 1" (keydown)="onKeydownSearch($event)" />
+            <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới" (click)="reset()">
+                <nz-icon nzType="sync" nzTheme="outline" />
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="open(null)">
+                <nz-icon nzType="plus" nzTheme="outline" />Thêm mới
+            </button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <nz-table #list nzBordered [nzData]="filtered" nzSize="small" [nzShowPagination]="false"
+            [(nzPageIndex)]="pageIndex" [nzPageSize]="pageSize" [nzScroll]="{ y: 'calc(100vh - 226px)' }">
+            <thead>
+                <tr>
+                    <th nzAlign="center" nzWidth="60px">STT</th>
+                    <th nzWidth="160px">Mã</th>
+                    <th>Tên</th>
+                    <th nzAlign="center" nzWidth="90px">Thứ tự</th>
+                    <th nzAlign="center" nzWidth="110px">Nhân sự</th>
+                    <th>Ghi chú</th>
+                    <th nzAlign="center" nzWidth="140px">Trạng thái</th>
+                    <th nzAlign="center" nzWidth="70px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of list.data; let i = index; trackBy: trackByCode">
+                    <td nzAlign="center">{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
+                    <td><a (click)="open(item)">{{ item.code }}</a></td>
+                    <td>{{ item.name }}</td>
+                    <td nzAlign="center">{{ item.orderNumber }}</td>
+                    <td nzAlign="center">{{ item.employeeCount }}</td>
+                    <td>{{ item.notes }}</td>
+                    <td nzAlign="center">
+                        <nz-tag [nzColor]="item.isActive ? 'success' : 'error'">
+                            <nz-icon [nzType]="item.isActive ? 'check-circle' : 'close-circle'" />
+                            <span>{{ item.isActive ? 'Kích hoạt' : 'Khoá' }}</span>
+                        </nz-tag>
+                    </td>
+                    <td nzAlign="center">
+                        @if (item.employeeCount) {
+                        <button nz-button nzType="text" nzSize="small" disabled nz-tooltip
+                            [nzTooltipTitle]="'Đang có ' + item.employeeCount + ' nhân sự, không xóa được'"
+                            aria-label="Không xóa được">
+                            <nz-icon nzType="delete" />
+                        </button>
+                        } @else {
+                        <button nz-button nzType="text" nzSize="small" nzDanger nz-popconfirm
+                            nzPopconfirmTitle="Xóa chức danh này?" (nzOnConfirm)="remove(item)" aria-label="Xóa chức danh">
+                            <nz-icon nzType="delete" />
+                        </button>
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </nz-table>
+    </nz-page-header-content>
+</nz-page-header>
+<div class="paging-container">
+    <div>Tổng {{ filtered.length }} bản ghi</div>
+    <nz-pagination [(nzPageIndex)]="pageIndex" [nzTotal]="filtered.length" nzShowSizeChanger
+        [(nzPageSize)]="pageSize" nzShowQuickJumper></nz-pagination>
+</div>
+
+<nz-drawer [nzWidth]="460" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzMask]="!isEdit"
+    [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA' : 'TẠO MỚI'" (nzOnClose)="close()">
+    <ng-container *nzDrawerContent>
+        <label class="text-control">Mã <span class="required-star">*</span></label>
+        <input nz-input [(ngModel)]="dto.code" [disabled]="isEdit" maxlength="50" placeholder="TP"
+            aria-label="Mã chức danh" [class.space-control]="!codeError" (ngModelChange)="codeError = ''" />
+        @if (codeError) {
+        <div class="field-error">{{ codeError }}</div>
+        }
+
+        <label class="text-control">Tên <span class="required-star">*</span></label>
+        <input nz-input [(ngModel)]="dto.name" maxlength="200" placeholder="Trưởng phòng" aria-label="Tên chức danh"
+            class="space-control" />
+
+        <label class="text-control">Thứ tự</label>
+        <nz-input-number class="space-control" [(ngModel)]="dto.orderNumber" [nzMin]="0" aria-label="Thứ tự"></nz-input-number>
+
+        <label class="text-control">Ghi chú</label>
+        <textarea nz-input [(ngModel)]="dto.notes" rows="3" maxlength="500" aria-label="Ghi chú"
+            class="space-control"></textarea>
+
+        <nz-radio-group [(ngModel)]="dto.isActive">
+            <label nz-radio [nzValue]="true">Kích hoạt</label>
+            <label nz-radio [nzValue]="false">Khoá</label>
+        </nz-radio-group>
+    </ng-container>
+
+    <ng-template #extra>
+        <nz-space>
+            <button *nzSpaceItem nz-button (click)="close()">
+                <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="isSaving" (click)="save()">
+                <nz-icon nzType="save" nzTheme="outline" /> {{ isEdit ? 'Cập nhật' : 'Lưu' }}
+            </button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>

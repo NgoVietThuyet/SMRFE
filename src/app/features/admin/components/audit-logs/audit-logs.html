@@ -1,0 +1,96 @@
+<nz-page-header>
+    <nz-page-header-title>NHẬT KÝ HOẠT ĐỘNG</nz-page-header-title>
+    <nz-page-header-subtitle>Đăng nhập, tài khoản, phân quyền, tổ chức, cấu hình</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space nzWrap>
+            <nz-range-picker *nzSpaceItem [(ngModel)]="range" nzFormat="dd/MM/yyyy" (ngModelChange)="searchFirstPage()"
+                aria-label="Khoảng thời gian"></nz-range-picker>
+            <nz-select *nzSpaceItem class="filter-category" [(ngModel)]="filter.category"
+                (ngModelChange)="searchFirstPage()" nzAllowClear nzPlaceHolder="Nhóm" aria-label="Lọc nhóm">
+                @for (c of categories; track c.value) {
+                <nz-option [nzValue]="c.value" [nzLabel]="c.label"></nz-option>
+                }
+            </nz-select>
+            <nz-select *nzSpaceItem class="filter-result" [(ngModel)]="filter.success"
+                (ngModelChange)="searchFirstPage()" nzAllowClear nzPlaceHolder="Kết quả" aria-label="Lọc kết quả">
+                <nz-option [nzValue]="true" nzLabel="Thành công"></nz-option>
+                <nz-option [nzValue]="false" nzLabel="Thất bại"></nz-option>
+            </nz-select>
+            <input *nzSpaceItem nz-input class="filter-actor" placeholder="Người thực hiện" aria-label="Người thực hiện"
+                [(ngModel)]="filter.actor" (keydown)="onKeydownSearch($event)" />
+            <input *nzSpaceItem nz-input class="filter-keyword" placeholder="Hành động, đối tượng"
+                aria-label="Tìm hành động hoặc đối tượng" [(ngModel)]="filter.keyword" (keydown)="onKeydownSearch($event)" />
+            <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới" (click)="reset()">
+                <nz-icon nzType="sync" nzTheme="outline" />
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="searchFirstPage()">
+                <nz-icon nzType="search" nzTheme="outline" /> Tìm kiếm
+            </button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <nz-table #list nzBordered [nzData]="data.data" nzSize="small" [nzFrontPagination]="false"
+            [nzShowPagination]="false" [nzScroll]="{ y: 'calc(100vh - 226px)', x: '1100px' }">
+            <thead>
+                <tr>
+                    <th nzWidth="150px">Thời gian</th>
+                    <th nzWidth="150px">Người thực hiện</th>
+                    <th nzAlign="center" nzWidth="120px">Nhóm</th>
+                    <th>Hành động</th>
+                    <th nzWidth="200px">Đối tượng</th>
+                    <th nzAlign="center" nzWidth="120px">Kết quả</th>
+                    <th nzWidth="130px">IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of list.data; trackBy: trackById" class="clickable-row" (click)="open(item)">
+                    <td>{{ time(item) | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+                    <td>{{ item.actorUserName || '---' }}</td>
+                    <td nzAlign="center"><nz-tag [nzColor]="categoryColor(item.category)">{{ categoryLabel(item.category) }}</nz-tag></td>
+                    <td><a>{{ actionLabel(item) }}</a></td>
+                    <td class="break-all">{{ item.targetId || '---' }}</td>
+                    <td nzAlign="center">
+                        <nz-tag [nzColor]="item.success ? 'success' : 'error'">
+                            <nz-icon [nzType]="item.success ? 'check-circle' : 'close-circle'" />
+                            <span>{{ item.success ? 'Thành công' : 'Thất bại' }}</span>
+                        </nz-tag>
+                    </td>
+                    <td>{{ item.ip || '---' }}</td>
+                </tr>
+            </tbody>
+        </nz-table>
+    </nz-page-header-content>
+</nz-page-header>
+<div class="paging-container">
+    <div>Tổng {{ data.totalRecord }} bản ghi</div>
+    <nz-pagination [nzPageIndex]="data.currentPage || 1" [nzTotal]="data.totalRecord" nzShowSizeChanger
+        [nzPageSize]="filter.pageSize" nzShowQuickJumper (nzPageIndexChange)="pageIndexChange($event)"
+        (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+</div>
+
+<nz-drawer [nzWidth]="560" [nzVisible]="detailVisible" nzPlacement="right" nzTitle="CHI TIẾT NHẬT KÝ"
+    (nzOnClose)="detailVisible = false">
+    <ng-container *nzDrawerContent>
+        @if (detail) {
+        <nz-descriptions nzBordered nzSize="small" [nzColumn]="1">
+            <nz-descriptions-item nzTitle="Thời gian">{{ time(detail) | date: 'dd/MM/yyyy HH:mm:ss' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Người thực hiện">{{ detail.actorUserName || '---' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Nhóm">{{ categoryLabel(detail.category) }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Hành động">{{ actionLabel(detail) }} <code class="raw-code">{{ detail.action }}</code></nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Đối tượng">{{ detail.targetType || '---' }} · {{ detail.targetId || '---' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Kết quả">
+                <nz-tag [nzColor]="detail.success ? 'success' : 'error'">{{ detail.success ? 'Thành công' : 'Thất bại' }}</nz-tag>
+                HTTP {{ detail.httpStatus }}
+            </nz-descriptions-item>
+            <nz-descriptions-item nzTitle="IP">{{ detail.ip || '---' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Trình duyệt"><span class="break-all">{{ detail.userAgent || '---' }}</span></nz-descriptions-item>
+        </nz-descriptions>
+        <div class="payload-title">Dữ liệu (đã lọc mật khẩu, token)</div>
+        @if (detail.payloadJson) {
+        <pre class="payload">{{ prettyPayload(detail) }}</pre>
+        } @else {
+        <nz-empty nzNotFoundContent="Không có dữ liệu kèm theo"></nz-empty>
+        }
+        }
+    </ng-container>
+</nz-drawer>

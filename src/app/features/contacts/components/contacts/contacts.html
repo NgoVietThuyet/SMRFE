@@ -1,0 +1,133 @@
+<div class="contacts-layout">
+    <!-- ===== Trái: cây phòng ban ===== -->
+    <aside class="org-panel">
+        <div class="org-panel-head">
+            <span class="org-panel-title">Phòng ban</span>
+            @if (organizationId) { <a (click)="clearOrg()">Tất cả</a> }
+        </div>
+        <div class="org-panel-body">
+            <nz-tree [nzData]="orgTree" nzBlockNode [nzSelectedKeys]="organizationId ? [organizationId] : []"
+                (nzClick)="onOrgClick($event)"></nz-tree>
+        </div>
+    </aside>
+
+    <!-- ===== Phải: danh sách ===== -->
+    <section class="contact-panel">
+        <nz-page-header>
+            <nz-page-header-title>DANH BẠ</nz-page-header-title>
+            <nz-page-header-subtitle>{{ selectedOrgName }}</nz-page-header-subtitle>
+            <nz-page-header-extra>
+                <nz-space>
+                    <nz-input-group *nzSpaceItem [nzPrefix]="searchIcon" class="search-box">
+                        <input nz-input placeholder="Họ tên, email, điện thoại (gõ có dấu hoặc không)" aria-label="Tìm trong danh bạ"
+                            [(ngModel)]="keyword" (ngModelChange)="onKeywordChange()" />
+                    </nz-input-group>
+                    <ng-template #searchIcon><nz-icon nzType="search" /></ng-template>
+                    <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới" (click)="reset()">
+                        <nz-icon nzType="sync" />
+                    </button>
+                </nz-space>
+            </nz-page-header-extra>
+            <nz-page-header-content>
+                @if (lastAssigned) {
+                <nz-alert class="mb-3" nzType="success" nzShowIcon nzCloseable (nzOnClose)="lastAssigned = null"
+                    [nzMessage]="assignedMsg"></nz-alert>
+                <ng-template #assignedMsg>
+                    Đã giao việc cho <b>{{ lastAssigned.name }}</b>. <a (click)="openAssigned()">Mở việc vừa giao</a>
+                </ng-template>
+                }
+                <nz-table #list nzBordered [nzData]="items" nzSize="small" [nzLoading]="loading" [nzFrontPagination]="false"
+                    [nzShowPagination]="false" [nzScroll]="{ y: 'calc(100vh - 226px)', x: '960px' }" [nzNoResult]="empty">
+                    <thead>
+                        <tr>
+                            <th nzAlign="center" nzWidth="56px">STT</th>
+                            <th nzWidth="240px">Họ tên</th>
+                            <th nzWidth="170px">Chức danh</th>
+                            <th>Phòng ban</th>
+                            <th nzWidth="220px">Email</th>
+                            <th nzWidth="130px">Điện thoại</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let c of list.data; let i = index; trackBy: trackByUser" class="contact-row" (click)="open(c)"
+                            tabindex="0" (keydown.enter)="open(c)">
+                            <td nzAlign="center">{{ (page - 1) * pageSize + i + 1 }}</td>
+                            <td>
+                                <div class="person">
+                                    <nz-avatar [nzText]="ui.initials(c.fullName)" [style.background]="ui.colorOf(c.userName)"></nz-avatar>
+                                    <div class="person-main">
+                                        <div class="person-name">{{ c.fullName }} @if (isMe(c)) {<nz-tag>Bạn</nz-tag>}</div>
+                                        <div class="muted">{{ c.userName }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ c.titleName || '---' }}</td>
+                            <td>{{ c.organizationName || '---' }}</td>
+                            <td class="break-all">
+                                @if (c.email) { <a [href]="'mailto:' + c.email" (click)="$event.stopPropagation()">{{ c.email }}</a> } @else { --- }
+                            </td>
+                            <td>
+                                @if (c.phone) { <a [href]="'tel:' + c.phone" (click)="$event.stopPropagation()">{{ c.phone }}</a> } @else { --- }
+                            </td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+                <ng-template #empty>
+                    <nz-empty [nzNotFoundContent]="keyword ? 'Không tìm thấy ai phù hợp với “' + keyword + '”' : 'Phòng ban chưa có ai'"></nz-empty>
+                </ng-template>
+            </nz-page-header-content>
+        </nz-page-header>
+        <div class="paging-container">
+            <div>Tổng {{ total }} người</div>
+            <nz-pagination [nzPageIndex]="page" [nzTotal]="total" nzShowSizeChanger [nzPageSize]="pageSize"
+                [nzPageSizeOptions]="[20, 50, 100]" (nzPageIndexChange)="pageIndexChange($event)"
+                (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+        </div>
+    </section>
+</div>
+
+<!-- ===== Drawer thông tin (chỉ xem) ===== -->
+<nz-drawer [nzWidth]="420" [nzClosable]="false" [nzVisible]="!!selected" nzPlacement="right" nzTitle="THÔNG TIN LIÊN HỆ"
+    [nzExtra]="extra" (nzOnClose)="selected = null">
+    <ng-container *nzDrawerContent>
+        @if (selected) {
+        <div class="profile">
+            <nz-avatar [nzSize]="72" [nzText]="ui.initials(selected.fullName)" [style.background]="ui.colorOf(selected.userName)"
+                class="profile-avatar"></nz-avatar>
+            <div class="profile-name">{{ selected.fullName }}</div>
+            <div class="muted">{{ selected.titleName || 'Chưa có chức danh' }}</div>
+        </div>
+
+        <div class="profile-actions">
+            @if (canCreateMeeting && !isMe(selected)) {
+            <button nz-button nzType="primary" (click)="inviteToMeeting(selected)"><nz-icon nzType="video-camera-add" /> Mời họp</button>
+            }
+            <button nz-button (click)="assignTask(selected)"><nz-icon nzType="carry-out" /> Giao việc</button>
+        </div>
+
+        <nz-descriptions nzBordered nzSize="small" [nzColumn]="1">
+            <nz-descriptions-item nzTitle="Tài khoản">{{ selected.userName }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Phòng ban">{{ selected.organizationName || '---' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Email">
+                @if (selected.email) {
+                <a [href]="'mailto:' + selected.email" class="break-all">{{ selected.email }}</a>
+                <a class="copy" (click)="copy(selected.email, 'email')" aria-label="Sao chép email"><nz-icon nzType="copy" /></a>
+                } @else { --- }
+            </nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Điện thoại">
+                @if (selected.phone) {
+                <a [href]="'tel:' + selected.phone">{{ selected.phone }}</a>
+                <a class="copy" (click)="copy(selected.phone, 'số điện thoại')" aria-label="Sao chép số điện thoại"><nz-icon nzType="copy" /></a>
+                } @else { --- }
+            </nz-descriptions-item>
+        </nz-descriptions>
+        }
+    </ng-container>
+    <ng-template #extra>
+        <button nz-button nzType="text" (click)="selected = null" aria-label="Đóng"><nz-icon nzType="close" /></button>
+    </ng-template>
+</nz-drawer>
+
+<app-meeting-form [(visible)]="meetingVisible" [meetingId]="null" [presetParticipants]="meetingInvitees"
+    (saved)="onMeetingSaved($event)"></app-meeting-form>
+<app-assign-task-modal [(contact)]="assignTarget" (assigned)="onAssigned($event, assignTarget?.fullName || '')"></app-assign-task-modal>

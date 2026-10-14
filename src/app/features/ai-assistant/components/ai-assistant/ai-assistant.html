@@ -1,0 +1,129 @@
+<div class="ai-layout">
+    <!-- ===== Trái: cuộc họp ===== -->
+    <aside class="meeting-panel">
+        <div class="panel-head">
+            <span class="panel-title">Cuộc họp</span>
+        </div>
+        <div class="panel-search">
+            <nz-input-group [nzPrefix]="searchIcon">
+                <input nz-input placeholder="Tìm cuộc họp" aria-label="Tìm cuộc họp" [(ngModel)]="keyword" (ngModelChange)="onKeywordChange()" />
+            </nz-input-group>
+            <ng-template #searchIcon><nz-icon nzType="search" /></ng-template>
+        </div>
+        <div class="panel-list">
+            <nz-spin [nzSpinning]="loadingMeetings">
+                @for (m of meetings; track m.meetingId) {
+                <div class="meeting-item" [class.active]="selected?.meetingId === m.meetingId" tabindex="0" (click)="select(m)"
+                    (keydown.enter)="select(m)">
+                    <div class="meeting-name" [title]="m.meetingName">{{ m.meetingName }}</div>
+                    <div class="muted">{{ when(m) }}</div>
+                    <div class="meeting-tags">
+                        @if (m.transcriptCount > 0) { <nz-tag>{{ m.transcriptCount }} đoạn transcript</nz-tag> }
+                        @else { <nz-tag nzColor="default">Chưa có transcript</nz-tag> }
+                        @if (hasPublishedMinutes(m)) { <nz-tag nzColor="success">Có biên bản</nz-tag> }
+                    </div>
+                </div>
+                } @empty {
+                @if (!loadingMeetings) {
+                <nz-empty [nzNotFoundContent]="keyword ? 'Không có cuộc họp phù hợp' : 'Chưa có cuộc họp nào đã diễn ra'"></nz-empty>
+                }
+                }
+            </nz-spin>
+        </div>
+    </aside>
+
+    <!-- ===== Phải: hỏi đáp ===== -->
+    <main class="chat-panel">
+        @if (!selected) {
+        <div class="welcome">
+            <div class="ai-avatar big"><nz-icon nzType="robot" /></div>
+            <h2>Trợ lý AI cuộc họp</h2>
+            <p class="muted">Chọn một cuộc họp bên trái để hỏi về nội dung, quyết định và công việc của cuộc họp đó.</p>
+        </div>
+        } @else {
+        <div class="chat-head">
+            <div class="chat-title">
+                <div class="meeting-name" [title]="selected.meetingName">{{ selected.meetingName }}</div>
+                <div class="muted">
+                    AI chỉ trả lời từ dữ liệu của cuộc họp này
+                    @if (status?.indexed) { · {{ status?.sourcesSummary }} }
+                </div>
+            </div>
+            <span class="spacer"></span>
+            <button nz-button nzType="text" nz-tooltip nzTooltipTitle="Đồng bộ lại dữ liệu cho AI (chủ trì)" aria-label="Đồng bộ lại"
+                [nzLoading]="syncing" (click)="sync()"><nz-icon nzType="sync" /></button>
+            <button nz-button nzType="text" nz-tooltip nzTooltipTitle="Mở biên bản" aria-label="Mở biên bản"
+                [routerLink]="['/minutes', selected.meetingId]"><nz-icon nzType="file-text" /></button>
+            @if (messages.length) {
+            <button nz-button nzType="text" nz-tooltip nzTooltipTitle="Xóa hội thoại" aria-label="Xóa hội thoại" [disabled]="asking"
+                (click)="clearChat()"><nz-icon nzType="delete" /></button>
+            }
+        </div>
+
+        <div class="messages-area" #messageContainer>
+            @if (thinData) {
+            <nz-alert class="thin" nzType="warning" nzShowIcon
+                nzMessage="Cuộc họp này chưa có transcript và chưa có biên bản phát hành. AI chỉ trả lời được về thông tin chung, thành phần và công việc."></nz-alert>
+            }
+            @if (!messages.length) {
+            <div class="welcome small">
+                <div class="ai-avatar big"><nz-icon nzType="robot" /></div>
+                <p>Bạn muốn biết gì về cuộc họp này?</p>
+                <div class="suggestion-chips">
+                    @for (s of suggestions; track s) {
+                    <button type="button" class="suggestion-chip" (click)="send(s)"><nz-icon nzType="bulb" /> <span>{{ s }}</span></button>
+                    }
+                </div>
+            </div>
+            }
+            @for (msg of messages; track $index) {
+            <div class="message-row" [class.user]="msg.role === 'user'">
+                @if (msg.role === 'user') {
+                <div class="message-body"><div class="message-text user-text">{{ msg.content }}</div></div>
+                } @else {
+                <div class="ai-avatar"><nz-icon nzType="robot" /></div>
+                <div class="message-body">
+                    <div class="message-role">Trợ lý AI @if (msg.degraded) { <nz-tag nzColor="warning">AI không phản hồi</nz-tag> }</div>
+                    <div class="message-text ai-text" [innerHTML]="msg.content | markdown"></div>
+                    @if (msg.citations.length) {
+                    <div class="citations">
+                        <span class="muted">Nguồn:</span>
+                        @for (c of msg.citations; track c.id) {
+                        <nz-tag class="citation" nzColor="blue" nz-popover [nzPopoverTitle]="c.sourceTitle" [nzPopoverContent]="citationBody"
+                            nzPopoverOverlayClassName="citation-popover" (click)="openCitation(c)">[{{ citationLabel(c) }}]</nz-tag>
+                        <ng-template #citationBody><div class="citation-content">{{ c.content }}</div></ng-template>
+                        }
+                    </div>
+                    }
+                    <div class="message-actions">
+                        <a aria-label="Sao chép câu trả lời" nz-tooltip nzTooltipTitle="Sao chép" (click)="copy(msg.content)"><nz-icon nzType="copy" /></a>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+            @if (asking) {
+            <div class="message-row">
+                <div class="ai-avatar"><nz-icon nzType="robot" /></div>
+                <div class="message-body">
+                    <div class="message-role">Trợ lý AI</div>
+                    <div class="typing-indicator" aria-label="AI đang trả lời"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea nz-input rows="1" [nzAutosize]="{ minRows: 1, maxRows: 5 }" maxlength="1000" aria-label="Câu hỏi"
+                    placeholder="Hỏi về cuộc họp này… (Enter để gửi, Shift+Enter xuống dòng)" [(ngModel)]="input" [disabled]="asking"
+                    (keydown)="onKeyDown($event)"></textarea>
+                <button nz-button nzType="primary" nzShape="circle" aria-label="Gửi" [disabled]="!input.trim() || asking" (click)="send()">
+                    <nz-icon nzType="send" />
+                </button>
+            </div>
+            <div class="disclaimer muted">Câu trả lời do AI tạo từ dữ liệu cuộc họp, hãy đối chiếu nguồn trước khi dùng.</div>
+        </div>
+        }
+    </main>
+</div>

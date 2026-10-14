@@ -1,0 +1,285 @@
+@if (loadError) {
+<nz-result [nzStatus]="loadError === 403 ? '403' : '404'"
+    [nzTitle]="loadError === 403 ? 'Bạn không có quyền xem cuộc họp này' : 'Không tìm thấy cuộc họp'"
+    [nzSubTitle]="loadError === 403 ? 'Cuộc họp chỉ dành cho người được mời.' : 'Cuộc họp không tồn tại hoặc đã bị xóa.'">
+    <div nz-result-extra>
+        <button nz-button nzType="primary" routerLink="/meetings">Về danh sách cuộc họp</button>
+    </div>
+</nz-result>
+} @else if (!meeting) {
+<div class="detail-loading"><nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 8 }"></nz-skeleton></div>
+} @else {
+<nz-page-header (nzBack)="router.navigate(['/meetings'])" nzBackIcon>
+    <nz-page-header-title>{{ meeting.name }}</nz-page-header-title>
+    <nz-page-header-tags>
+        <nz-tag [nzColor]="statusMeta[meeting.status]?.color">{{ statusMeta[meeting.status]?.label }}</nz-tag>
+    </nz-page-header-tags>
+    <nz-page-header-extra>
+        <nz-space nzWrap>
+            @if (meeting.status === MeetingStatus.Ongoing) {
+            <button *nzSpaceItem nz-button nzType="primary" (click)="join()"><nz-icon nzType="login" /> Vào phòng</button>
+            } @else if (actions.canStart(meeting)) {
+            <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="busy" (click)="start()"><nz-icon nzType="play-circle" /> Bắt đầu</button>
+            <button *nzSpaceItem nz-button (click)="join()"><nz-icon nzType="login" /> Vào phòng chờ</button>
+            } @else if (meeting.status === MeetingStatus.Scheduled) {
+            <button *nzSpaceItem nz-button nzType="primary" (click)="join()"><nz-icon nzType="login" /> Vào phòng chờ</button>
+            }
+            @if (actions.canEdit(meeting)) {
+            <button *nzSpaceItem nz-button (click)="formVisible = true"><nz-icon nzType="edit" /> {{ meeting.status === MeetingStatus.Draft ? 'Hoàn tất và gửi' : 'Sửa' }}</button>
+            }
+            @if (actions.canShare(meeting)) {
+            <button *nzSpaceItem nz-button (click)="shareTarget = meeting"><nz-icon nzType="qrcode" /> Mời</button>
+            }
+            @if (actions.canCancel(meeting) || actions.canArchive(meeting) || actions.canDelete(meeting)) {
+            <button *nzSpaceItem nz-button nz-dropdown [nzDropdownMenu]="moreMenu" nzPlacement="bottomRight" aria-label="Thao tác khác">
+                <nz-icon nzType="more" />
+            </button>
+            }
+        </nz-space>
+        <nz-dropdown-menu #moreMenu="nzDropdownMenu">
+            <ul nz-menu>
+                @if (actions.canArchive(meeting)) {
+                <li nz-menu-item nz-popconfirm nzPopconfirmTitle="Lưu trữ cuộc họp này?" (nzOnConfirm)="archive()">
+                    <nz-icon nzType="inbox" />&nbsp; Lưu trữ</li>
+                }
+                @if (actions.canCancel(meeting)) {
+                <li nz-menu-item nzDanger (click)="cancelTarget = meeting"><nz-icon nzType="stop" />&nbsp; Hủy cuộc họp</li>
+                }
+                @if (actions.canDelete(meeting)) {
+                <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa bản nháp này?" (nzOnConfirm)="remove()">
+                    <nz-icon nzType="delete" />&nbsp; Xóa bản nháp</li>
+                }
+            </ul>
+        </nz-dropdown-menu>
+    </nz-page-header-extra>
+
+    <nz-page-header-content>
+        @if (meeting.status === MeetingStatus.Cancelled) {
+        <nz-alert class="mb-3" nzType="error" nzShowIcon nzMessage="Cuộc họp đã bị hủy — không vào phòng được nữa."
+            [nzDescription]="meeting.cancellationReason ? 'Lý do: ' + meeting.cancellationReason : ''"></nz-alert>
+        } @else if (meeting.status === MeetingStatus.Draft) {
+        <nz-alert class="mb-3" nzType="info" nzShowIcon
+            nzMessage="Bản nháp — chưa ai nhận được lời mời. Bấm “Hoàn tất và gửi” để phát hành."></nz-alert>
+        }
+
+        <nz-tabset [nzSelectedIndex]="tabIndex" (nzSelectedIndexChange)="onTabChange($event)" nzSize="small">
+            <!-- ===== Tổng quan ===== -->
+            <nz-tab nzTitle="Tổng quan">
+                <div class="overview">
+                    <div class="overview-main">
+                        <nz-descriptions nzBordered nzSize="small" [nzColumn]="{ xxl: 2, xl: 2, lg: 1, md: 1, sm: 1, xs: 1 }">
+                            <nz-descriptions-item nzTitle="Thời gian dự kiến">
+                                @if (date(meeting.expectedStartTime); as s) {
+                                {{ s | date: 'HH:mm' }}@if (date(meeting.expectedEndTime); as e) {–{{ e | date: 'HH:mm' }}}
+                                · {{ weekday(s) }}, {{ s | date: 'dd/MM/yyyy' }}
+                                }
+                            </nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Thời gian thực tế">
+                                @if (date(meeting.actualStartTime); as s) {
+                                {{ s | date: 'HH:mm dd/MM' }} – {{ meeting.actualEndTime ? (date(meeting.actualEndTime) | date: 'HH:mm dd/MM') : 'đang họp' }}
+                                } @else { <span class="muted">Chưa diễn ra</span> }
+                            </nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Chủ trì">{{ meeting.hostName || '---' }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Người tham gia">{{ meeting.participantCount }} người</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Chế độ">{{ visibilityLabel(meeting.visibility) }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Múi giờ">{{ meeting.timeZone || 'Asia/Bangkok' }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Mô tả" [nzSpan]="2">
+                                <span class="pre-line">{{ meeting.description || '---' }}</span>
+                            </nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Chương trình" [nzSpan]="2">
+                                @if (agendaLines.length) {
+                                <ol class="agenda">
+                                    @for (line of agendaLines; track $index) { <li>{{ line }}</li> }
+                                </ol>
+                                } @else { <span class="muted">Chưa có</span> }
+                            </nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Cài đặt phòng" [nzSpan]="2">
+                                @for (s of enabledSettings; track s) { <nz-tag>{{ s }}</nz-tag> }
+                                @if (!enabledSettings.length) { <span class="muted">Mặc định</span> }
+                            </nz-descriptions-item>
+                        </nz-descriptions>
+                    </div>
+
+                    @if (actions.canShare(meeting)) {
+                    <div class="overview-side">
+                        <div class="share-card">
+                            <nz-qrcode [nzValue]="link" [nzSize]="150" nzLevel="M"></nz-qrcode>
+                            <div class="room-code">
+                                <span class="muted small">Mã phòng</span>
+                                <b>{{ meeting.roomCode }}</b>
+                                <a (click)="copy(meeting.roomCode, 'Đã sao chép mã phòng')" aria-label="Sao chép mã phòng"><nz-icon nzType="copy" /></a>
+                            </div>
+                            <button nz-button nzBlock (click)="copy(link, 'Đã sao chép link')"><nz-icon nzType="link" /> Sao chép link</button>
+                            <button nz-button nzBlock (click)="copyInvite()"><nz-icon nzType="copy" /> Sao chép lời mời</button>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </nz-tab>
+
+            <!-- ===== Người tham gia ===== -->
+            <nz-tab [nzTitle]="'Người tham gia (' + meeting.participants.length + ')'">
+                @if (canManagePeople) {
+                <div class="add-row">
+                    <nz-select class="add-user" nzShowSearch nzServerSearch nzAllowClear nzPlaceHolder="Gõ tên hoặc email để mời thêm"
+                        [nzLoading]="searching" [(ngModel)]="addUser" (nzOnSearch)="search$.next($event)" aria-label="Mời thêm người">
+                        @for (u of searchOptions; track u.userName) {
+                        <nz-option [nzValue]="u.userName" [nzLabel]="u.fullName + ' · ' + u.email"></nz-option>
+                        }
+                    </nz-select>
+                    <nz-select class="add-role" [(ngModel)]="addRole" aria-label="Vai trò">
+                        @for (r of roleOptions; track r.value) {
+                        <nz-option [nzValue]="r.value" [nzLabel]="r.label"></nz-option>
+                        }
+                    </nz-select>
+                    <button nz-button nzType="primary" [disabled]="!addUser" [nzLoading]="busy" (click)="addParticipant()">
+                        <nz-icon nzType="user-add" /> Mời
+                    </button>
+                </div>
+                }
+                @if (meeting.isHost && meeting.actualStartTime) {
+                <div class="add-row attendance-row">
+                    <button nz-button [nzLoading]="exporting" (click)="exportAttendance()">
+                        <nz-icon nzType="file-excel" /> Xuất XLSX tham dự
+                    </button>
+                    <span class="muted small">Thời lượng gộp các lần vào/rời, không tính trùng khi mở nhiều tab.</span>
+                </div>
+                }
+                <nz-table #people [nzData]="sortedParticipants" nzSize="small" nzBordered [nzFrontPagination]="false"
+                    [nzShowPagination]="false">
+                    <thead>
+                        <tr>
+                            <th nzWidth="56px" nzAlign="center">STT</th>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th nzWidth="130px" nzAlign="center">Vai trò</th>
+                            <th nzWidth="170px" nzAlign="center">Tham dự</th>
+                            @if (hasAttendance) { <th nzWidth="120px" nzAlign="center">Thời lượng</th> }
+                            <th nzWidth="60px" nzAlign="center"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (p of people.data; track p.userName; let i = $index) {
+                        <tr>
+                            <td nzAlign="center">{{ i + 1 }}</td>
+                            <td>{{ p.fullName }} @if (isMe(p.userName)) {<nz-tag>Bạn</nz-tag>}</td>
+                            <td class="break-all">{{ p.email || p.userName }}</td>
+                            <td nzAlign="center"><nz-tag [nzColor]="roleMeta(p.role).color">{{ roleMeta(p.role).label }}</nz-tag></td>
+                            <td nzAlign="center">
+                                @if (p.isJoined) {
+                                <nz-badge nzStatus="success" [nzText]="'Đang trong phòng'"></nz-badge>
+                                } @else if (p.joinTime) {
+                                <span class="muted">Đã vào {{ date(p.joinTime) | date: 'HH:mm dd/MM' }}</span>
+                                } @else {
+                                <span class="muted">Chưa vào</span>
+                                }
+                            </td>
+                            @if (hasAttendance) { <td nzAlign="center">{{ durationOf(p) || '—' }}</td> }
+                            <td nzAlign="center">
+                                @if (canRemove(p)) {
+                                <button nz-button nzType="text" nzSize="small" nzDanger nz-popconfirm
+                                    [nzPopconfirmTitle]="'Bỏ ' + p.fullName + ' khỏi cuộc họp?'" (nzOnConfirm)="removeParticipant(p)"
+                                    aria-label="Bỏ khỏi cuộc họp"><nz-icon nzType="user-delete" /></button>
+                                }
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+
+            <!-- ===== Tài liệu ===== -->
+            <nz-tab nzTitle="Tài liệu">
+                @if (canUploadHere) {
+                <div class="add-row">
+                    <button nz-button nzType="primary" [nzLoading]="uploading" (click)="fileInput.click()">
+                        <nz-icon nzType="upload" /> Tải lên
+                    </button>
+                    <span class="muted small">Tối đa 200MB mỗi file. Thành viên cuộc họp đều xem được.</span>
+                    <input #fileInput type="file" hidden multiple (change)="onFilePicked($event)" />
+                </div>
+                }
+                <nz-list nzBordered nzSize="small" [nzLoading]="!filesLoaded" [nzDataSource]="files" [nzRenderItem]="fileTpl"
+                    [nzNoResult]="noFiles"></nz-list>
+                <ng-template #fileTpl let-f>
+                    <nz-list-item [nzActions]="canDownload ? [downloadAction] : []">
+                        <nz-list-item-meta [nzAvatar]="fileAvatar" [nzTitle]="f.fileName"
+                            [nzDescription]="fileSize(f.fileSize) + ' · ' + (date(f.createDate) | date: 'HH:mm dd/MM/yyyy')">
+                        </nz-list-item-meta>
+                        <ng-template #fileAvatar><img class="file-icon" [src]="fileIcon(f)" alt="" /></ng-template>
+                        <ng-template #downloadAction>
+                            <a (click)="download(f)" aria-label="Tải xuống"><nz-icon nzType="download" /> Tải xuống</a>
+                        </ng-template>
+                    </nz-list-item>
+                </ng-template>
+                <ng-template #noFiles><nz-empty nzNotFoundContent="Chưa có tài liệu"></nz-empty></ng-template>
+            </nz-tab>
+
+            <!-- ===== Biên bản và ghi hình ===== -->
+            <nz-tab nzTitle="Biên bản và ghi hình">
+                <ng-template nz-tab>
+                    <app-minutes-summary [meetingId]="meeting.id"></app-minutes-summary>
+                </ng-template>
+            </nz-tab>
+
+            <!-- ===== Công việc ===== -->
+            <nz-tab nzTitle="Công việc">
+                @if (!isReadOnly || meeting.status === MeetingStatus.Ended) {
+                <div class="add-row">
+                    <button nz-button nzType="primary" [routerLink]="['/tasks']" [queryParams]="{ create: 1, meetingId: meeting.id }">
+                        <nz-icon nzType="plus" /> Tạo công việc cho cuộc họp
+                    </button>
+                    <a [routerLink]="['/tasks']" [queryParams]="{ group: 'meeting:' + meeting.id }">Xem trên trang Công việc</a>
+                </div>
+                }
+                <nz-table #taskTable [nzData]="tasks" nzSize="small" nzBordered [nzLoading]="!tasksLoaded"
+                    [nzFrontPagination]="false" [nzShowPagination]="false" [nzNoResult]="noTasks">
+                    <thead>
+                        <tr>
+                            <th>Công việc</th>
+                            <th nzWidth="180px">Người phụ trách</th>
+                            <th nzWidth="140px">Hạn</th>
+                            <th nzWidth="130px" nzAlign="center">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (t of taskTable.data; track t.id) {
+                        <tr>
+                            <td><a (click)="openTask(t)">{{ t.title }}</a></td>
+                            <td>{{ t.assigneeFullName || t.assigneeUserName || '---' }}</td>
+                            <td [class.overdue]="isOverdue(t)">{{ t.dueDate ? (date(t.dueDate) | date: 'HH:mm dd/MM/yyyy') : '---' }}</td>
+                            <td nzAlign="center"><nz-tag [nzColor]="taskStatus[t.status]?.color">{{ taskStatus[t.status]?.label }}</nz-tag></td>
+                        </tr>
+                        }
+                    </tbody>
+                </nz-table>
+                <ng-template #noTasks><nz-empty nzNotFoundContent="Cuộc họp chưa có công việc"></nz-empty></ng-template>
+            </nz-tab>
+
+            <!-- ===== Lịch sử hoạt động (chủ trì) — luôn là tab cuối để chỉ số các tab trước không đổi ===== -->
+            @if (meeting.isHost) {
+            <nz-tab nzTitle="Lịch sử hoạt động">
+                @if (meeting.activity.length) {
+                <nz-timeline class="activity">
+                    @for (a of meeting.activity; track a.id) {
+                    <nz-timeline-item [nzColor]="activityColor(a)">
+                        <div><b>{{ activityLabel(a) }}</b> · {{ actorName(a.actorId) }}</div>
+                        <div class="muted small">{{ date(a.occurredAt) | date: 'HH:mm:ss dd/MM/yyyy' }}
+                            @if (activityDetail(a); as d) { · {{ d }} }
+                        </div>
+                    </nz-timeline-item>
+                    }
+                </nz-timeline>
+                } @else {
+                <nz-empty nzNotFoundContent="Chưa có hoạt động"></nz-empty>
+                }
+            </nz-tab>
+            }
+        </nz-tabset>
+    </nz-page-header-content>
+</nz-page-header>
+
+<app-meeting-form [(visible)]="formVisible" [meetingId]="meeting.id" (saved)="onSaved($event)"></app-meeting-form>
+<app-cancel-meeting-modal [(meeting)]="cancelTarget" (cancelled)="load(false)"></app-cancel-meeting-modal>
+<app-share-meeting-modal [(meeting)]="shareTarget"></app-share-meeting-modal>
+}

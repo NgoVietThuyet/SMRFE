@@ -1,0 +1,107 @@
+<nz-page-header>
+    <nz-page-header-title>CƠ CẤU TỔ CHỨC</nz-page-header-title>
+    <nz-page-header-subtitle>{{ list.length }} phòng ban · {{ totalEmployees }} nhân sự</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <input *nzSpaceItem nz-input placeholder="Tìm phòng ban" aria-label="Tìm phòng ban" [(ngModel)]="keyword"
+                (ngModelChange)="onSearch()" />
+
+            <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới" (click)="reset()">
+                <nz-icon nzType="sync" nzTheme="outline" />
+            </button>
+
+            <button *nzSpaceItem nz-button nzType="primary" (click)="create('')">
+                <nz-icon nzType="plus" nzTheme="outline" /> Thêm mới
+            </button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <div class="org-hint">
+            <nz-icon nzType="info-circle" nzTheme="outline" />
+            Kéo thả phòng ban để đổi đơn vị cha hoặc thứ tự. Bấm tên phòng ban để chỉnh sửa.
+        </div>
+        <div class="org-container">
+            @if (treeData.length) {
+            <nz-tree [nzData]="treeData" nzDraggable nzBlockNode [nzBeforeDrop]="beforeDrop"
+                [nzTreeTemplate]="nzTreeTemplate" [nzExpandedIcon]="expandedIconTpl" (nzOnDrop)="onDrop($event)">
+                <ng-template #nzTreeTemplate let-node>
+                    <div class="item-org" [class.is-inactive]="!node.origin.origin.isActive">
+                        <div class="item-org-main" (click)="edit(node.origin.origin)">
+                            <span class="org-name">{{ node.title }}</span>
+                            @if (node.origin.origin.employeeCount) {
+                            <nz-tag nzColor="blue" class="org-count">{{ node.origin.origin.employeeCount }} nhân sự</nz-tag>
+                            }
+                            @if (!node.origin.origin.isActive) {
+                            <nz-tag nzColor="error" class="org-count">Khoá</nz-tag>
+                            }
+                        </div>
+                        <div class="item-org-actions">
+                            <nz-tag nzColor="processing" class="action-tag" nz-tooltip nzTooltipTitle="Thêm phòng ban con"
+                                role="button" aria-label="Thêm phòng ban con" (click)="create(node.key)">
+                                <nz-icon nzType="plus" />
+                            </nz-tag>
+                            @if (canDelete(node.origin.origin)) {
+                            <nz-tag nzColor="error" class="action-tag" nz-popconfirm
+                                nzPopconfirmTitle="Bạn có chắc chắn muốn xoá phòng ban này?"
+                                (nzOnConfirm)="remove(node.origin.origin)" role="button" aria-label="Xóa phòng ban">
+                                <nz-icon nzType="delete" />
+                            </nz-tag>
+                            } @else {
+                            <nz-tag nzColor="default" class="action-tag is-disabled" nz-tooltip
+                                [nzTooltipTitle]="deleteHint(node.origin.origin)" aria-label="Không xóa được">
+                                <nz-icon nzType="delete" />
+                            </nz-tag>
+                            }
+                        </div>
+                    </div>
+                </ng-template>
+                <ng-template #expandedIconTpl let-node>
+                    @if (node.children.length > 0) {
+                    <nz-icon class="expand-icon" [nzType]="node.isExpanded ? 'caret-down' : 'caret-right'" />
+                    }
+                </ng-template>
+            </nz-tree>
+            } @else {
+            <nz-empty [nzNotFoundContent]="keyword ? 'Không tìm thấy phòng ban phù hợp' : 'Chưa có phòng ban nào'"></nz-empty>
+            }
+        </div>
+    </nz-page-header-content>
+</nz-page-header>
+
+<nz-drawer [nzWidth]="460" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzExtra]="extra"
+    [nzTitle]="isEdit ? 'CHỈNH SỬA PHÒNG BAN' : 'THÊM PHÒNG BAN'" (nzOnClose)="close()">
+    <ng-container *nzDrawerContent>
+        <label class="text-control">Tên phòng ban <span class="required-star">*</span></label>
+        <input nz-input [(ngModel)]="dto.name" maxlength="200" placeholder="Phòng Công nghệ thông tin"
+            aria-label="Tên phòng ban" class="space-control" />
+
+        <label class="text-control">Đơn vị cha</label>
+        <nz-tree-select class="space-control" [nzNodes]="parentOptions" [(ngModel)]="dto.parentId"
+            nzPlaceHolder="(Cấp cao nhất)" nzAllowClear nzShowSearch [nzDropdownStyle]="{ 'max-height': '320px' }"
+            aria-label="Đơn vị cha"></nz-tree-select>
+
+        <label class="text-control">Thứ tự</label>
+        <nz-input-number class="space-control" [(ngModel)]="dto.orderNumber" [nzMin]="0" [nzStep]="1"
+            aria-label="Thứ tự"></nz-input-number>
+
+        <label class="text-control">Ghi chú</label>
+        <textarea nz-input [(ngModel)]="dto.notes" rows="3" maxlength="500" aria-label="Ghi chú"
+            class="space-control"></textarea>
+
+        <nz-radio-group [(ngModel)]="dto.isActive">
+            <label nz-radio [nzValue]="true">Kích hoạt</label>
+            <label nz-radio [nzValue]="false">Khoá</label>
+        </nz-radio-group>
+    </ng-container>
+
+    <ng-template #extra>
+        <nz-space>
+            <button *nzSpaceItem nz-button (click)="close()">
+                <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="isSaving" (click)="save()">
+                <nz-icon nzType="save" nzTheme="outline" /> {{ isEdit ? 'Cập nhật' : 'Lưu' }}
+            </button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>

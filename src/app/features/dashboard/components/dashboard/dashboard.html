@@ -1,0 +1,244 @@
+<div class="dashboard">
+  <!-- ═════════ BANNER: lời chào + lối tắt ═════════ -->
+  <nz-card class="dash-card banner-card" [nzBodyStyle]="{ padding: '12px 18px' }">
+    <div class="banner-row">
+      <div class="banner-greeting">
+        <div class="banner-hi">
+          {{ greeting }},&nbsp;<strong class="banner-name">{{ fullName || 'bạn' }}</strong>&nbsp;👋
+        </div>
+        <div class="banner-date">{{ todayLabel }}</div>
+      </div>
+
+      <div class="banner-sep"></div>
+
+      <div class="quick-strip">
+        @for (item of quickItems; track item.label) {
+        <button type="button" class="quick-item" nz-tooltip [nzTooltipTitle]="item.tooltip" (click)="item.action()">
+          <span class="quick-icon"><img [src]="item.img" alt="" /></span>
+          <span class="quick-label">{{ item.label }}</span>
+        </button>
+        }
+      </div>
+
+      <button type="button" class="reload-btn" nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới số liệu"
+        (click)="reload()">
+        <nz-icon nzType="sync" />
+      </button>
+    </div>
+  </nz-card>
+
+  <!-- ═════════ 4 THẺ SỐ LIỆU ═════════ -->
+  <div class="stat-cards">
+    <button type="button" class="stat-card stat-ongoing" (click)="onOngoingCard()"
+      [attr.aria-label]="(summary?.ongoing ?? 0) + ' cuộc họp đang diễn ra'">
+      <span class="stat-icon-wrap"><i class="bi bi-broadcast"></i></span>
+      <span class="stat-body">
+        <span class="stat-value">{{ summary?.ongoing ?? 0 }}</span>
+        <span class="stat-label">Đang diễn ra</span>
+      </span>
+      <span class="stat-badge">{{ (summary?.ongoing ?? 0) > 0 ? 'Vào phòng ngay' : 'Không có' }}</span>
+    </button>
+
+    <a class="stat-card stat-upcoming" [routerLink]="['/meetings']" [queryParams]="{ tab: 'upcoming' }"
+      [attr.aria-label]="(summary?.upcoming ?? 0) + ' cuộc họp sắp diễn ra, mở danh sách'">
+      <span class="stat-icon-wrap"><i class="bi bi-calendar-event"></i></span>
+      <span class="stat-body">
+        <span class="stat-value">{{ summary?.upcoming ?? 0 }}</span>
+        <span class="stat-label">Sắp diễn ra</span>
+      </span>
+      <span class="stat-badge">{{ upcomingToday }} trong hôm nay</span>
+    </a>
+
+    <a class="stat-card stat-today" [routerLink]="['/tasks']" [queryParams]="{ shortcut: 'today' }"
+      [attr.aria-label]="(tasksToday?.totalItems ?? 0) + ' việc của tôi đến hạn hôm nay, mở danh sách'">
+      <span class="stat-icon-wrap"><i class="bi bi-check2-square"></i></span>
+      <span class="stat-body">
+        <span class="stat-value">{{ tasksToday?.totalItems ?? 0 }}</span>
+        <span class="stat-label">Việc hôm nay</span>
+      </span>
+      <span class="stat-badge">của tôi</span>
+    </a>
+
+    <a class="stat-card stat-overdue" [class.has-overdue]="(tasksOverdue?.totalItems ?? 0) > 0"
+      [routerLink]="['/tasks']" [queryParams]="{ shortcut: 'overdue' }"
+      [attr.aria-label]="(tasksOverdue?.totalItems ?? 0) + ' việc của tôi quá hạn, mở danh sách'">
+      <span class="stat-icon-wrap"><i class="bi bi-exclamation-triangle"></i></span>
+      <span class="stat-body">
+        <span class="stat-value">{{ tasksOverdue?.totalItems ?? 0 }}</span>
+        <span class="stat-label">Việc quá hạn</span>
+      </span>
+      <span class="stat-badge">cần xử lý</span>
+    </a>
+  </div>
+
+  <!-- ═════════ LƯỚI 2 CỘT ═════════ -->
+  <div class="dash-main">
+    <!-- ─── CỘT TRÁI ─── -->
+    <div class="col-left">
+      @if (ongoing.length) {
+      <nz-card class="dash-card ongoing-card" [nzBodyStyle]="{ padding: '0' }">
+        <div class="card-head" #ongoingBlock tabindex="-1">
+          <div class="card-title"><span class="live-dot"></span> Đang diễn ra</div>
+          @if (ongoingTotal > ongoing.length) {
+          <a class="card-link" [routerLink]="['/meetings']" [queryParams]="{ tab: 'ongoing' }">
+            Xem tất cả ({{ ongoingTotal }}) <nz-icon nzType="arrow-right" />
+          </a>
+          }
+        </div>
+        <div class="card-body">
+          @for (m of ongoing; track m.id) {
+          <div class="meeting-item is-live" role="button" tabindex="0" (click)="openMeeting(m)"
+            (keydown.enter)="openMeeting(m)">
+            <div class="meeting-time-col">
+              <div class="meeting-date">{{ isToday(m.expectedStartTime) ? 'Từ' : (date(m.expectedStartTime) | date: 'dd/MM') }}</div>
+              <div class="meeting-hour">{{ date(m.expectedStartTime) | date: 'HH:mm' }}</div>
+            </div>
+            <div class="meeting-bar live"></div>
+            <div class="meeting-info">
+              <div class="meeting-name">{{ m.name }}</div>
+              <div class="meeting-meta">Chủ trì: {{ m.isHost ? 'Bạn' : m.hostName }} · {{ m.participantCount }} người</div>
+            </div>
+            <button nz-button nzType="primary" (click)="joinMeeting(m, $event)" [attr.aria-label]="'Vào phòng ' + m.name">
+              <nz-icon nzType="login" /> Vào phòng
+            </button>
+          </div>
+          }
+        </div>
+      </nz-card>
+      }
+
+      <nz-card class="dash-card" [nzBodyStyle]="{ padding: '0' }">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-camera-video icon-meeting"></i> Cuộc họp sắp tới</div>
+          <a class="card-link" [routerLink]="['/meetings']" [queryParams]="{ tab: 'upcoming' }">
+            Xem tất cả <nz-icon nzType="arrow-right" />
+          </a>
+        </div>
+        <div class="card-body">
+          @if (loading) {
+          <nz-skeleton [nzActive]="true" [nzParagraph]="{ rows: 4 }"></nz-skeleton>
+          } @else {
+          @for (m of summary?.nextMeetings ?? []; track m.id) {
+          <div class="meeting-item" role="button" tabindex="0" (click)="openMeeting(m)" (keydown.enter)="openMeeting(m)">
+            <div class="meeting-time-col">
+              <div class="meeting-date">{{ date(m.expectedStartTime) | date: 'dd/MM' }}</div>
+              <div class="meeting-hour">{{ date(m.expectedStartTime) | date: 'HH:mm' }}</div>
+            </div>
+            <div class="meeting-bar" [style.background]="meetingColor(m)"></div>
+            <div class="meeting-info">
+              <div class="meeting-name">
+                {{ m.name }}
+                @if (m.isHost) { <nz-tag class="host-tag" nzColor="blue">Bạn chủ trì</nz-tag> }
+              </div>
+              <div class="meeting-meta">Chủ trì: {{ m.isHost ? 'Bạn' : m.hostName }} · {{ m.participantCount }} người</div>
+            </div>
+            <nz-tag [nzColor]="isStartingSoon(m) ? 'orange' : 'default'" class="time-tag">
+              {{ m.expectedStartTime | relativeTime: now }}
+            </nz-tag>
+            <button nz-button nzType="text" nzSize="small" class="row-action" nz-tooltip nzTooltipTitle="Sao chép lời mời"
+              [attr.aria-label]="'Sao chép lời mời ' + m.name" (click)="copyInvite(m, $event)">
+              <nz-icon nzType="copy" />
+            </button>
+          </div>
+          } @empty {
+          <div class="nice-empty">
+            <i class="bi bi-calendar-x"></i>
+            <p>Không có cuộc họp sắp tới</p>
+            @if (canCreateMeeting) {
+            <a [routerLink]="['/meetings']" [queryParams]="{ action: 'create' }">Lên lịch họp</a>
+            }
+          </div>
+          }
+          }
+        </div>
+      </nz-card>
+    </div>
+
+    <!-- ─── CỘT PHẢI ─── -->
+    <div class="col-right">
+      <nz-card class="dash-card" [nzBodyStyle]="{ padding: '0' }">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-calendar-check icon-calendar"></i> Lịch hôm nay</div>
+          <a class="card-link" [routerLink]="['/calendar']">Mở lịch <nz-icon nzType="arrow-right" /></a>
+        </div>
+        <div class="card-body">
+          <div class="today-header">
+            <div class="today-day-num">{{ now | date: 'dd' }}</div>
+            <div class="today-info">
+              <div class="today-weekday">{{ todayWeekday }}</div>
+              <div class="today-monthyear">{{ todayMonth }}</div>
+            </div>
+            <div class="today-event-count">
+              <div class="tec-value">{{ today.length }}</div>
+              <div class="tec-label">Cuộc họp</div>
+            </div>
+          </div>
+
+          @for (m of today; track m.id) {
+          <div class="event-item" [class.is-done]="m.status === MeetingStatus.Ended || m.status === MeetingStatus.Archived"
+            role="button" tabindex="0" (click)="openMeeting(m)" (keydown.enter)="openMeeting(m)">
+            <div class="event-time">{{ date(m.expectedStartTime) | date: 'HH:mm' }}</div>
+            <div class="event-color-dot" [class.live]="m.status === MeetingStatus.Ongoing"
+              [class.done]="m.status === MeetingStatus.Ended || m.status === MeetingStatus.Archived"></div>
+            <div class="event-details">
+              <div class="event-title">{{ m.name }}</div>
+              <div class="event-duration">
+                {{ date(m.expectedStartTime) | date: 'HH:mm' }}@if (m.expectedEndTime) { – {{ date(m.expectedEndTime) | date: 'HH:mm' }} }
+              </div>
+            </div>
+            @if (m.status === MeetingStatus.Ongoing) {
+            <nz-tag nzColor="success">Đang họp</nz-tag>
+            } @else if (m.status === MeetingStatus.Ended || m.status === MeetingStatus.Archived) {
+            <nz-tag>Đã kết thúc</nz-tag>
+            }
+          </div>
+          } @empty {
+          <div class="empty-events">
+            <i class="bi bi-sun"></i>
+            <p>Bạn không có cuộc họp nào hôm nay</p>
+          </div>
+          }
+        </div>
+      </nz-card>
+
+      <nz-card class="dash-card" [nzBodyStyle]="{ padding: '0' }">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-kanban icon-task"></i> Công việc của tôi</div>
+          <a class="card-link" [routerLink]="['/tasks']" [queryParams]="{ shortcut: taskTab }">
+            Xem tất cả <nz-icon nzType="arrow-right" />
+          </a>
+        </div>
+        <div class="card-body">
+          <nz-segmented class="task-tabs" nzSize="small" [nzOptions]="taskTabOptions" [ngModel]="taskTab"
+            (ngModelChange)="onTaskTabChange($event)"></nz-segmented>
+
+          @for (t of tasks; track t.id) {
+          <div class="task-item" role="button" tabindex="0" (click)="openTask(t)" (keydown.enter)="openTask(t)">
+            <div class="task-priority-bar" [style.background]="priorityColor(t.priority)"></div>
+            <div class="task-content">
+              <div class="task-name">{{ t.title }}</div>
+              <div class="task-meta">
+                @if (t.meetingName) { <nz-tag class="meeting-tag">{{ t.meetingName }}</nz-tag> }
+                <span class="task-due" [class.is-overdue]="isOverdue(t)">
+                  <nz-icon nzType="clock-circle" /> {{ t.dueDate | relativeTime: now : 'due' }}
+                </span>
+              </div>
+            </div>
+            <nz-tag [nzColor]="t.status === 1 ? 'processing' : 'default'" class="status-tag">
+              {{ t.status === 1 ? 'Đang làm' : 'Chưa bắt đầu' }}
+            </nz-tag>
+          </div>
+          } @empty {
+          <div class="nice-empty">
+            <i class="bi" [class.bi-emoji-smile]="taskTab === 'today'" [class.bi-check2-circle]="taskTab === 'overdue'"></i>
+            <p>{{ taskTab === 'today' ? 'Không có việc đến hạn hôm nay 🎉' : 'Không có việc quá hạn' }}</p>
+          </div>
+          }
+        </div>
+      </nz-card>
+    </div>
+  </div>
+</div>
+
+<app-quick-meeting-modal [(visible)]="quickMeetingVisible" (created)="onQuickMeetingCreated($event)"></app-quick-meeting-modal>
+<app-join-by-code-modal [(visible)]="joinByCodeVisible" (join)="onJoinByCode($event)"></app-join-by-code-modal>

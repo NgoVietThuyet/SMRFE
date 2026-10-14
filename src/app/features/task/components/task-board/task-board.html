@@ -1,0 +1,230 @@
+<div class="board-page" [style.background]="background">
+  <div class="board-header">
+    <div class="board-header-left">
+      <button nz-button nzType="text" class="back-btn" (click)="goBack()" aria-label="Quay lại"><nz-icon nzType="arrow-left" /></button>
+      <h1 class="board-title" [title]="board?.work?.title || ''">{{ board?.work?.title }}</h1>
+      @if (board) {
+      <nz-tag [nzColor]="board.work.isPublic ? 'green' : 'default'" class="visibility-tag">
+        <nz-icon [nzType]="board.work.isPublic ? 'global' : 'lock'" />
+        {{ board.work.isPublic ? 'Công khai' : 'Riêng tư' }}
+      </nz-tag>
+      @if (board.work.meetingId) {
+      <nz-tag class="visibility-tag meeting-tag" [routerLink]="['/meetings', board.work.meetingId]" nz-tooltip nzTooltipTitle="Mở cuộc họp">
+        <nz-icon nzType="video-camera" /> {{ board.work.meetingName }}
+      </nz-tag>
+      }
+      @if (!canEdit) { <nz-tag class="visibility-tag"><nz-icon nzType="eye" /> Chỉ xem</nz-tag> }
+      }
+    </div>
+    <div class="board-header-right">
+      <div class="view-switcher" style="margin-right: 16px;">
+        <nz-segmented [nzOptions]="viewOptions" [ngModel]="view" (ngModelChange)="setView($event)"></nz-segmented>
+      </div>
+
+      @if (board?.members?.length) {
+      <nz-avatar-group class="members">
+        @for (m of board!.members.slice(0, 5); track m.userName) {
+        <nz-avatar nzSize="small" [nzText]="ui.initials(m.fullName)" [style.background]="ui.colorOf(m.userName)"
+          nz-tooltip [nzTooltipTitle]="m.fullName + (m.role === 'owner' ? ' (người tạo)' : m.role === 'edit' ? ' (sửa)' : m.role === 'view' ? ' (xem)' : '')"></nz-avatar>
+        }
+        @if (board!.members.length > 5) { <nz-avatar nzSize="small" [nzText]="'+' + (board!.members.length - 5)"></nz-avatar> }
+      </nz-avatar-group>
+      }
+
+      @if (board?.isOwner) {
+      <button nz-button class="header-btn" (click)="shareWorkId = workId"><nz-icon nzType="share-alt" /> Chia sẻ</button>
+      }
+      @if (board) {
+      <button nz-button nzType="text" class="header-btn icon" nz-dropdown [nzDropdownMenu]="boardMenu" nzTrigger="click"
+        nzPlacement="bottomRight" aria-label="Thao tác khác"><nz-icon nzType="ellipsis" /></button>
+      <nz-dropdown-menu #boardMenu="nzDropdownMenu">
+        <ul nz-menu>
+          @if (canEdit) { <li nz-menu-item (click)="workModalVisible = true"><nz-icon nzType="edit" />&nbsp; Sửa công việc</li> }
+          <li nz-menu-item (click)="openArchived()"><nz-icon nzType="inbox" />&nbsp; Thẻ đã lưu trữ ({{ board.archivedCount }})</li>
+          @if (board.isOwner) {
+          <li nz-menu-divider></li>
+          <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa công việc và toàn bộ đầu việc, việc nhỏ?"
+            (nzOnConfirm)="deleteWork()"><nz-icon nzType="delete" />&nbsp; Xóa công việc</li>
+          }
+        </ul>
+      </nz-dropdown-menu>
+      }
+    </div>
+  </div>
+
+  <div class="board-view-container">
+    @if (loading && !board) {
+    <div class="board-spin"><nz-spin nzSimple nzSize="large"></nz-spin></div>
+    } @else if (board) {
+    @switch (view) {
+    <!-- ===== Bảng (Trello) ===== -->
+    @case ('board') {
+    <div class="board-body" cdkDropList cdkDropListOrientation="horizontal" [cdkDropListData]="board.lists"
+      [cdkDropListDisabled]="!canEdit" (cdkDropListDropped)="dropList($event)">
+      @for (list of board.lists; track list.id) {
+      <div class="list-wrapper" cdkDrag [cdkDragData]="list" [cdkDragDisabled]="!canEdit">
+        @if (canEdit) { <div class="list-drag-handle" cdkDragHandle></div> }
+        <div class="list-column">
+          <div class="list-header">
+            @if (editingListId !== list.id) {
+            <div class="list-title-area" (click)="startEditList(list, $event)">
+              <span class="list-name">{{ list.title }}</span>
+              <span class="list-card-count">{{ list.cards.length }}</span>
+            </div>
+            } @else {
+            <input nz-input class="list-name-input" [(ngModel)]="editingListName" maxlength="300" (blur)="saveListName(list)"
+              (keydown)="onKeydownEditList($event, list)" [id]="'edit-list-' + list.id" />
+            }
+            @if (canEdit) {
+            <div class="list-actions">
+              <button nz-button nzType="text" nzSize="small" class="list-action-btn" nz-dropdown [nzDropdownMenu]="listMenu"
+                nzTrigger="click" (click)="$event.stopPropagation()" aria-label="Thao tác danh sách"><nz-icon nzType="ellipsis" /></button>
+              <nz-dropdown-menu #listMenu="nzDropdownMenu">
+                <ul nz-menu>
+                  <li nz-menu-item (click)="startEditList(list, $event)"><nz-icon nzType="edit" /> Đổi tên</li>
+                  <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa danh sách này và toàn bộ thẻ?"
+                    (nzOnConfirm)="deleteList(list)"><nz-icon nzType="delete" /> Xóa danh sách</li>
+                </ul>
+              </nz-dropdown-menu>
+            </div>
+            }
+          </div>
+
+          <div class="cards-container" cdkDropList [id]="'list-' + list.id" [cdkDropListData]="list.cards"
+            [cdkDropListConnectedTo]="listDropIds" [cdkDropListDisabled]="!canEdit" (cdkDropListDropped)="dropCard($event, list)">
+            @for (card of list.cards; track card.id) {
+            <div class="card-item" cdkDrag [cdkDragData]="card" [cdkDragDisabled]="!canEdit" (click)="openCard(card)"
+              role="button" tabindex="0" (keydown.enter)="openCard(card)">
+              <div *cdkDragPlaceholder class="card-placeholder"></div>
+
+              @if (labelsOf(card).length) {
+              <div class="card-labels">
+                @for (label of labelsOf(card); track label.id) {
+                <span class="card-label" [style.background]="label.color" nz-tooltip [nzTooltipTitle]="label.name"></span>
+                }
+              </div>
+              }
+
+              <div class="card-header-row">
+                <div class="task-status-dot" [class.done]="ui.isDone(card)" [class.disabled]="!card.canWork"
+                  (click)="$event.stopPropagation(); toggleComplete(card)" nz-tooltip
+                  [nzTooltipTitle]="ui.isDone(card) ? 'Hoàn thành' : 'Đang thực hiện'">
+                  <nz-icon nzType="check" />
+                </div>
+                <div class="card-title" [class.text-completed]="ui.isDone(card)">{{ card.title }}</div>
+              </div>
+
+              <div class="card-badges">
+                @if (card.dueDate) {
+                <span class="badge badge-date" [class.overdue]="ui.isOverdue(card)" [class.due-soon]="ui.isDueSoon(card)">
+                  <nz-icon nzType="clock-circle" /> {{ ui.shortDate(card.dueDate) }}
+                </span>
+                }
+                @if (priorityMeta(card.priority); as p) {
+                <span class="badge badge-priority" [style.background]="p.color + '22'" [style.color]="p.color">
+                  <nz-icon nzType="flag" nzTheme="fill" /> {{ p.label }}
+                </span>
+                }
+                @if (card.checklistTotal > 0) {
+                <span class="badge badge-checklist" [class.done]="card.checklistDone === card.checklistTotal">
+                  <nz-icon nzType="check-square" /> {{ card.checklistDone }}/{{ card.checklistTotal }}
+                </span>
+                }
+                @if (card.commentCount > 0) {
+                <span class="badge badge-comment"><nz-icon nzType="comment" /> {{ card.commentCount }}</span>
+                }
+                @if (card.fileCount > 0) {
+                <span class="badge badge-comment"><nz-icon nzType="paper-clip" /> {{ card.fileCount }}</span>
+                }
+              </div>
+
+              @if (card.assigneeUserName) {
+              <div class="card-members">
+                <nz-avatar nzSize="small" [nzText]="ui.initials(card.assigneeFullName || card.assigneeUserName)"
+                  [style.background]="ui.colorOf(card.assigneeUserName)" nz-tooltip
+                  [nzTooltipTitle]="card.assigneeFullName || card.assigneeUserName"></nz-avatar>
+              </div>
+              }
+            </div>
+            }
+          </div>
+
+          @if (canEdit) {
+          <div class="add-card-area">
+            @if (addingCardListId !== list.id) {
+            <div class="add-card-btn" (click)="startAddCard(list.id)"><nz-icon nzType="plus" /> Thêm thẻ</div>
+            } @else {
+            <div class="add-card-form">
+              <textarea nz-input [id]="'new-card-input-' + list.id" [(ngModel)]="newCardTitle" placeholder="Nhập tiêu đề thẻ..."
+                maxlength="300" [nzAutosize]="{ minRows: 2, maxRows: 5 }" (keydown)="onKeydownCard($event, list.id)"></textarea>
+              <div class="add-card-actions">
+                <button nz-button nzType="primary" nzSize="small" (click)="addCard(list.id)">Thêm thẻ</button>
+                <button nz-button nzType="text" nzSize="small" (click)="addingCardListId = ''" aria-label="Huỷ"><nz-icon nzType="close" /></button>
+              </div>
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      @if (canEdit) {
+      <div class="add-list-wrapper">
+        @if (!isAddingList) {
+        <div class="add-list-btn" (click)="startAddList()"><nz-icon nzType="plus" /> Thêm danh sách</div>
+        } @else {
+        <div class="add-list-form">
+          <input nz-input id="new-list-input" [(ngModel)]="newListName" placeholder="Nhập tên danh sách..." maxlength="300"
+            (keydown)="onKeydownList($event)" />
+          <div class="add-list-actions">
+            <button nz-button nzType="primary" nzSize="small" (click)="addList()">Thêm</button>
+            <button nz-button nzType="text" nzSize="small" (click)="isAddingList = false" aria-label="Huỷ"><nz-icon nzType="close" /></button>
+          </div>
+        </div>
+        }
+      </div>
+      }
+      @if (!board.lists.length && !canEdit) {
+      <div class="board-empty">Công việc chưa có đầu việc nào.</div>
+      }
+    </div>
+    }
+
+    <!-- ===== Danh sách (ClickUp) ===== -->
+    @case ('list') {
+    <div class="board-panel">
+      <app-task-list-view [groups]="groups" [labels]="board.labels" [canEdit]="canEdit" (cardClicked)="openCard($event)"
+        (cardToggleComplete)="toggleComplete($event)" (addCard)="addCard($event.listId, $event.title)"
+        (addList)="addList($event)"></app-task-list-view>
+    </div>
+    }
+
+    <!-- ===== Timeline ===== -->
+    @case ('timeline') {
+    <div class="board-panel">
+      <app-task-timeline [groups]="groups" [canEdit]="canEdit" (cardClicked)="openCard($event)"
+        (cardToggleComplete)="toggleComplete($event)" (addCard)="addCard($event.listId, $event.title)"
+        (addList)="addList($event)"></app-task-timeline>
+    </div>
+    }
+    }
+    }
+  </div>
+</div>
+
+<app-card-detail [taskId]="openCardId" (closed)="onCardClosed($event)"></app-card-detail>
+<app-work-modal [(visible)]="workModalVisible" [work]="board?.work ?? null" (saved)="onWorkSaved()"></app-work-modal>
+<app-task-share-modal [(workId)]="shareWorkId" (changed)="load(false)"></app-task-share-modal>
+
+<nz-drawer [nzVisible]="archivedVisible" nzTitle="Thẻ đã lưu trữ" [nzWidth]="400" (nzOnClose)="archivedVisible = false">
+  <ng-container *nzDrawerContent>
+    @if (!archived.length) { <nz-empty nzNotFoundContent="Không có thẻ nào bị lưu trữ"></nz-empty> }
+    @for (card of archived; track card.id) {
+    <div class="archived-row">
+      <a (click)="openCard(card)">{{ card.title }}</a>
+      @if (canEdit) { <button nz-button nzSize="small" (click)="restore(card)"><nz-icon nzType="rollback" /> Khôi phục</button> }
+    </div>
+    }
+  </ng-container>
+</nz-drawer>

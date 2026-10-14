@@ -1,0 +1,78 @@
+.dash-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: calc(100vh - 90px);
+    overflow: auto;
+    padding-bottom: 24px;
+}
+
+.filter-org {
+    width: 220px;
+}
+
+// ── Thẻ số liệu (giống hrm-dashboard của 2.FrontEnd) ──
+.stat-card {
+    border-radius: 8px;
+
+    ::ng-deep .ant-card-body {
+        padding: 20px 24px;
+    }
+}
+
+.stat-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.stat-blue .stat-icon { background: #e6f4ff; color: #1890ff; }
+.stat-green .stat-icon { background: #f6ffed; color: #52c41a; }
+.stat-purple .stat-icon { background: #f9f0ff; color: #722ed1; }
+.stat-red .stat-icon { background: #fff1f0; color: #f5222d; }
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #262626;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #8c8c8c;
+}
+
+.hr-line {
+    color: #595959;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.chart-card {
+    border-radius: 8px;
+    height: 100%;
+
+    ::ng-deep .ant-card-body {
+        min-height: 300px;
+    }
+}
+
+.export-group {
+    display: flex;
+    width: 250px;
+}

@@ -1,0 +1,137 @@
+<div class="list-view">
+  <div class="list-toolbar">
+    <div class="list-toolbar-left">
+      <span class="list-toolbar-title">
+        <nz-icon nzType="bars" />
+        {{ title }}
+      </span>
+      <nz-tag class="task-count-badge">{{ total }} nhiệm vụ</nz-tag>
+    </div>
+  </div>
+
+  <div class="list-table-wrapper">
+    <div class="list-header-row">
+      <div class="col-expand"></div>
+      <div class="col-title">Nhiệm vụ</div>
+      <div class="col-assignee">Người thực hiện</div>
+      <div class="col-due">Ngày hết hạn</div>
+      <div class="col-checklist">Checklist</div>
+    </div>
+
+    @if (!groups.length) {
+    <nz-empty class="list-empty" nzNotFoundContent="Không có nhiệm vụ nào"></nz-empty>
+    }
+
+    @for (list of groups; track list.id; let gi = $index) {
+    <div class="list-group">
+      <div class="group-header" (click)="toggleGroup(list.id)">
+        <div class="group-header-left">
+          <nz-icon [nzType]="collapsedGroups.has(list.id) ? 'caret-right' : 'caret-down'" class="group-toggle-icon" />
+          <span class="group-color-dot" [style.background]="ui.listColor(gi)"></span>
+          <span class="group-name">{{ list.name }}</span>
+          <span class="group-count">{{ list.cards.length }}</span>
+        </div>
+      </div>
+
+      @if (!collapsedGroups.has(list.id)) {
+      @for (card of list.cards; track card.id; let last = $last) {
+      <div class="task-row" [class.task-row-last]="last" (click)="cardClicked.emit(card)" role="button" tabindex="0"
+        (keydown.enter)="cardClicked.emit(card)">
+        <div class="col-expand">
+          <div class="task-status-dot" [class.done]="ui.isDone(card)" [class.disabled]="!card.canWork"
+            (click)="$event.stopPropagation(); card.canWork && cardToggleComplete.emit(card)" nz-tooltip
+            [nzTooltipTitle]="ui.isDone(card) ? 'Hoàn thành' : 'Đang thực hiện'">
+            <nz-icon nzType="check" />
+          </div>
+        </div>
+
+        <div class="col-title">
+          <div class="task-title-wrap">
+            <span class="task-title-text" [class.text-completed]="ui.isDone(card)">{{ card.title }}</span>
+            @if (ui.labelsOf(card, labels).length) {
+            <div class="task-labels">
+              @for (label of ui.labelsOf(card, labels); track label.id) {
+              <span class="task-label-chip" [style.background]="label.color + '33'" [style.color]="label.color"
+                nz-tooltip [nzTooltipTitle]="label.name">{{ label.name || '&nbsp;' }}</span>
+              }
+            </div>
+            }
+          </div>
+        </div>
+
+        <div class="col-assignee">
+          @if (card.assigneeUserName) {
+          <span class="member-avatar" nz-tooltip [nzTooltipTitle]="card.assigneeFullName || card.assigneeUserName">
+            <nz-avatar nzSize="small" [nzText]="ui.initials(card.assigneeFullName || card.assigneeUserName)"
+              [style.background]="ui.colorOf(card.assigneeUserName)"></nz-avatar>
+          </span>
+          } @else {
+          <span class="no-value">—</span>
+          }
+        </div>
+
+        <div class="col-due">
+          @if (card.dueDate) {
+          <span class="due-badge" [class.overdue]="ui.isOverdue(card)" [class.due-soon]="ui.isDueSoon(card)">
+            <nz-icon nzType="clock-circle" />
+            {{ ui.shortDate(card.dueDate) }}
+          </span>
+          } @else {
+          <span class="no-value">—</span>
+          }
+        </div>
+
+        <div class="col-checklist">
+          @if (card.checklistTotal > 0) {
+          <span class="checklist-progress" [class.done]="card.checklistDone === card.checklistTotal">
+            <nz-icon nzType="check-square" />
+            {{ card.checklistDone }}/{{ card.checklistTotal }}
+          </span>
+          }
+        </div>
+      </div>
+      }
+
+      @if (canEdit) {
+      <div class="add-task-container">
+        @if (addingCardListId !== list.id) {
+        <div class="add-task-row" (click)="startAddCard(list.id)">
+          <nz-icon nzType="plus" class="add-task-icon" />
+          <span class="add-task-text">Thêm nhiệm vụ</span>
+        </div>
+        } @else {
+        <div class="add-task-form">
+          <input nz-input [id]="'new-card-input-lv-' + list.id" [(ngModel)]="newCardTitle" placeholder="Tiêu đề nhiệm vụ..."
+            (keydown)="onKeydownCard($event, list.id)" />
+          <div class="add-task-actions">
+            <button nz-button nzType="primary" nzSize="small" (click)="submitAddCard(list.id)">Thêm</button>
+            <button nz-button nzType="text" nzSize="small" (click)="cancelAddCard()" aria-label="Huỷ"><nz-icon nzType="close" /></button>
+          </div>
+        </div>
+        }
+      </div>
+      }
+      }
+    </div>
+    }
+
+    @if (canEdit) {
+    <div class="add-list-section">
+      @if (!isAddingList) {
+      <div class="add-list-trigger" (click)="startAddList()">
+        <nz-icon nzType="plus" />
+        <span>Thêm danh sách mới</span>
+      </div>
+      } @else {
+      <div class="add-list-form">
+        <input nz-input id="new-list-input-lv" [(ngModel)]="newListName" placeholder="Tên danh sách..." (keydown)="onKeydownList($event)" />
+        <div class="add-list-actions">
+          <button nz-button nzType="primary" nzSize="small" (click)="submitAddList()">Thêm</button>
+          <button nz-button nzType="text" nzSize="small" (click)="cancelAddList()" aria-label="Huỷ"><nz-icon nzType="close" /></button>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

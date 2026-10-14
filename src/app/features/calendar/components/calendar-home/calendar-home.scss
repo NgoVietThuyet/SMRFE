@@ -1,0 +1,439 @@
+// Theo calendar-home.scss của 2.FrontEnd (bỏ sidebar "lịch của tôi", kéo thả).
+$primary: #189AD6;
+$border: #e8e8e8;
+$border-radius: 6px;
+$toolbar-height: 56px;
+$time-gutter-width: 56px;
+$today-bg: #e6f7ff;
+$other-month-bg: #fafafa;
+$text-muted: #8c8c8c;
+
+:host {
+    display: block;
+    height: 100vh;
+}
+
+.cal-main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: #fff;
+}
+
+.cal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 16px;
+    min-height: $toolbar-height;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+
+    .toolbar-left,
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .toolbar-right {
+        gap: 12px;
+    }
+
+    .toolbar-title {
+        margin: 0 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #262626;
+        white-space: nowrap;
+    }
+
+    ::ng-deep .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+        background: $primary;
+        border-color: $primary;
+    }
+}
+
+.legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: $text-muted;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+    }
+
+    .truncated {
+        color: #d46b08;
+        margin-left: auto;
+    }
+}
+
+.today-badge {
+    background: $primary;
+    color: #fff !important;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+// ─── Tháng ────────────────────────────────────────────────────────────────────
+.month-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.month-weekday-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid $border;
+    background: #fafafa;
+    flex-shrink: 0;
+
+    .month-weekday-cell {
+        padding: 6px 0;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: $text-muted;
+        text-transform: uppercase;
+    }
+}
+
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-auto-rows: minmax(104px, 1fr);
+    flex: 1;
+    overflow-y: auto;
+    border-left: 1px solid $border;
+}
+
+.month-cell {
+    border-right: 1px solid $border;
+    border-bottom: 1px solid $border;
+    padding: 4px;
+    overflow: hidden;
+    transition: background 0.1s;
+    min-width: 0;
+
+    &.clickable:hover {
+        background: #f0faff;
+    }
+
+    &.other-month {
+        background: $other-month-bg;
+
+        .month-day-num {
+            color: #bfbfbf;
+        }
+    }
+
+    &.is-today {
+        background: $today-bg;
+    }
+
+    .month-cell-header {
+        margin-bottom: 2px;
+    }
+
+    .month-day-num {
+        display: inline-block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #262626;
+        padding: 0 4px;
+        line-height: 26px;
+        min-width: 26px;
+        text-align: center;
+        border-radius: 13px;
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+    }
+
+    .month-cell-events {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+}
+
+.month-event-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    border-radius: $border-radius;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 18px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+
+    &:hover,
+    &:focus-visible {
+        opacity: 0.85;
+        outline: none;
+    }
+
+    &.cancelled .chip-title {
+        text-decoration: line-through;
+    }
+
+    .chip-time {
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .chip-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.month-event-more {
+    font-size: 11px;
+    color: $text-muted;
+    padding: 1px 6px;
+    border-radius: $border-radius;
+
+    &:hover {
+        background: #f0f0f0;
+        color: #262626;
+    }
+}
+
+.more-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 240px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+// ─── Tuần ─────────────────────────────────────────────────────────────────────
+.week-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.week-header-row {
+    display: flex;
+    border-bottom: 1px solid $border;
+    background: #fafafa;
+    flex-shrink: 0;
+    padding-right: 8px; // chừa chỗ thanh cuộn của lưới giờ
+
+    .time-gutter-header {
+        width: $time-gutter-width;
+        flex-shrink: 0;
+        border-right: 1px solid $border;
+    }
+
+    .week-day-header {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 6px 4px;
+        border-right: 1px solid $border;
+
+        &.week-today {
+            background: $today-bg;
+        }
+
+        .wdh-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: $text-muted;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .wdh-num {
+            font-size: 18px;
+            font-weight: 500;
+            color: #262626;
+            line-height: 26px;
+        }
+    }
+}
+
+.time-scroll-wrap {
+    flex: 1;
+    overflow-y: scroll;
+    min-height: 0;
+}
+
+.time-scroll-inner {
+    position: relative;
+    width: 100%;
+}
+
+.time-labels-col {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: $time-gutter-width;
+    border-right: 1px solid $border;
+
+    .time-label {
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 6px;
+        font-size: 10px;
+        color: $text-muted;
+        transform: translateY(-6px);
+    }
+}
+
+.week-cols {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: $time-gutter-width;
+    right: 0;
+    display: flex;
+}
+
+.week-col {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    border-right: 1px solid $border;
+
+    &.week-today {
+        background: rgba(230, 247, 255, 0.4);
+    }
+
+    &.clickable:hover {
+        background: rgba(24, 154, 214, 0.04);
+    }
+}
+
+.hour-line {
+    border-bottom: 1px solid #f0f0f0;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.now-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #ff4d4f;
+    z-index: 3;
+    pointer-events: none;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: -5px;
+        top: -4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ff4d4f;
+    }
+}
+
+.timed-event {
+    position: absolute;
+    border-radius: $border-radius;
+    padding: 2px 6px;
+    overflow: hidden;
+    cursor: pointer;
+    color: #fff;
+    font-size: 11px;
+    line-height: 1.3;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+    box-sizing: border-box;
+
+    &:hover,
+    &:focus-visible {
+        z-index: 2;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        outline: none;
+    }
+
+    &.cancelled .te-title {
+        text-decoration: line-through;
+    }
+
+    // Cuộc họp kéo dài qua ngày: bo góc phẳng ở phía bị cắt.
+    &.cut-top {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+    &.cut-bottom {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .te-title {
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .te-time {
+        opacity: 0.9;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .month-grid {
+        grid-auto-rows: minmax(72px, 1fr);
+    }
+
+    .month-event-chip .chip-time {
+        display: none;
+    }
+
+    .cal-toolbar .toolbar-right label[nz-checkbox] {
+        display: none;
+    }
+}

@@ -1,0 +1,143 @@
+<div class="perm-layout">
+    <!-- ===== Trái: chọn đối tượng ===== -->
+    <aside class="target-panel">
+        <nz-tabset [(nzSelectedIndex)]="leftTab" nzSize="small" [nzTabBarGutter]="0" class="target-tabs">
+            <nz-tab nzTitle="Phòng ban">
+                <div class="target-list">
+                    <nz-tree [nzData]="orgTree" nzBlockNode
+                        [nzSelectedKeys]="selected?.type === 'organization' ? [selected!.id] : []"
+                        (nzClick)="selectOrganization($event)"></nz-tree>
+                </div>
+            </nz-tab>
+            <nz-tab nzTitle="Chức danh">
+                <div class="target-search">
+                    <input nz-input placeholder="Tìm chức danh" aria-label="Tìm chức danh" [(ngModel)]="titleKeyword" />
+                </div>
+                <div class="target-list">
+                    @for (t of filteredTitles; track t.code) {
+                    <div class="target-item" [class.is-selected]="isSelected('title', t.code)" (click)="selectTitle(t)">
+                        <span class="target-name">{{ t.name }}</span>
+                        <span class="target-sub">{{ t.code }}</span>
+                    </div>
+                    } @empty {
+                    <nz-empty nzNotFoundContent="Không có chức danh"></nz-empty>
+                    }
+                </div>
+            </nz-tab>
+            <nz-tab nzTitle="Tài khoản">
+                <div class="target-search">
+                    <input nz-input placeholder="Tài khoản, họ tên, email" aria-label="Tìm tài khoản"
+                        [(ngModel)]="accountKeyword" (ngModelChange)="onAccountKeyword($event)" />
+                </div>
+                <div class="target-list">
+                    @for (a of accounts; track a.userName) {
+                    <div class="target-item" [class.is-selected]="isSelected('account', a.userName)"
+                        (click)="selectAccount(a)">
+                        <span class="target-name">{{ a.fullName }}</span>
+                        <span class="target-sub">{{ a.userName }} · {{ a.titleName || '---' }}</span>
+                    </div>
+                    } @empty {
+                    <nz-empty nzNotFoundContent="Không tìm thấy tài khoản"></nz-empty>
+                    }
+                </div>
+            </nz-tab>
+        </nz-tabset>
+    </aside>
+
+    <!-- ===== Phải: ma trận quyền ===== -->
+    <section class="matrix-panel">
+        <nz-page-header>
+            <nz-page-header-title>PHÂN QUYỀN</nz-page-header-title>
+            <nz-page-header-subtitle>{{ selected ? selected.name : 'Chọn phòng ban, chức danh hoặc tài khoản' }}</nz-page-header-subtitle>
+            <nz-page-header-extra>
+                @if (selected && !selected.isAdmin) {
+                <nz-space>
+                    @if (hasChanges) {
+                    <button *nzSpaceItem nz-button (click)="discard()">
+                        <nz-icon nzType="rollback" /> Bỏ thay đổi
+                    </button>
+                    }
+                    <button *nzSpaceItem nz-button nzType="primary" [disabled]="!hasChanges" [nzLoading]="isSaving"
+                        (click)="confirmSave()">
+                        <nz-icon nzType="save" /> Lưu{{ hasChanges ? ' (' + pendingChanges.length + ')' : '' }}
+                    </button>
+                </nz-space>
+                }
+            </nz-page-header-extra>
+            <nz-page-header-content>
+                @if (!selected) {
+                <nz-empty class="empty-state"
+                    nzNotFoundContent="Chọn một đối tượng ở cột bên trái để xem và gán quyền"></nz-empty>
+                } @else if (selected.isAdmin) {
+                <nz-alert nzType="info" nzShowIcon nzMessage="Toàn quyền"
+                    nzDescription="Tài khoản có vai trò SUPER_ADMIN luôn được cho phép mọi quyền, không cần gán."></nz-alert>
+                } @else {
+                <nz-tabset [(nzSelectedIndex)]="rightTab" nzSize="small">
+                    <nz-tab nzTitle="Gán quyền">
+                        <nz-alert class="mb-3" nzType="info" nzShowIcon
+                            nzMessage="Thứ tự áp dụng: Tài khoản → Chức danh → Phòng ban. Giá trị đầu tiên khác “Kế thừa” được dùng; không có thì từ chối."></nz-alert>
+                        <div class="matrix-scroll">
+                            <nz-collapse nzGhost [nzBordered]="false">
+                                @for (group of catalog; track group.groupName) {
+                                <nz-collapse-panel [nzHeader]="groupHeader" [nzActive]="true">
+                                    <ng-template #groupHeader>
+                                        <div class="group-header">
+                                            <span class="group-name">{{ group.groupName }}</span>
+                                            <span class="group-count">
+                                                <nz-tag nzColor="success">{{ countIn(group, 'Allow') }} cho phép</nz-tag>
+                                                <nz-tag nzColor="error">{{ countIn(group, 'Deny') }} từ chối</nz-tag>
+                                            </span>
+                                            <span class="group-actions">
+                                                <a (click)="setGroup(group, 'Allow', $event)">Cho phép hết</a>
+                                                <a (click)="setGroup(group, 'Inherit', $event)">Kế thừa hết</a>
+                                            </span>
+                                        </div>
+                                    </ng-template>
+                                    @for (p of group.permissions; track p.code) {
+                                    <div class="perm-row" [class.is-changed]="current[p.code] !== original[p.code]">
+                                        <div class="perm-info">
+                                            <span class="perm-name">{{ p.name }}</span>
+                                            <code class="perm-code">{{ p.code }}</code>
+                                        </div>
+                                        <nz-segmented [nzOptions]="effectOptions" [(ngModel)]="current[p.code]"
+                                            [attr.aria-label]="'Quyền ' + p.name"></nz-segmented>
+                                    </div>
+                                    }
+                                </nz-collapse-panel>
+                                }
+                            </nz-collapse>
+                        </div>
+                    </nz-tab>
+                    @if (selected.type === 'account') {
+                    <nz-tab nzTitle="Quyền hiệu lực" (nzClick)="loadEffective()">
+                        <nz-table #eff nzBordered nzSize="small" [nzData]="effective" [nzLoading]="effectiveLoading"
+                            [nzShowPagination]="false" [nzPageSize]="100" [nzScroll]="{ y: 'calc(100vh - 230px)' }">
+                            <thead>
+                                <tr>
+                                    <th>Quyền</th>
+                                    <th nzWidth="220px">Mã</th>
+                                    <th nzAlign="center" nzWidth="120px">Kết quả</th>
+                                    <th nzWidth="260px">Nguồn</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (p of eff.data; track p.code) {
+                                <tr>
+                                    <td>{{ p.name }}</td>
+                                    <td><code>{{ p.code }}</code></td>
+                                    <td nzAlign="center">
+                                        <nz-tag [nzColor]="p.allowed ? 'success' : 'error'">{{ p.allowed ? 'Cho phép' : 'Từ chối' }}</nz-tag>
+                                    </td>
+                                    <td>{{ sourceLabel(p) }}</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </nz-table>
+                    </nz-tab>
+                    }
+                </nz-tabset>
+                }
+            </nz-page-header-content>
+        </nz-page-header>
+    </section>
+</div>

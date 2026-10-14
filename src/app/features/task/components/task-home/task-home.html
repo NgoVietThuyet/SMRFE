@@ -1,0 +1,135 @@
+<div class="task-home">
+  <div class="task-sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title"><nz-icon nzType="project" nzTheme="fill" /> Quản lý công việc</span>
+      <button nz-button nzType="text" nz-tooltip nzTooltipTitle="Tạo công việc mới" (click)="openCreate()" aria-label="Tạo công việc mới">
+        <nz-icon nzType="plus" />
+      </button>
+    </div>
+
+    <div class="sidebar-search">
+      <nz-input-group [nzPrefix]="searchIcon">
+        <input nz-input [(ngModel)]="keyword" placeholder="Tìm công việc..." (keydown)="onKeydownSearch($event)" aria-label="Tìm công việc" />
+      </nz-input-group>
+      <ng-template #searchIcon><nz-icon nzType="search" /></ng-template>
+    </div>
+
+    <div class="workspace-list">
+      <div class="sidebar-section-label">LỐI TẮT</div>
+      <div class="workspace-item" [class.active]="group === 'today'" (click)="selectGroup('today')" role="button" tabindex="0">
+        <div class="workspace-icon" style="background:#FF9F1A"><nz-icon nzType="clock-circle" /></div>
+        <div class="workspace-info"><div class="workspace-name">Hôm nay</div><div class="workspace-desc">Việc của tôi đến hạn hôm nay</div></div>
+        @if (counts?.today) { <span class="count-badge">{{ counts?.today }}</span> }
+      </div>
+      <div class="workspace-item" [class.active]="group === 'overdue'" (click)="selectGroup('overdue')" role="button" tabindex="0">
+        <div class="workspace-icon" style="background:#EB5A46"><nz-icon nzType="warning" /></div>
+        <div class="workspace-info"><div class="workspace-name">Quá hạn</div><div class="workspace-desc">Việc của tôi đã trễ hạn</div></div>
+        @if (counts?.overdue) { <span class="count-badge danger">{{ counts?.overdue }}</span> }
+      </div>
+
+      <div class="sidebar-section-label">NHÓM</div>
+      @for (g of [
+        { key: 'mine', name: 'Của tôi', desc: 'Công việc tôi tạo', count: counts?.mine, icon: 'user' },
+        { key: 'assigned', name: 'Được giao', desc: 'Có việc giao cho tôi', count: counts?.assigned, icon: 'solution' },
+        { key: 'shared', name: 'Được chia sẻ', desc: 'Người khác chia sẻ', count: counts?.shared, icon: 'share-alt' },
+        { key: 'public', name: 'Công khai', desc: 'Mọi người xem được', count: counts?.publicCount, icon: 'global' }
+      ]; track g.key) {
+      <div class="workspace-item" [class.active]="group === g.key" (click)="selectGroup(g.key)" role="button" tabindex="0">
+        <div class="workspace-icon" [style.background]="ui.colorOf(g.key)"><nz-icon [nzType]="g.icon" /></div>
+        <div class="workspace-info"><div class="workspace-name">{{ g.name }}</div><div class="workspace-desc">{{ g.desc }}</div></div>
+        @if (g.count) { <span class="count-badge">{{ g.count }}</span> }
+      </div>
+      }
+
+      @if (counts?.meetings?.length) {
+      <div class="sidebar-section-label">THEO CUỘC HỌP</div>
+      @for (m of counts!.meetings; track m.meetingId) {
+      <div class="workspace-item" [class.active]="group === 'meeting:' + m.meetingId" (click)="selectGroup('meeting:' + m.meetingId)"
+        role="button" tabindex="0">
+        <div class="workspace-icon" [style.background]="ui.colorOf(m.meetingId)">{{ ui.initials(m.name) }}</div>
+        <div class="workspace-info">
+          <div class="workspace-name" nz-tooltip [nzTooltipTitle]="m.name">{{ m.name }}</div>
+          @if (m.startTime) { <div class="workspace-desc">{{ ui.shortDate(m.startTime) }}</div> }
+        </div>
+        <span class="count-badge">{{ m.count }}</span>
+      </div>
+      }
+      }
+    </div>
+  </div>
+
+  <div class="task-main">
+    <div class="main-header">
+      <div class="header-left">
+        <h2 class="workspace-title">{{ title }}</h2>
+        <p class="workspace-subtitle">
+          @if (isDueView) {
+          Việc nhỏ được giao cho tôi, chưa hoàn thành
+          } @else {
+          {{ works.length }} công việc
+          }
+        </p>
+      </div>
+      @if (canCreateHere) {
+      <button nz-button nzType="primary" (click)="openCreate()"><nz-icon nzType="plus" /> Tạo công việc</button>
+      }
+    </div>
+
+    @if (loading) {
+    <div class="main-spin"><nz-spin nzSimple></nz-spin></div>
+    } @else if (isDueView) {
+    <div class="due-panel">
+      <app-task-list-view [groups]="dueGroups" [title]="title" (cardClicked)="openCard($event)"
+        (cardToggleComplete)="toggleComplete($event)"></app-task-list-view>
+    </div>
+    } @else {
+    <div class="boards-grid">
+      @if (canCreateHere) {
+      <div class="board-card create-board-card" (click)="openCreate()" role="button" tabindex="0">
+        <div class="create-icon"><nz-icon nzType="plus" style="font-size:28px;color:#bbb" /></div>
+        <span class="create-label">Tạo công việc mới</span>
+      </div>
+      }
+
+      @for (w of works; track w.id) {
+      <div class="board-card" [style.background-color]="w.color || defaultColor" (click)="openWork(w)" role="button" tabindex="0"
+        (keydown.enter)="openWork(w)">
+        <div class="board-card-overlay">
+          <div class="board-card-name">{{ w.title }}</div>
+          @if (w.isCreator) {
+          <div class="board-card-actions" (click)="$event.stopPropagation()">
+            <button nz-button nzType="text" nzSize="small" class="board-action-btn" nz-tooltip nzTooltipTitle="Chỉnh sửa"
+              (click)="openEdit(w, $event)" aria-label="Chỉnh sửa"><nz-icon nzType="edit" style="color:white" /></button>
+            <button nz-button nzType="text" nzSize="small" class="board-action-btn" nz-popconfirm
+              nzPopconfirmTitle="Xóa công việc và toàn bộ đầu việc, việc nhỏ?" (nzOnConfirm)="deleteWork(w)" aria-label="Xoá">
+              <nz-icon nzType="delete" style="color:white" /></button>
+          </div>
+          }
+        </div>
+        <div class="board-card-footer">
+          @if (w.cardCount) {
+          <div class="board-progress" nz-tooltip [nzTooltipTitle]="(w.cardDoneCount || 0) + '/' + w.cardCount + ' việc đã xong'">
+            <div class="board-progress-bar" [style.width.%]="progressOf(w)"></div>
+          </div>
+          }
+          @if (w.meetingName) {
+          <span class="board-meeting" nz-tooltip [nzTooltipTitle]="w.meetingName"><nz-icon nzType="video-camera" /></span>
+          }
+          <div class="board-visibility">
+            <nz-icon [nzType]="w.isPublic ? 'global' : 'lock'" style="color:rgba(255,255,255,0.8)" />
+            <span>{{ w.isPublic ? 'Công khai' : 'Riêng tư' }}</span>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    @if (!works.length) {
+    <nz-empty class="home-empty" [nzNotFoundContent]="keyword ? 'Không có công việc phù hợp' : canCreateHere ? 'Chưa có công việc nào. Hãy tạo công việc đầu tiên!' : 'Chưa có công việc nào'"></nz-empty>
+    }
+    }
+  </div>
+</div>
+
+<app-work-modal [(visible)]="workModalVisible" [work]="editingWork" [presetMeetingId]="presetMeetingId" (saved)="onWorkSaved($event)"></app-work-modal>
+<app-card-detail [taskId]="openCardId" (closed)="onCardClosed($event)"></app-card-detail>

@@ -1,0 +1,141 @@
+<nz-page-header>
+    <nz-page-header-title>CUỘC HỌP CỦA TÔI</nz-page-header-title>
+    <nz-page-header-extra>
+        <nz-space nzWrap>
+            <nz-range-picker *nzSpaceItem nzFormat="dd/MM/yyyy" [(ngModel)]="range" (ngModelChange)="searchFirstPage()"
+                [nzPlaceHolder]="['Từ ngày', 'Đến ngày']" aria-label="Khoảng ngày"></nz-range-picker>
+            <input *nzSpaceItem nz-input class="search-input" placeholder="Tên cuộc họp hoặc mã phòng"
+                aria-label="Tìm cuộc họp" [(ngModel)]="keyword" (keydown)="onKeydownSearch($event)" />
+            <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" aria-label="Làm mới" (click)="reset()">
+                <nz-icon nzType="sync" />
+            </button>
+            <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Tìm kiếm" aria-label="Tìm kiếm" (click)="searchFirstPage()">
+                <nz-icon nzType="search" />
+            </button>
+            @if (canCreate) {
+            <nz-space-compact *nzSpaceItem>
+                <button nz-button nzType="primary" (click)="openCreate()"><nz-icon nzType="plus" /> Tạo cuộc họp</button>
+                <button nz-button nzType="primary" nz-dropdown [nzDropdownMenu]="createMenu" nzPlacement="bottomRight"
+                    aria-label="Cách tạo khác"><nz-icon nzType="down" /></button>
+            </nz-space-compact>
+            <nz-dropdown-menu #createMenu="nzDropdownMenu">
+                <ul nz-menu>
+                    <li nz-menu-item (click)="openCreate()"><nz-icon nzType="calendar" />&nbsp; Lên lịch họp</li>
+                    <li nz-menu-item (click)="quickVisible = true"><nz-icon nzType="thunderbolt" />&nbsp; Họp nhanh</li>
+                </ul>
+            </nz-dropdown-menu>
+            }
+        </nz-space>
+    </nz-page-header-extra>
+
+    <nz-page-header-content>
+        <nz-tabset [nzSelectedIndex]="tabIndex" nzSize="small" class="list-tabs">
+            @for (t of tabs; track t.value) {
+            <nz-tab [nzTitle]="tabTitle" (nzClick)="onTabChange(t.value)">
+                <ng-template #tabTitle><nz-icon [nzType]="t.icon" /> {{ t.label }}</ng-template>
+            </nz-tab>
+            }
+        </nz-tabset>
+
+        <nz-table #list nzBordered [nzData]="items" nzSize="small" [nzLoading]="isLoading" [nzFrontPagination]="false"
+            [nzShowPagination]="false" [nzScroll]="{ y: 'calc(100vh - 262px)', x: '1000px' }" [nzNoResult]="empty">
+            <thead>
+                <tr>
+                    <th nzAlign="center" nzWidth="56px">STT</th>
+                    <th>Cuộc họp</th>
+                    <th nzWidth="190px">Thời gian</th>
+                    <th nzWidth="170px">Chủ trì</th>
+                    <th nzAlign="center" nzWidth="80px">Số người</th>
+                    <th nzAlign="center" nzWidth="120px">Trạng thái</th>
+                    <th nzAlign="center" nzWidth="170px" nzRight>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let m of list.data; let i = index; trackBy: trackById">
+                    <td nzAlign="center">{{ (page - 1) * pageSize + i + 1 }}</td>
+                    <td>
+                        <a class="meeting-name" [routerLink]="['/meetings', m.id]">{{ m.name }}</a>
+                        <div class="muted small">
+                            <nz-icon nzType="number" /> {{ m.roomCode }}
+                            @if (m.isHost) { · <span class="host-badge">Bạn chủ trì</span> }
+                        </div>
+                    </td>
+                    <td>
+                        @if (date(m.expectedStartTime); as s) {
+                        <div>{{ s | date: 'dd/MM/yyyy' }}</div>
+                        <div class="muted small">
+                            {{ s | date: 'HH:mm' }}@if (date(m.expectedEndTime); as e) {–{{ e | date: 'HH:mm' }}}
+                            @if (m.status === MeetingStatus.Scheduled) {
+                            · <span class="relative">{{ m.expectedStartTime | relativeTime: now }}</span>
+                            }
+                        </div>
+                        }
+                    </td>
+                    <td>{{ m.hostName || '---' }}</td>
+                    <td nzAlign="center">{{ m.participantCount }}</td>
+                    <td nzAlign="center">
+                        <nz-tag [nzColor]="statusMeta[m.status]?.color">{{ statusMeta[m.status]?.label }}</nz-tag>
+                    </td>
+                    <td nzAlign="center" nzRight>
+                        <div class="row-actions">
+                            @if (primaryAction(m); as a) {
+                            <button nz-button nzSize="small" [nzType]="a.type" [nzLoading]="busyId === m.id" (click)="a.run()">
+                                <nz-icon [nzType]="a.icon" /> {{ a.label }}
+                            </button>
+                            }
+                            <button nz-button nzType="text" nzSize="small" nz-dropdown [nzDropdownMenu]="rowMenu"
+                                nzTrigger="click" nzPlacement="bottomRight" aria-label="Thao tác khác">
+                                <nz-icon nzType="more" />
+                            </button>
+                        </div>
+                        <nz-dropdown-menu #rowMenu="nzDropdownMenu">
+                            <ul nz-menu>
+                                <li nz-menu-item (click)="openDetail(m)"><nz-icon nzType="file-text" />&nbsp; Xem chi tiết</li>
+                                @if (actions.canEdit(m)) {
+                                <li nz-menu-item (click)="openEdit(m)"><nz-icon nzType="edit" />&nbsp; Sửa</li>
+                                }
+                                @if (actions.canShare(m)) {
+                                <li nz-menu-item (click)="shareTarget = m"><nz-icon nzType="qrcode" />&nbsp; Link và QR</li>
+                                <li nz-menu-item (click)="copyInvite(m)"><nz-icon nzType="copy" />&nbsp; Sao chép lời mời</li>
+                                }
+                                @if (actions.canArchive(m)) {
+                                <li nz-menu-item nz-popconfirm nzPopconfirmTitle="Lưu trữ cuộc họp này?"
+                                    (nzOnConfirm)="archive(m)"><nz-icon nzType="inbox" />&nbsp; Lưu trữ</li>
+                                }
+                                @if (actions.canCancel(m) || actions.canDelete(m)) {
+                                <li nz-menu-divider></li>
+                                }
+                                @if (actions.canCancel(m)) {
+                                <li nz-menu-item nzDanger (click)="cancelTarget = m"><nz-icon nzType="stop" />&nbsp; Hủy cuộc họp</li>
+                                }
+                                @if (actions.canDelete(m)) {
+                                <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa bản nháp này?"
+                                    (nzOnConfirm)="remove(m)"><nz-icon nzType="delete" />&nbsp; Xóa bản nháp</li>
+                                }
+                            </ul>
+                        </nz-dropdown-menu>
+                    </td>
+                </tr>
+            </tbody>
+        </nz-table>
+        <ng-template #empty>
+            <nz-empty [nzNotFoundContent]="keyword || range.length ? 'Không có cuộc họp phù hợp' : 'Chưa có cuộc họp nào'"
+                [nzNotFoundFooter]="canCreate && !keyword && !range.length ? emptyFooter : undefined"></nz-empty>
+            <ng-template #emptyFooter>
+                <button nz-button nzType="primary" (click)="openCreate()"><nz-icon nzType="plus" /> Tạo cuộc họp</button>
+            </ng-template>
+        </ng-template>
+    </nz-page-header-content>
+</nz-page-header>
+
+<div class="paging-container">
+    <div>Tổng {{ total }} cuộc họp</div>
+    <nz-pagination [nzPageIndex]="page" [nzTotal]="total" nzShowSizeChanger [nzPageSize]="pageSize"
+        [nzPageSizeOptions]="[10, 20, 50]" (nzPageIndexChange)="pageIndexChange($event)"
+        (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+</div>
+
+<app-meeting-form [(visible)]="formVisible" [meetingId]="formMeetingId" (saved)="onSaved($event)"></app-meeting-form>
+<app-cancel-meeting-modal [(meeting)]="cancelTarget" (cancelled)="search(false)"></app-cancel-meeting-modal>
+<app-share-meeting-modal [(meeting)]="shareTarget"></app-share-meeting-modal>
+<app-quick-meeting-modal [(visible)]="quickVisible" (created)="onQuickCreated($event)"></app-quick-meeting-modal>

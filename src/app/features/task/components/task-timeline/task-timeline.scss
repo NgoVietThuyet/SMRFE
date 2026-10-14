@@ -1,0 +1,561 @@
+// ─── Design tokens ────────────────────────────────────────────────────────────
+$primary: #189AD6;
+$primary-light: rgba(24, 154, 214, 0.08);
+$text-primary: #172b4d;
+$text-secondary: #5e6c84;
+$text-muted: #97a0af;
+$border-color: #ebecf0;
+$bg-page: #f5f6f8;
+$bg-white: #ffffff;
+$bg-hover: #f7f8fa;
+$radius: 6px;
+$sidebar-width: 260px;
+$row-height: 40px;
+$header-height: 48px;
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+.gantt-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: $bg-white;
+  overflow: hidden;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+// ─── Toolbar ─────────────────────────────────────────────────────────────────
+.gantt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid $border-color;
+  flex-shrink: 0;
+  background: $bg-white;
+
+  &-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .mr-2 {
+      margin-right: 8px;
+    }
+  }
+
+  &-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    i {
+      color: $primary;
+    }
+  }
+}
+
+.task-count-badge {
+  font-size: 11px;
+  color: $text-muted;
+  background: $bg-page;
+  border: none;
+  border-radius: 12px;
+  padding: 0 8px;
+  height: 20px;
+  line-height: 20px;
+}
+
+.view-mode-switcher {
+  ::ng-deep .ant-radio-button-wrapper {
+    font-size: 12px;
+    height: 28px;
+    line-height: 26px;
+    padding: 0 12px;
+
+    &-checked {
+      color: $primary;
+      border-color: $primary;
+    }
+  }
+}
+
+// ─── Single scroll container ───────────────────────────────────────────────────
+.gantt-scroll-container {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.gantt-inner {
+  display: inline-block; // shrink-wrap to content width
+  min-width: 100%;
+}
+
+// ─── Header row ───────────────────────────────────────────────────────────────
+.gantt-header-row {
+  display: flex;
+  height: $header-height;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: $bg-page;
+  border-bottom: 1px solid $border-color;
+}
+
+.gantt-sidebar-header-cell {
+  width: $sidebar-width;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  background: $bg-page;
+  border-right: 2px solid $border-color;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gantt-date-header {
+  display: flex;
+  height: $header-height;
+}
+
+.gantt-date-cell {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid $border-color;
+  gap: 2px;
+  box-sizing: border-box;
+
+  &.today-col {
+    background: rgba(24, 154, 214, 0.06);
+
+    .date-label {
+      color: $primary;
+      font-weight: 700;
+    }
+  }
+}
+
+.date-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.day-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: $text-primary;
+  line-height: 1;
+}
+
+// ─── Unified row (sidebar + timeline) ─────────────────────────────────────────
+.gantt-row {
+  display: flex;
+  height: $row-height;
+  border-bottom: 1px solid $border-color;
+
+  &:hover {
+    .gantt-task-cell {
+      background: $bg-hover;
+    }
+
+    .gantt-timeline-cell {
+      background: $bg-hover;
+    }
+
+    .gantt-task-name {
+      color: $primary;
+    }
+  }
+
+  // Sticky left column inside each row
+  .gantt-sidebar-cell {
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+    flex-shrink: 0;
+    padding: 0 12px;
+    border-right: 1px solid $border-color;
+    background: $bg-white;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+
+    &.gantt-group-cell {
+      background: #f8f9fa;
+      height: 42px;
+      font-weight: 600;
+      z-index: 6;
+      cursor: pointer;
+    }
+
+    &.gantt-add-task-cell,
+    &.gantt-add-list-cell {
+      background: #fff;
+      padding-left: 24px;
+      border-bottom: 1px solid $border-color;
+
+      .add-btn-trigger {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: $text-muted;
+        font-size: 13px;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+
+        &:hover {
+          color: $primary;
+        }
+      }
+
+      .add-form-gv {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+
+        input {
+          flex: 1;
+          height: 24px;
+          font-size: 12px;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 4px;
+          color: $text-muted;
+
+          i {
+            cursor: pointer;
+            font-size: 14px;
+
+            &:hover {
+              color: $primary;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .add-task-row-gv,
+  .add-list-row-gv {
+    .gantt-timeline-cell {
+      background: rgba(0, 0, 0, 0.02);
+    }
+  }
+}
+
+.gantt-group-cell {
+  gap: 8px;
+  padding: 0 12px;
+  cursor: pointer;
+  background: $bg-page !important;
+  user-select: none;
+  transition: background 0.12s;
+
+  &:hover {
+    background: color-mix(in srgb, $bg-page, black 2%) !important;
+  }
+}
+
+.gantt-task-cell {
+  gap: 8px;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+// Timeline column (flex-grows to fill remaining space)
+.gantt-timeline-cell {
+  display: flex;
+  flex: 0 0 auto; // don't grow/shrink, let inner grid lines define width
+  position: relative;
+  height: 100%;
+  background: $bg-white;
+  transition: background 0.12s;
+}
+
+.gantt-group-cell+.gantt-timeline-cell {
+  background: $bg-page;
+}
+
+// ─── Grid lines ───────────────────────────────────────────────────────────────
+.gantt-grid-line {
+  flex-shrink: 0;
+  height: 100%;
+  border-right: 1px solid $border-color;
+  box-sizing: border-box;
+
+  &.today-grid {
+    background: rgba(24, 154, 214, 0.04);
+    border-right-color: rgba(24, 154, 214, 0.3);
+  }
+}
+
+// ─── Group helpers ────────────────────────────────────────────────────────────
+.group-toggle {
+  font-size: 10px;
+  color: $text-muted;
+}
+
+.group-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.group-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-count {
+  font-size: 11px;
+  color: $text-muted;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 0 6px;
+  height: 17px;
+  line-height: 17px;
+  flex-shrink: 0;
+}
+
+// ─── Task status dot ─────────────────────────────────────────────────────────
+.task-status-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid $text-muted;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  background: transparent;
+  cursor: pointer;
+
+  i {
+    font-size: 7px;
+    color: #fff;
+    display: none;
+  }
+
+  &.done {
+    background: #26C55F;
+    border-color: #26C55F;
+
+    i {
+      display: block;
+      color: #fff;
+      font-weight: bold;
+    }
+  }
+
+  &:hover {
+    border-color: $primary;
+    background: rgba(24, 154, 214, 0.05);
+
+    i {
+      display: block;
+      color: $primary;
+      opacity: 0.5;
+    }
+  }
+
+  &.done:hover {
+    background: color-mix(in srgb, #26C55F, black 5%);
+    border-color: color-mix(in srgb, #26C55F, black 5%);
+
+    i {
+      opacity: 1;
+      color: #fff;
+    }
+  }
+}
+
+.gantt-task-cell:hover .task-status-dot:not(.done) {
+  border-color: $primary;
+}
+
+.gantt-task-name {
+  font-size: 13px;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  transition: color 0.12s;
+
+  &.text-completed {
+    color: $text-muted;
+  }
+}
+
+.task-sidebar-assignees {
+  display: flex;
+  align-items: center;
+  gap: -4px; // Slight overlap
+  margin-left: auto;
+  padding-left: 8px;
+
+  .sidebar-avatar {
+    border: 1.5px solid white;
+    background: $primary;
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 10px !important;
+    line-height: 20px !important;
+    transition: transform 0.2s;
+
+    &:not(:first-child) {
+      margin-left: -8px;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+  }
+}
+
+// ─── Task bar ─────────────────────────────────────────────────────────────────
+.gantt-bar-wrap {
+  position: absolute;
+  top: 8px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: opacity 0.15s, transform 0.15s;
+  min-width: 20px;
+  z-index: 2;
+
+  &:hover {
+    opacity: 1;
+    transform: scaleY(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.bar-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-assignees {
+  position: absolute;
+  right: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+
+  .bar-avatar {
+    border: 1px solid white;
+    background: $primary;
+    font-size: 10px !important;
+    width: 20px !important;
+    height: 20px !important;
+    line-height: 20px !important;
+  }
+
+  .bar-avatar-more {
+    font-size: 10px;
+    color: $text-secondary;
+    background: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+  }
+}
+
+// ─── Group summary bar ────────────────────────────────────────────────────────
+.group-summary-bar {
+  position: absolute;
+  top: 15px;
+  height: 10px;
+  border-radius: 5px;
+  opacity: 0.6;
+  z-index: 1;
+  pointer-events: none;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 14px;
+    background: inherit;
+  }
+
+  &::before {
+    left: 0;
+    transform: translateY(-2px);
+  }
+
+  &::after {
+    right: 0;
+    transform: translateY(-2px);
+  }
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+.gantt-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: $text-muted;
+
+  p {
+    font-size: 14px;
+    margin: 0;
+  }
+}

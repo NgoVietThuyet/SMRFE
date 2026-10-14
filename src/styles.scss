@@ -1,0 +1,525 @@
+:root {
+  /* fallback nếu theme.less chưa load */
+  --app-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --bs-picton-blue: var(--system-primary);
+  --bs-white: #ffffff;
+  --bs-success: #26C55F;
+  --bs-black: #000000;
+  --bs-grey-light: #ccc;
+  --bs-black-light: #6A7380;
+  --bs-purple: #973DEC;
+  --bs-bright-blue: #3B82F6;
+  --bs-alice-blue: #EFF6FF;
+  --bs-deep-blue-violet: #4B49AC;
+}
+
+$my-map: (
+  "picton-blue",
+  "white",
+  'success',
+  'black',
+  'grey-light',
+  'black-light',
+  'purple',
+  'bright-blue',
+  'alice-blue',
+  'deep-blue-violet'
+);
+
+* {
+  scrollbar-width: thin;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 0px;
+}
+
+body {
+  font-family: var(--app-font-family) !important;
+}
+
+.ant-drawer,
+.ant-drawer-content,
+.ant-drawer-header,
+.ant-drawer-body,
+.cdk-overlay-container .ant-modal,
+.cdk-overlay-container .ant-dropdown,
+.cdk-overlay-container .ant-select-dropdown {
+  font-family: var(--app-font-family) !important;
+}
+
+::ng-deep .ant-splitter {
+  font-family: var(--app-font-family) !important;
+}
+
+/* Loading toàn cục hệ thống */
+#global-loading {
+  position: fixed;
+  z-index: 99999;
+  height: 2em;
+  width: 2em;
+  margin: auto;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  display: none;
+}
+
+#global-loading:before {
+  content: '';
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(rgba(20, 20, 20, .4), rgba(0, 0, 0, .4));
+  background: -webkit-radial-gradient(rgba(20, 20, 20, .4), rgba(0, 0, 0, .4));
+}
+
+#global-loading:not(:required) {
+  font: 0/0 a;
+  color: transparent;
+  text-shadow: none;
+  background-color: transparent;
+  border: 0;
+}
+
+/* Spinner vòng tròn clip-path (màu trắng) */
+#global-loading:not(:required):after {
+  content: '';
+  display: block;
+  width: 50px;
+  aspect-ratio: 1;
+  margin-top: -25px;
+  margin-left: -25px;
+  border-radius: 50%;
+  border: 8px solid #ffffff;
+  box-sizing: border-box;
+  animation:
+    global-loading-clip 0.8s infinite linear alternate,
+    global-loading-spin 1.6s infinite linear;
+}
+
+@keyframes global-loading-clip {
+  0%    { clip-path: polygon(50% 50%, 0 0, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%); }
+  12.5% { clip-path: polygon(50% 50%, 0 0, 50% 0%, 100% 0%, 100% 0%, 100% 0%, 100% 0%); }
+  25%   { clip-path: polygon(50% 50%, 0 0, 50% 0%, 100% 0%, 100% 100%, 100% 100%, 100% 100%); }
+  50%   { clip-path: polygon(50% 50%, 0 0, 50% 0%, 100% 0%, 100% 100%, 50% 100%, 0% 100%); }
+  62.5% { clip-path: polygon(50% 50%, 100% 0, 100% 0%, 100% 0%, 100% 100%, 50% 100%, 0% 100%); }
+  75%   { clip-path: polygon(50% 50%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 50% 100%, 0% 100%); }
+  100%  { clip-path: polygon(50% 50%, 50% 100%, 50% 100%, 50% 100%, 50% 100%, 50% 100%, 0% 100%); }
+}
+
+@keyframes global-loading-spin {
+  0%     { transform: scaleY(1) rotate(0deg); }
+  49.99% { transform: scaleY(1) rotate(135deg); }
+  50%    { transform: scaleY(-1) rotate(0deg); }
+  100%   { transform: scaleY(-1) rotate(-135deg); }
+}
+
+.ant-drawer-header {
+  height: 50px !important;
+  padding: 0px 12px 0px 18px !important;
+  flex: none !important;
+}
+
+.ant-page-header {
+  padding: 8px 12px 0px 16px;
+}
+
+.ant-drawer-body {
+  padding: 8px 18px !important;
+}
+
+.paging-container {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 50px;
+  background: white;
+  border-top: solid 1px #dedede;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px
+}
+
+.text-control {
+  font-weight: 600;
+}
+
+.space-control {
+  margin: 2px 0px 12px 0;
+  width: 100% !important;
+}
+
+/* Borderless transparent input in report entry cells */
+.rp-cell-input {
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: right;
+  font-size: 13px;
+  color: inherit;
+  box-shadow: none !important;
+}
+.rp-cell-input:hover,
+.rp-cell-input:focus,
+.rp-cell-input:active {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.rp-cell-input:disabled {
+  background: transparent;
+  color: #595959;
+  cursor: not-allowed;
+}
+.rp-cell-input.rp-cell-error {
+  background: #fff1f0 !important;
+  outline: 1px solid #ff4d4f !important;
+  outline-offset: -1px;
+}
+
+/* P3: small info icon shown on cell hover (top-right corner) */
+.rp-cell-info {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  color: #bbb;
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+  z-index: 2;
+}
+td:hover > .rp-cell-info { opacity: 1; }
+.rp-cell-info:hover { color: #1677ff; }
+
+/* P3: Mobile responsive tweaks for report entry */
+@media (max-width: 768px) {
+  app-report-entry .ant-page-header-heading-title {
+    font-size: 14px !important;
+  }
+  app-report-entry .ant-page-header-heading-extra {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  app-report-entry .ant-page-header-heading-extra .ant-btn {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
+  app-report-entry .ant-table-cell { padding: 4px !important; }
+  app-report-entry .rp-cell-input {
+    font-size: 12px;
+    padding: 3px 4px;
+  }
+  app-report-entry .ant-drawer-content-wrapper {
+    width: 100vw !important;
+  }
+}
+@media (max-width: 480px) {
+  app-report-entry .ant-table-cell { font-size: 11px; }
+  app-report-entry .ant-tag { font-size: 10px; }
+}
+
+
+.btn-green {
+  border-color: #378A00 !important;
+  background: #378A00 !important;
+}
+
+.custom-notification {
+  padding: 12px !important;
+
+  .ant-notification-notice-description {
+    max-height: calc(100vh - 136px) !important;
+    overflow-y: auto !important;
+    word-break: break-word;
+  }
+}
+
+.btn-success {
+  background: #28a745 !important;
+  border-color: #28a745 !important;
+}
+
+.ant-drawer-title {
+  text-transform: uppercase !important;
+}
+
+.ant-space-horizontal {
+  gap: 6px !important;
+}
+
+.filter-container {
+  padding: 6px;
+  display: flex;
+  justify-content: end;
+  gap: 6px;
+}
+
+.table-container {
+  padding: 0 0 0 6px;
+}
+
+.ant-menu-title-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+button[nz-button] i.bi {
+  margin-right: 4px;
+}
+
+button[nz-button].icon-only {
+  padding: 0px 8px 0px 10px;
+  text-align: center;
+}
+
+nz-date-picker,
+nz-select {
+  width: 100%;
+}
+
+.position-absolute {
+  position: absolute;
+}
+
+.position-relative {
+  position: relative;
+}
+
+.overflow-y-auto {
+  overflow-y: auto !important;
+}
+
+.d-block {
+  display: block !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-end {
+  text-align: end !important;
+}
+
+.text-start {
+  text-align: start !important;
+}
+
+.flex-wrap {
+  flex-wrap: wrap !important;
+}
+
+.flex-form {
+  display: flex;
+  gap: 12px
+}
+
+.ant-row {
+  margin: 0 !important;
+}
+
+.z-index-999 {
+  z-index: 999 !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+
+/* ================================
+   GLOBAL SCROLLBAR STYLING
+   ================================ */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  /* mỏng */
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  /* mờ */
+}
+
+/* Chrome, Edge, Safari */
+*::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+  /* cho cả scroll ngang */
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  /* mờ nhẹ */
+  border-radius: 3px;
+}
+
+/* Không đổi màu khi hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+// margin classes (cách dùng: m-1, mx-1, my-1, .... , e: end, b: bottom, s: start, t: top, x: trục hoành, y trục tung)
+$max-spacing: 20;
+$spacing-unit: 0.25rem;
+
+@for $i from 0 through $max-spacing {
+  .m-#{$i} {
+    margin: $i * $spacing-unit !important;
+  }
+
+  .mt-#{$i} {
+    margin-top: $i * $spacing-unit !important;
+  }
+
+  .mb-#{$i} {
+    margin-bottom: $i * $spacing-unit !important;
+  }
+
+  .ms-#{$i} {
+    margin-left: $i * $spacing-unit !important;
+  }
+
+  .me-#{$i} {
+    margin-right: $i * $spacing-unit !important;
+  }
+
+  .mx-#{$i} {
+    margin-left: $i * $spacing-unit !important;
+    margin-right: $i * $spacing-unit !important;
+  }
+
+  .my-#{$i} {
+    margin-top: $i * $spacing-unit !important;
+    margin-bottom: $i * $spacing-unit !important;
+  }
+}
+
+// Padding classes (cách dùng: p-1, px-1, py-1, .... , e: end, b: bottom, s: start, t: top, x: trục hoành, y trục tung)
+@for $i from 0 through $max-spacing {
+  .p-#{$i} {
+    padding: $i * $spacing-unit !important;
+  }
+
+  .pt-#{$i} {
+    padding-top: $i * $spacing-unit !important;
+  }
+
+  .pb-#{$i} {
+    padding-bottom: $i * $spacing-unit !important;
+  }
+
+  .ps-#{$i} {
+    padding-left: $i * $spacing-unit !important;
+  }
+
+  .pe-#{$i} {
+    padding-right: $i * $spacing-unit !important;
+  }
+
+  .px-#{$i} {
+    padding-left: $i * $spacing-unit !important;
+    padding-right: $i * $spacing-unit !important;
+  }
+
+  .py-#{$i} {
+    padding-top: $i * $spacing-unit !important;
+    padding-bottom: $i * $spacing-unit !important;
+  }
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.justify-content-around {
+  justify-content: space-around !important;
+}
+
+.justify-content-evenly {
+  justify-content: space-evenly !important;
+}
+
+.justify-content-center {
+  justify-content: center !important;
+}
+
+.justify-content-start {
+  justify-content: start !important;
+}
+
+.justify-content-end {
+  justify-content: end !important;
+}
+
+.align-items-start {
+  align-items: start !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.align-items-end {
+  align-items: end !important;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WINDOW MODE: Ensure CDK overlay (ng-zorro modals/tooltips/dropdowns) appear
+// above the desktop (z-index: 2000) when in window mode
+// ═══════════════════════════════════════════════════════════════════════════════
+.cdk-overlay-container {
+  z-index: 99999 !important;
+}
+
+.required-star {
+  color: #f5222d;
+  margin-left: 2px;
+}
+/* Lỗi hiển thị ngay dưới ô nhập (drawer form) */
+.field-error {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin: 2px 0 10px;
+}
+
+/* Danh sách thay đổi trong modal xác nhận (Phân quyền) */
+.permission-confirm .ant-modal-confirm-content {
+  white-space: pre-line;
+  max-height: 50vh;
+  overflow: auto;
+}
