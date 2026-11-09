@@ -3,10 +3,11 @@
  * Web server phía trước (IIS — public/web.config, hoặc nginx trong Docker) chuyển tiếp /api và /meetinghub
  * sang jar ở http://localhost:5228. Nhờ vậy không có CORS, không bị chặn Mixed Content khi trang chạy HTTPS,
  * không lộ IP nội bộ / cổng 5228, và đổi domain không cần build lại.
+ *
+ * Dùng đường dẫn TƯƠNG ĐỐI: trình duyệt tự ghép với domain đang mở trang. KHÔNG ghi localhost hay domain cố định ở đây.
  */
 
-
 export const environment = {
-     serverUrl: "https://localhost:4558",
-    baseUrl: "https://localhost:4558/api",
+    serverUrl: "",
+    baseUrl: "/api",
 }
