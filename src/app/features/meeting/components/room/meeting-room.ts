@@ -138,8 +138,10 @@ export class MeetingRoom implements OnInit, OnDestroy {
   }
 
   /** Đóng tab / F5: báo rời phòng (hub tự ghi "rời" khi kết nối đóng). */
-  @HostListener('window:beforeunload')
-  onUnload(): void {
+  @HostListener('window:beforeunload', ['$event'])
+  onUnload(event?: BeforeUnloadEvent): void {
+    // Đang ghi hình: phần chưa tải lên sẽ mất nếu đóng tab → hỏi lại.
+    if (this.isRecorder && event) event.preventDefault();
     if (this.phase === 'room') this.room.markLeft(this.meetingId);
   }
 
@@ -206,6 +208,7 @@ export class MeetingRoom implements OnInit, OnDestroy {
             if (this.phase === 'room' || this.phase === 'connecting') {
               this.teardown();
               this.phase = 'kicked';
+              this.message.warning('Bạn đã bị mời ra khỏi phòng họp');
             }
             break;
           case 'ForceMute':
@@ -230,6 +233,12 @@ export class MeetingRoom implements OnInit, OnDestroy {
             if (p.by !== this.userName) {
               this.recording = !!p.on;
               this.message.info(p.on ? 'Cuộc họp đang được ghi hình' : 'Đã dừng ghi hình');
+            }
+            break;
+          case 'WhiteboardOp':
+            if (p.op?.k === 'o' && p.by !== this.userName && this.phase === 'room') {
+              this.whiteboardOpen = !!p.op.open;
+              if (p.op.open) this.message.info('Bảng trắng đang được chia sẻ');
             }
             break;
           case 'ReceiveCaption':
@@ -321,7 +330,7 @@ export class MeetingRoom implements OnInit, OnDestroy {
     if (this.phase === 'connecting' || this.phase === 'room') return;
     this.phase = 'connecting';
     this.clientSessionId = (crypto as any).randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    this.room.joinInfo(this.meetingId).pipe(takeUntil(this.destroy$)).subscribe({
+    this.room.joinInfo(this.meetingId).pipe(takeUntil(this.destroy$), takeUntil(this.leave$)).subscribe({
       next: async info => {
         this.joinInfo = info;
         try {
@@ -329,11 +338,17 @@ export class MeetingRoom implements OnInit, OnDestroy {
         } catch {
           this.message.warning('Chưa kết nối được realtime — chat, phụ đề, bảng trắng có thể chậm.');
         }
+        // Bị mời ra / rời / phòng đóng trong lúc đang kết nối → không vào phòng nữa.
+        if (this.phase !== 'connecting') {
+          void this.hub.leaveMeeting(this.meetingId);
+          return;
+        }
         this.room.markJoined(this.meetingId).subscribe({ error: () => { } });
         // Làm mới trạng thái (vừa bắt đầu → có giờ bắt đầu thực tế cho đồng hồ).
         this.meetings.detail(this.meetingId, false).subscribe({ next: d => this.meeting = d, error: () => { } });
         this.zone.run(() => {
           this.phase = 'room';
+          this.startTranscription();
           setTimeout(() => this.startJitsi());
         });
       },
@@ -347,7 +362,7 @@ export class MeetingRoom implements OnInit, OnDestroy {
     if (!host || !info) return;
     this.jitsiError = '';
     try {
-      this.api = await this.jitsi.createRoom({
+      const api = await this.jitsi.createRoom({
         domain: info.domain,
         externalApiUrl: info.externalApiUrl,
         roomName: info.roomName,
@@ -358,11 +373,18 @@ export class MeetingRoom implements OnInit, OnDestroy {
         parentNode: host,
         devices: this.choice.devices,
       });
+      // Bị đuổi / rời trong lúc đang nạp Jitsi → huỷ ngay, không để nghe/nói trong phòng.
+      if (this.phase !== 'room') {
+        try { api.executeCommand('hangup'); } catch { /* bỏ qua */ }
+        try { api.dispose(); } catch { /* bỏ qua */ }
+        host.replaceChildren();
+        return;
+      }
+      this.api = api;
       const on = (event: string, fn: (p: any) => void) => this.api!.addEventListener(event, p => this.zone.run(() => fn(p ?? {})));
       on('audioMuteStatusChanged', p => this.audioMuted = !!p.muted);
       on('videoMuteStatusChanged', p => this.videoMuted = !!p.muted);
       on('screenSharingStatusChanged', p => this.sharing = !!p.on);
-      on('recordingStatusChanged', p => this.recording = !!p.on);
       on('readyToClose', () => this.leave());
       on('videoConferenceJoined', () => {
         this.mediaReady = true;
@@ -421,27 +443,30 @@ export class MeetingRoom implements OnInit, OnDestroy {
     return this.settings.captionsEnabled || this.isModerator;
   }
 
-  private captionSub: { unsubscribe(): void } | null = null;
+  private transcriptSub: { unsubscribe(): void } | null = null;
   private captionSegment = '';
 
+  /** Nút Phụ đề chỉ bật/tắt HIỂN THỊ. Transcript luôn được ghi tự động từ lúc vào phòng (startTranscription). */
   toggleCaptions(): void {
     if (!this.canCaption) return;
     this.captionsOn = !this.captionsOn;
-    if (!this.captionsOn) {
-      this.speech.stopListening();
-      this.captionSub?.unsubscribe();
-      this.captionSub = null;
-      return;
-    }
+    if (!this.captionsOn) this.captions = [];
+  }
+
+  /**
+   * Tự ghi transcript của chính mình từ lúc vào phòng: nhận dạng giọng nói (Web Speech) → hub SendCaption.
+   * BE lưu câu cuối (isFinal) kèm tên người nói + thời điểm → AI dùng làm nguồn lập biên bản.
+   */
+  private startTranscription(): void {
+    if (this.transcriptSub) return;
     if (!this.speech.isSupported()) {
-      this.message.warning('Trình duyệt không hỗ trợ nhận dạng giọng nói (dùng Chrome hoặc Edge).');
-      this.captionsOn = false;
+      this.message.warning('Trình duyệt không hỗ trợ ghi transcript tự động (dùng Chrome hoặc Edge). Lời bạn nói sẽ không được ghi lại.');
       return;
     }
     this.captionSegment = this.newId();
     this.speech.startListening('vi-VN');
-    // Kết quả tạm gửi tối đa ~3 lần/giây; kết quả cuối luôn gửi (BE lưu vào transcript).
-    this.captionSub = this.speech.captionResult
+    // Kết quả tạm gửi tối đa ~3 lần/giây (để người khác xem phụ đề); kết quả cuối luôn gửi.
+    this.transcriptSub = this.speech.captionResult
       .pipe(throttleTime(300, undefined, { leading: true, trailing: true }), takeUntil(this.leave$))
       .subscribe(r => {
         if (this.audioMuted) return;
@@ -451,6 +476,12 @@ export class MeetingRoom implements OnInit, OnDestroy {
         });
         if (r.isFinal) this.captionSegment = this.newId();
       });
+  }
+
+  private stopTranscription(): void {
+    this.speech.stopListening();
+    this.transcriptSub?.unsubscribe();
+    this.transcriptSub = null;
   }
 
   /** Trạng thái phụ đề của chính mình khi chưa có dòng nào hiển thị — để không "bật mà im lặng". */
@@ -463,6 +494,7 @@ export class MeetingRoom implements OnInit, OnDestroy {
   }
 
   private onCaption(c: Caption): void {
+    if (!this.captionsOn) return;
     const line: CaptionLine = { speaker: c.speakerUserName, name: c.speakerName, text: c.text, at: Date.now() };
     const others = this.captions.filter(x => x.speaker !== c.speakerUserName);
     this.captions = [...others, line].slice(-3);
@@ -472,13 +504,143 @@ export class MeetingRoom implements OnInit, OnDestroy {
     return this.isModerator && this.canRecord && this.settings.recordingEnabled;
   }
 
+  // ===================== Ghi hình (trình duyệt của chủ trì) =====================
+  // Không dùng Jibri: ghi tab phòng họp (hình + tiếng của mọi người) trộn thêm micro của chủ trì bằng MediaRecorder,
+  // cắt từng phần ~10 phút (≤ giới hạn upload) và tải lên BE; biên bản liệt kê các phần ở mục Ghi hình.
+
+  private recStream: MediaStream | null = null;
+  private recAudioCtx: AudioContext | null = null;
+  private recMicStream: MediaStream | null = null;
+  private recorder: MediaRecorder | null = null;
+  private recPartTimer: ReturnType<typeof setTimeout> | null = null;
+  private recPart = 0;
+  private recStartedAt = new Date();
+  private recUploads = 0;
+  private static readonly REC_PART_MS = 10 * 60 * 1000;
+
+  /** Mình là người đang ghi (khác `recording` = có ai đó đang ghi). */
+  get isRecorder(): boolean {
+    return !!this.recStream;
+  }
+
   toggleRecording(): void {
     if (!this.canRecordHere) return;
-    const on = !this.recording;
-    this.room.recording(this.meetingId, on).subscribe(() => {
-      this.api?.executeCommand(on ? 'startRecording' : 'stopRecording', ...(on ? [{ mode: 'file' }] : ['file']));
-      this.recording = on;
+    if (this.isRecorder) this.stopRecording(true);
+    else void this.startRecording();
+  }
+
+  private async startRecording(): Promise<void> {
+    if (this.isRecorder) return;
+    if (!navigator.mediaDevices?.getDisplayMedia || typeof MediaRecorder === 'undefined') {
+      this.message.warning('Trình duyệt không hỗ trợ ghi hình (dùng Chrome hoặc Edge bản mới).');
+      return;
+    }
+    let display: MediaStream;
+    try {
+      this.message.info('Hãy chọn "Tab này" và bật "Chia sẻ âm thanh tab" để ghi cả tiếng của mọi người.', { nzDuration: 5000 });
+      display = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 15 }, audio: true, preferCurrentTab: true, selfBrowserSurface: 'include', systemAudio: 'include',
+      } as any);
+    } catch {
+      this.message.warning('Chưa chọn nguồn ghi hình nên chưa bắt đầu ghi.');
+      return;
+    }
+    if (!display.getAudioTracks().length) {
+      display.getTracks().forEach(t => t.stop());
+      this.message.error('Không có âm thanh tab. Hãy chọn đúng "Tab này" và tick "Chia sẻ âm thanh tab", rồi thử lại.');
+      return;
+    }
+
+    // Trộn tiếng tab (mọi người) + micro của chủ trì thành một đường âm thanh.
+    let audioTrack = display.getAudioTracks()[0];
+    try {
+      const ctx = new AudioContext();
+      const dest = ctx.createMediaStreamDestination();
+      ctx.createMediaStreamSource(new MediaStream([display.getAudioTracks()[0]])).connect(dest);
+      try {
+        this.recMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        ctx.createMediaStreamSource(this.recMicStream).connect(dest);
+      } catch { /* không có micro → chỉ ghi tiếng tab */ }
+      this.recAudioCtx = ctx;
+      audioTrack = dest.stream.getAudioTracks()[0];
+    } catch { /* giữ nguyên đường âm thanh tab */ }
+
+    const stream = new MediaStream([...display.getVideoTracks(), audioTrack]);
+    // Người dùng bấm "Dừng chia sẻ" của trình duyệt → dừng ghi.
+    display.getVideoTracks()[0].addEventListener('ended', () => this.zone.run(() => this.stopRecording(true)));
+
+    this.room.recording(this.meetingId, true).subscribe({
+      next: () => {
+        this.recStream = stream;
+        this.recPart = 0;
+        this.recStartedAt = new Date();
+        this.recording = true;
+        this.startRecPart();
+        this.message.success('Đang ghi hình cuộc họp');
+      },
+      error: () => {
+        stream.getTracks().forEach(t => t.stop());
+        display.getTracks().forEach(t => t.stop());
+        this.releaseRecResources();
+      },
     });
+  }
+
+  private startRecPart(): void {
+    const stream = this.recStream;
+    if (!stream) return;
+    const mime = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
+    const part = ++this.recPart;
+    const chunks: BlobPart[] = [];
+    const rec = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: 1_000_000, audioBitsPerSecond: 96_000 });
+    rec.ondataavailable = e => { if (e.data?.size) chunks.push(e.data); };
+    rec.onstop = () => {
+      if (chunks.length) this.uploadRecPart(new Blob(chunks, { type: 'video/webm' }), part);
+      // Còn đang ghi → mở phần tiếp theo; không thì giải phóng tài nguyên.
+      if (this.recStream && this.recorder === rec) this.startRecPart();
+      else this.releaseRecResources();
+    };
+    rec.start(5000);
+    this.recorder = rec;
+    this.recPartTimer = setTimeout(() => { if (rec.state !== 'inactive') rec.stop(); }, MeetingRoom.REC_PART_MS);
+  }
+
+  private uploadRecPart(blob: Blob, part: number, attempt = 1): void {
+    const d = this.recStartedAt;
+    const p = (n: number) => String(n).padStart(2, '0');
+    const name = `Ghi-hinh-${p(d.getHours())}${p(d.getMinutes())}-${p(d.getDate())}${p(d.getMonth() + 1)}${d.getFullYear()}-phan${part}.webm`;
+    this.recUploads++;
+    // Không gắn takeUntil: rời phòng / đóng cuộc họp vẫn phải tải nốt phần cuối.
+    this.room.uploadRecording(this.meetingId, blob, name).pipe(finalize(() => this.recUploads--)).subscribe({
+      next: () => this.zone.run(() => this.message.success(`Đã lưu bản ghi hình (phần ${part})`)),
+      error: () => {
+        if (attempt < 3) setTimeout(() => this.uploadRecPart(blob, part, attempt + 1), 3000 * attempt);
+        else this.zone.run(() => this.message.error(`Không tải được bản ghi hình phần ${part} lên máy chủ.`));
+      },
+    });
+  }
+
+  /** notify=true: báo cả phòng đã dừng ghi (chủ động dừng); false khi đang rời phòng. */
+  private stopRecording(notify: boolean): void {
+    if (!this.recStream) return;
+    if (this.recPartTimer) clearTimeout(this.recPartTimer);
+    this.recPartTimer = null;
+    const rec = this.recorder;
+    const stream = this.recStream;
+    this.recStream = null;           // báo cho onstop: không mở phần mới
+    this.recording = false;
+    if (notify) this.room.recording(this.meetingId, false).subscribe({ error: () => { } });
+    if (rec && rec.state !== 'inactive') rec.stop();   // onstop → tải phần cuối + releaseRecResources
+    else this.releaseRecResources();
+    stream.getTracks().forEach(t => t.stop());
+  }
+
+  private releaseRecResources(): void {
+    this.recorder = null;
+    this.recMicStream?.getTracks().forEach(t => t.stop());
+    this.recMicStream = null;
+    void this.recAudioCtx?.close().catch(() => { });
+    this.recAudioCtx = null;
   }
 
   get canWhiteboard(): boolean {
@@ -486,7 +648,18 @@ export class MeetingRoom implements OnInit, OnDestroy {
   }
 
   toggleWhiteboard(): void {
-    if (this.canWhiteboard) this.whiteboardOpen = !this.whiteboardOpen;
+    if (!this.canWhiteboard) return;
+    this.setWhiteboard(!this.whiteboardOpen, true);
+  }
+
+  closeWhiteboard(): void {
+    this.setWhiteboard(false, true);
+  }
+
+  /** Mở/đóng bảng trắng; broadcast=true → mọi người trong phòng tự thấy bảng trắng (chia sẻ bảng). */
+  private setWhiteboard(open: boolean, broadcast: boolean): void {
+    this.whiteboardOpen = open;
+    if (broadcast && this.phase === 'room') this.hub.sendWhiteboardOp(this.meetingId, { k: 'o', open });
   }
 
   openPanel(tab: PanelTab): void {
@@ -534,14 +707,14 @@ export class MeetingRoom implements OnInit, OnDestroy {
 
   private teardown(): void {
     this.leave$.next();
-    if (this.captionsOn) {
-      this.speech.stopListening();
-      this.captionsOn = false;
-    }
-    this.captionSub?.unsubscribe();
-    this.captionSub = null;
+    this.stopRecording(this.phase === 'room' || this.phase === 'connecting');
+    this.stopTranscription();
+    this.captionsOn = false;
+    // Ngắt hẳn kết nối Jitsi: hangup → dispose → gỡ iframe còn sót (nếu không vẫn nghe/nói được trong phòng).
+    try { this.api?.executeCommand('hangup'); } catch { /* iframe đã đóng */ }
     try { this.api?.dispose(); } catch { /* iframe đã đóng */ }
     this.api = null;
+    this.jitsiHost?.nativeElement.replaceChildren();
     this.mediaReady = false;
     this.clearMediaTimer();
     if (this.phase === 'room' || this.phase === 'connecting') {

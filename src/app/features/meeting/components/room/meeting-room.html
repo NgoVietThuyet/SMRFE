@@ -83,12 +83,6 @@
                 <button nz-button (click)="jitsiError = ''">Đóng</button>
             </div>
             }
-            @if (whiteboardOpen) {
-            <div class="whiteboard-layer">
-                <app-room-whiteboard [meetingId]="meetingId" [userName]="userName" [isModerator]="isModerator"
-                    (closed)="whiteboardOpen = false"></app-room-whiteboard>
-            </div>
-            }
             @if (captions.length || captionHint) {
             <div class="captions" aria-live="polite">
                 @for (c of captions; track c.speaker) {
@@ -100,6 +94,13 @@
             </div>
             }
         </main>
+
+        @if (whiteboardOpen) {
+        <div class="whiteboard-layer">
+            <app-room-whiteboard [meetingId]="meetingId" [userName]="userName" [isModerator]="isModerator"
+                (closed)="closeWhiteboard()"></app-room-whiteboard>
+        </div>
+        }
 
         @if (panelOpen && phase === 'room') {
         <aside class="side">

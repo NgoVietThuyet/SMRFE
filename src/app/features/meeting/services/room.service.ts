@@ -72,6 +72,13 @@ export class RoomService {
             .pipe(map(r => r.data));
     }
 
+    /** Tải một phần bản ghi hình (webm) do chủ trì ghi trên trình duyệt lên BE. */
+    uploadRecording(id: string, blob: Blob, fileName: string): Observable<ApiResponse> {
+        const form = new FormData();
+        form.append('file', blob, fileName);
+        return this.http.post<ApiResponse>(`${this.env.getEnv('baseUrl')}/${this.base(id)}/room/recording/file`, form);
+    }
+
     // ----- Bảng trắng (409 → body.data là bản hiện tại; gọi thẳng HttpClient để tự xử lý, không hiện thông báo lỗi)
     whiteboard(id: string): Observable<WhiteboardState> { return this.common.get<WhiteboardState>(`${this.base(id)}/room/whiteboard`, null, false) }
 

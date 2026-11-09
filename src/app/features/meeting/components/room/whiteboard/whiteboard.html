@@ -33,8 +33,12 @@
             <nz-icon [nzType]="locked ? 'lock' : 'unlock'" />
         </button>
         }
-        <button nz-button nzSize="small" [nzLoading]="savingPng" (click)="savePng()" nz-tooltip nzTooltipTitle="Lưu ảnh vào Tài liệu">
-            <nz-icon nzType="picture" />
+        <button nz-button nzSize="small" (click)="imageInput.click()" [disabled]="!canDraw" nz-tooltip nzTooltipTitle="Thêm ảnh vào bảng">
+            <nz-icon nzType="file-image" />
+        </button>
+        <input #imageInput type="file" accept="image/*" hidden (change)="onImagePicked($event)" />
+        <button nz-button nzSize="small" [nzLoading]="savingPng" (click)="savePng()" nz-tooltip nzTooltipTitle="Lưu ảnh bảng vào Tài liệu">
+            <nz-icon nzType="save" />
         </button>
         <button nz-button nzSize="small" (click)="closed.emit()" aria-label="Đóng bảng trắng"><nz-icon nzType="close" /></button>
     </div>

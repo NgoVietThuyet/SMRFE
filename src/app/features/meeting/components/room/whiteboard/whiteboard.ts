@@ -10,9 +10,9 @@ import { RoomService } from '../../../services/room.service';
 import { MeetingService } from '../../../services/meeting.service';
 import { WhiteboardState } from '../../../models/room.models';
 
-type Tool = 'pen' | 'marker' | 'eraser' | 'line' | 'rect' | 'ellipse';
+type Tool = 'pen' | 'marker' | 'eraser' | 'line' | 'rect' | 'ellipse' | 'image';
 
-/** Một nét vẽ. pts = [x0, y0, x1, y1, ...] chuẩn hoá 0..1 theo khung 16:9; size theo phần nghìn chiều rộng. */
+/** Một nét vẽ. pts = [x0, y0, x1, y1, ...] — CẢ x lẫn y chuẩn hoá theo CHIỀU RỘNG bảng (x: 0..1); size theo phần nghìn chiều rộng. image: src = data URL, pts = 2 góc. */
 interface Stroke {
   id: string;
   by: string;
@@ -20,6 +20,7 @@ interface Stroke {
   color: string;
   size: number;
   pts: number[];
+  src?: string;
 }
 
 /** Gói tin realtime: p = đang vẽ (nối thêm điểm), d = xong nét, u = bỏ nét, c = xoá bảng. */
@@ -29,7 +30,9 @@ type WbOp =
   | { k: 'u'; id: string }
   | { k: 'c' };
 
-const RATIO = 16 / 9;
+/** Bản lưu v1 chuẩn hoá y theo chiều cao khung 16:9 → đổi sang v2 (theo chiều rộng). */
+const LEGACY_RATIO = 16 / 9;
+const IMAGE_MAX_PX = 1000;
 const BG = '#ffffff';
 const SEND_EVERY_MS = 80;
 const SAVE_DEBOUNCE_MS = 800;
@@ -146,7 +149,10 @@ export class RoomWhiteboard implements OnInit, AfterViewInit, OnDestroy {
     try {
       const data = JSON.parse(json || '[]');
       const list = Array.isArray(data) ? data : data?.strokes;
-      return Array.isArray(list) ? list.filter((s: any) => s && s.id && Array.isArray(s.pts)) : [];
+      if (!Array.isArray(list)) return [];
+      const legacy = Array.isArray(data) || data?.v !== 2;
+      return list.filter((s: any) => s && s.id && Array.isArray(s.pts)).map((s: Stroke) =>
+        legacy ? { ...s, pts: s.pts.map((n, i) => (i % 2 ? n / LEGACY_RATIO : n)) } : s);
     } catch {
       return [];
     }
@@ -175,13 +181,13 @@ export class RoomWhiteboard implements OnInit, AfterViewInit, OnDestroy {
     this.saveTimer = null;
     if (this.saving || !this.dirty || !this.canDraw) return;
     this.saving = true;
-    const snapshot = JSON.stringify({ v: 1, strokes: this.strokes });
+    const snapshot = JSON.stringify({ v: 2, strokes: this.strokes });
     this.room.saveWhiteboard(this.meetingId, this.revision, snapshot).subscribe({
       next: state => {
         this.saving = false;
         this.revision = state.revision;
         // Có thay đổi mới trong lúc đang lưu → lưu tiếp.
-        if (JSON.stringify({ v: 1, strokes: this.strokes }) === snapshot) {
+        if (JSON.stringify({ v: 2, strokes: this.strokes }) === snapshot) {
           this.dirty = false;
           this.removedIds.clear();
           this.clearedSinceSave = false;
@@ -219,19 +225,18 @@ export class RoomWhiteboard implements OnInit, AfterViewInit, OnDestroy {
     canvas.height = Math.floor(h * this.dpr);
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
-    // Khung 16:9 ở giữa — toạ độ chuẩn hoá theo khung này để mọi màn hình khớp nhau.
-    const bw = Math.min(w - 16, (h - 16) * RATIO);
-    const bh = bw / RATIO;
-    this.box = { x: (w - bw) / 2, y: (h - bh) / 2, w: bw, h: bh };
+    // Bảng phủ kín khung: x theo chiều rộng, y cũng chia cho chiều rộng nên hình không bị méo giữa các màn hình.
+    this.box = { x: 0, y: 0, w, h };
     this.ctx = canvas.getContext('2d');
     this.redraw();
   }
 
   private norm(e: PointerEvent): [number, number] {
     const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-    const x = (e.clientX - rect.left - this.box.x) / this.box.w;
-    const y = (e.clientY - rect.top - this.box.y) / this.box.h;
-    return [Math.min(1, Math.max(0, +x.toFixed(4))), Math.min(1, Math.max(0, +y.toFixed(4)))];
+    const x = (e.clientX - rect.left) / this.box.w;
+    const y = (e.clientY - rect.top) / this.box.w;
+    const maxY = this.box.h / this.box.w;
+    return [Math.min(1, Math.max(0, +x.toFixed(4))), Math.min(maxY, Math.max(0, +y.toFixed(4)))];
   }
 
   onDown(e: PointerEvent): void {
@@ -334,6 +339,64 @@ export class RoomWhiteboard implements OnInit, AfterViewInit, OnDestroy {
     this.redraw();
   }
 
+  private images = new Map<string, HTMLImageElement>();
+
+  private imageFor(s: Stroke): HTMLImageElement | null {
+    if (!s.src) return null;
+    let img = this.images.get(s.id);
+    if (!img) {
+      img = new Image();
+      img.onload = () => this.redraw();
+      img.src = s.src;
+      this.images.set(s.id, img);
+    }
+    return img;
+  }
+
+  /** Thêm ảnh vào bảng: thu nhỏ ≤1000px, đặt giữa khung đang xem; đồng bộ cho người khác qua lưu bảng (WhiteboardSaved). */
+  onImagePicked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !this.canDraw) return;
+    if (!file.type.startsWith('image/')) {
+      this.message.warning('Chỉ thêm được tệp ảnh');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, IMAGE_MAX_PX / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const g = c.getContext('2d')!;
+      g.fillStyle = BG;
+      g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, 0, 0, c.width, c.height);
+      const src = c.toDataURL('image/jpeg', 0.82);
+      const maxY = this.box.h / this.box.w;
+      let wn = 0.4;
+      let hn = wn * (c.height / c.width);
+      if (hn > maxY * 0.7) { hn = maxY * 0.7; wn = hn * (c.width / c.height); }
+      const x0 = (1 - wn) / 2;
+      const y0 = (maxY - hn) / 2;
+      const stroke: Stroke = {
+        id: `${this.userName}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        by: this.userName, tool: 'image', color: BG, size: 1, pts: [x0, y0, x0 + wn, y0 + hn], src,
+      };
+      this.strokes.push(stroke);
+      this.redraw();
+      this.scheduleSave();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      this.message.error('Không đọc được ảnh này');
+    };
+    img.src = url;
+  }
+
   private isShape(tool: Tool): boolean {
     return tool === 'line' || tool === 'rect' || tool === 'ellipse';
   }
@@ -357,9 +420,9 @@ export class RoomWhiteboard implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private draw(ctx: CanvasRenderingContext2D, s: Stroke): void {
-    const { x: bx, y: by, w: bw, h: bh } = this.box;
+    const { x: bx, y: by, w: bw } = this.box;
     const px = (i: number) => bx + s.pts[i] * bw;
-    const py = (i: number) => by + s.pts[i + 1] * bh;
+    const py = (i: number) => by + s.pts[i + 1] * bw;
     ctx.save();
     ctx.strokeStyle = s.color;
     ctx.lineWidth = Math.max(1, (s.size / 1000) * bw * 1.6);
@@ -367,7 +430,10 @@ export class RoomWhiteboard implements OnInit, AfterViewInit, OnDestroy {
     ctx.lineJoin = 'round';
     ctx.globalAlpha = s.tool === 'marker' ? 0.35 : 1;
     ctx.beginPath();
-    if (s.tool === 'rect' && s.pts.length >= 4) {
+    if (s.tool === 'image') {
+      const img = this.imageFor(s);
+      if (img?.complete && img.naturalWidth && s.pts.length >= 4) ctx.drawImage(img, px(0), py(0), px(2) - px(0), py(2) - py(0));
+    } else if (s.tool === 'rect' && s.pts.length >= 4) {
       ctx.strokeRect(px(0), py(0), px(2) - px(0), py(2) - py(0));
     } else if (s.tool === 'ellipse' && s.pts.length >= 4) {
       ctx.ellipse((px(0) + px(2)) / 2, (py(0) + py(2)) / 2, Math.abs(px(2) - px(0)) / 2, Math.abs(py(2) - py(0)) / 2, 0, 0, Math.PI * 2);
@@ -384,15 +450,16 @@ export class RoomWhiteboard implements OnInit, AfterViewInit, OnDestroy {
 
   savePng(): void {
     if (this.savingPng || !this.strokes.length) return;
-    // Vẽ lại riêng khung 16:9 ra canvas tạm, độ phân giải cố định 1600x900.
+    // Vẽ lại vùng đang xem ra canvas tạm, rộng cố định 1600px.
+    const outH = Math.max(1, Math.round(1600 * this.box.h / this.box.w));
     const out = document.createElement('canvas');
     out.width = 1600;
-    out.height = 900;
+    out.height = outH;
     const ctx = out.getContext('2d')!;
     const saved = { box: this.box };
-    this.box = { x: 0, y: 0, w: 1600, h: 900 };
+    this.box = { x: 0, y: 0, w: 1600, h: outH };
     ctx.fillStyle = BG;
-    ctx.fillRect(0, 0, 1600, 900);
+    ctx.fillRect(0, 0, 1600, outH);
     this.strokes.forEach(s => this.draw(ctx, s));
     this.box = saved.box;
     this.savingPng = true;
