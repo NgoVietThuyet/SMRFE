@@ -71,3 +71,16 @@ nz-tree-select,
 nz-input-number {
     width: 100%;
 }
+
+.org-icon {
+    font-size: 16px;
+    color: #52c41a;
+
+    &.is-root {
+        color: #1677ff;
+    }
+}
+
+.item-org.is-inactive .org-icon {
+    color: #bfbfbf;
+}
