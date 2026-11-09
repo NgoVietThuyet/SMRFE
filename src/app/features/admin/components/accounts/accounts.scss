@@ -88,3 +88,32 @@ nz-segmented {
         display: none;
     }
 }
+
+.org-node {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+
+    .org-node-icon {
+        font-size: 16px;
+        color: #52c41a;
+    }
+
+    &.is-root {
+        font-weight: 600;
+
+        .org-node-icon {
+            color: #1677ff;
+        }
+    }
+
+    &.is-inactive {
+        opacity: 0.55;
+    }
+
+    .org-node-lock {
+        color: #bfbfbf;
+        font-size: 12px;
+    }
+}

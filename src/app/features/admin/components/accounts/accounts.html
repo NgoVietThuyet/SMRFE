@@ -9,7 +9,15 @@
         </div>
         <div class="org-panel-body">
             <nz-tree [nzData]="orgTree" nzBlockNode [nzSelectedKeys]="filter.organizationId ? [filter.organizationId] : []"
-                (nzClick)="onOrgClick($event)"></nz-tree>
+                (nzClick)="onOrgClick($event)" [nzTreeTemplate]="orgNode">
+                <ng-template #orgNode let-node>
+                    <span class="org-node" [class.is-root]="node.level === 0" [class.is-inactive]="node.origin?.origin?.isActive === false">
+                        <nz-icon [nzType]="node.level === 0 ? 'apartment' : 'team'" class="org-node-icon" />
+                        <span class="org-node-name">{{ node.title }}</span>
+                        @if (node.origin?.origin?.isActive === false) { <nz-icon nzType="lock" class="org-node-lock" /> }
+                    </span>
+                </ng-template>
+            </nz-tree>
         </div>
     </aside>
 
