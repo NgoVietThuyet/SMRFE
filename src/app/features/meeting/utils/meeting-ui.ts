@@ -1,3 +1,5 @@
+import { Router } from '@angular/router';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { DateTimeUtils } from '../../../shared/utils';
 import { MeetingListItem, MeetingRole, MeetingStatus, MeetingVisibility } from '../models/meeting.models';
 
@@ -92,4 +94,14 @@ export const MeetingActions = {
 export function copyText(text: string): Promise<boolean> {
     if (!navigator.clipboard) return Promise.resolve(false);
     return navigator.clipboard.writeText(text).then(() => true, () => false);
+}
+
+/** Mở phòng họp ở tab mới (trang trống, ngoài Shell). Popup bị chặn → vào ngay tab hiện tại. */
+export function openMeetingRoom(router: Router, message: NzMessageService, meetingId: string): void {
+    const url = router.serializeUrl(router.createUrlTree(['/meetings', meetingId, 'join']));
+    const win = window.open(url, '_blank', 'noopener');
+    if (!win) {
+        message.warning('Trình duyệt chặn tab mới, đang vào phòng họp ngay tại trang này');
+        void router.navigate(['/meetings', meetingId, 'join']);
+    }
 }

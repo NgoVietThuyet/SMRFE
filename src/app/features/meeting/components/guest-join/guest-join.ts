@@ -28,7 +28,7 @@ const REASONS: Record<string, string> = {
   template: `
     <div class="page">
       <div class="card">
-        <div class="brand"><img src="img/d2s_logo.png" alt="" /> SMART MEETING</div>
+        <div class="brand"><img src="img/smr_logo.svg" alt="Smart Meeting" /></div>
         @if (loading) {
         <nz-spin nzSimple class="spin"></nz-spin>
         } @else if (reason) {
@@ -59,7 +59,7 @@ const REASONS: Record<string, string> = {
     .card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; padding: 28px;
       box-shadow: 0 10px 40px rgba(22, 119, 255, 0.08); }
     .brand { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 2px; color: #1677ff; font-weight: 600; margin-bottom: 12px; }
-    .brand img { height: 24px; }
+    .brand img { height: 30px; }
     .spin { display: block; margin: 40px auto; }
     h2 { margin: 0 0 10px; }
     .meta { color: #595959; margin-bottom: 6px; display: flex; gap: 6px; align-items: center; }

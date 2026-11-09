@@ -18,7 +18,9 @@ export class JwtUtils {
         .replace(/-/g, '+')
         .replace(/_/g, '/');
       const normalizedPayload = payload.padEnd(Math.ceil(payload.length / 4) * 4, '=');
-      return JSON.parse(atob(normalizedPayload));
+      // atob trả chuỗi Latin-1 → phải giải mã UTF-8, nếu không tên tiếng Việt bị lỗi font.
+      const bytes = Uint8Array.from(atob(normalizedPayload), c => c.charCodeAt(0));
+      return JSON.parse(new TextDecoder('utf-8').decode(bytes));
     } catch {
       return null;
     }

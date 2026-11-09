@@ -11,7 +11,7 @@ import { RelativeTimePipe } from '../../../../shared/pipes/relative-time.pipe';
 import { QuickMeetingModal } from '../../../dashboard/components/quick-meeting-modal/quick-meeting-modal';
 import { MeetingDetail, MeetingListItem, MeetingStatus, MeetingTab } from '../../models/meeting.models';
 import { MeetingService } from '../../services/meeting.service';
-import { MEETING_STATUS_META, MeetingActions, copyText, meetingInviteText } from '../../utils/meeting-ui';
+import { MEETING_STATUS_META, MeetingActions, copyText, meetingInviteText, openMeetingRoom } from '../../utils/meeting-ui';
 import { MeetingForm } from '../meeting-form/meeting-form';
 import { CancelMeetingModal } from '../cancel-meeting-modal/cancel-meeting-modal';
 import { ShareMeetingModal } from '../share-meeting-modal/share-meeting-modal';
@@ -214,7 +214,7 @@ export class MeetingList implements OnInit, OnDestroy {
   }
 
   join(m: MeetingListItem): void {
-    this.router.navigate(['/meetings', m.id, 'join']);
+    openMeetingRoom(this.router, this.message, m.id);
   }
 
   start(m: MeetingListItem): void {
@@ -244,6 +244,6 @@ export class MeetingList implements OnInit, OnDestroy {
 
   onQuickCreated(meetingId: string): void {
     this.quickVisible = false;
-    this.router.navigate(['/meetings', meetingId, 'join']);
+    openMeetingRoom(this.router, this.message, meetingId);
   }
 }

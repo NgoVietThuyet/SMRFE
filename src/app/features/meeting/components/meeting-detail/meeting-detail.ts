@@ -18,8 +18,7 @@ import { RoomService } from '../../services/room.service';
 import { AttendanceSummary } from '../../models/room.models';
 import {
   MEETING_ACTIVITY_LABELS, MEETING_ASSIGNABLE_ROLES, MEETING_STATUS_META, MeetingActions, copyText, meetingInviteText,
-  meetingJoinLink, roleMeta, visibilityLabel,
-} from '../../utils/meeting-ui';
+  meetingJoinLink, roleMeta, visibilityLabel, openMeetingRoom } from '../../utils/meeting-ui';
 import { MeetingForm } from '../meeting-form/meeting-form';
 import { CancelMeetingModal } from '../cancel-meeting-modal/cancel-meeting-modal';
 import { ShareMeetingModal } from '../share-meeting-modal/share-meeting-modal';
@@ -281,7 +280,7 @@ export class MeetingDetailPage implements OnInit, OnDestroy {
   // ===================== Thao tác cuộc họp =====================
 
   join(): void {
-    this.router.navigate(['/meetings', this.meetingId, 'join']);
+    openMeetingRoom(this.router, this.message, this.meetingId);
   }
 
   start(): void {

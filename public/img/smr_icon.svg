@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<defs><mask id="smr-cut"><rect width="64" height="64" fill="#fff"/><rect x="2.5" y="16.5" width="43" height="35" rx="11.5" fill="#000"/></mask></defs>
+<g mask="url(#smr-cut)"><rect x="22" y="4" width="38" height="30" rx="9" fill="#0B3B5C"/><path d="M48 32L58 42V30Z" fill="#0B3B5C"/></g>
+<rect x="4" y="18" width="40" height="32" rx="10" fill="#189AD6"/><path d="M12 48L10 60L23 48Z" fill="#189AD6"/>
+<path d="M24 24Q25.6 32.4 34 34Q25.6 35.6 24 44Q22.4 35.6 14 34Q22.4 32.4 24 24Z" fill="#fff"/>
+</svg>
+

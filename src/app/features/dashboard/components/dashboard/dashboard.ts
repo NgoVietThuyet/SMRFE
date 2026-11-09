@@ -2,6 +2,7 @@ import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@an
 import { Router } from '@angular/router';
 import { Subject, debounceTime, filter, forkJoin, interval, takeUntil } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { openMeetingRoom } from '../../../meeting/utils/meeting-ui';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
 import { GlobalService, SessionService } from '../../../../core';
 import { APP_RIGHTS } from '../../../../shared/constants';
@@ -287,7 +288,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   joinMeeting(m: MeetingListItem, event?: Event): void {
     event?.stopPropagation();
-    this.router.navigate(['/meetings', m.id, 'join']);
+    openMeetingRoom(this.router, this.message, m.id);
   }
 
   openTask(t: TaskListItem): void {
@@ -320,11 +321,11 @@ export class Dashboard implements OnInit, OnDestroy {
 
   onQuickMeetingCreated(meetingId: string): void {
     this.quickMeetingVisible = false;
-    this.router.navigate(['/meetings', meetingId, 'join']);
+    openMeetingRoom(this.router, this.message, meetingId);
   }
 
   onJoinByCode(meetingId: string): void {
     this.joinByCodeVisible = false;
-    this.router.navigate(['/meetings', meetingId, 'join']);
+    openMeetingRoom(this.router, this.message, meetingId);
   }
 }
