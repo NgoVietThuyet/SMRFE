@@ -9,11 +9,14 @@ import { EffectivePermission, PermissionCatalogGroup, PermissionDocument, Permis
 export class PermissionService {
     constructor(private common: CommonService) { }
 
+    /** BE gọi tài khoản là "employee" trong đường dẫn /api/human-resources/{type}/{id}/permissions. */
+    private static segment(type: PermissionTargetType): string { return type === 'account' ? 'employee' : type }
+
     catalog(): Observable<PermissionCatalogGroup[]> { return this.common.get<PermissionCatalogGroup[]>('permissions/catalog', null, false) }
 
-    get(type: PermissionTargetType, id: string): Observable<PermissionDocument> { return this.common.get<PermissionDocument>(`human-resources/${type}/${encodeURIComponent(id)}/permissions`) }
+    get(type: PermissionTargetType, id: string): Observable<PermissionDocument> { return this.common.get<PermissionDocument>(`human-resources/${PermissionService.segment(type)}/${encodeURIComponent(id)}/permissions`) }
 
-    save(type: PermissionTargetType, id: string, doc: PermissionDocument) { return this.common.put(`human-resources/${type}/${encodeURIComponent(id)}/permissions`, doc) }
+    save(type: PermissionTargetType, id: string, doc: PermissionDocument) { return this.common.put(`human-resources/${PermissionService.segment(type)}/${encodeURIComponent(id)}/permissions`, doc) }
 
     effective(userName: string): Observable<EffectivePermission[]> { return this.common.get<EffectivePermission[]>(`human-resources/employees/${encodeURIComponent(userName)}/effective-permissions`) }
 }
