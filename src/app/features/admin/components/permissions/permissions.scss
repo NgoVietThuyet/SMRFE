@@ -100,13 +100,24 @@
     flex-direction: column;
 }
 
-.perm-code {
-    font-size: 11px;
-    color: #8c8c8c;
+:host ::ng-deep .target-tabs .ant-tabs-nav {
+    padding: 0 8px;
 }
 
-:host ::ng-deep .target-tabs .ant-tabs-nav {
-    padding: 0 12px;
+// 3 tab chia đều chiều rộng cột trái, không bị tràn → không hiện nút "..."
+:host ::ng-deep .target-tabs .ant-tabs-nav-list {
+    width: 100%;
+}
+
+:host ::ng-deep .target-tabs .ant-tabs-tab {
+    flex: 1;
+    justify-content: center;
+    margin: 0;
+    padding: 8px 4px;
+}
+
+:host ::ng-deep .target-tabs .ant-tabs-nav-operations {
+    display: none !important;
 }
 
 @media (max-width: 900px) {

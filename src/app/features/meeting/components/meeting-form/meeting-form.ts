@@ -35,12 +35,8 @@ const SETTING_ITEMS: { key: keyof MeetingSettings; label: string; hint: string }
   { key: 'aiMinutesEnabled', label: 'Biên bản AI', hint: 'Tự tạo bản nháp biên bản sau họp (P13)' },
 ];
 
-const TIME_ZONES = [
-  { value: 'Asia/Bangkok', label: '(GMT+07:00) Hà Nội, Bangkok' },
-  { value: 'Asia/Tokyo', label: '(GMT+09:00) Tokyo, Seoul' },
-  { value: 'Asia/Singapore', label: '(GMT+08:00) Singapore' },
-  { value: 'Europe/London', label: '(GMT+00:00) London' },
-];
+/** Múi giờ cố định của hệ thống — không cho người dùng chọn. */
+const SYSTEM_TIME_ZONE = 'Asia/Bangkok';
 
 /**
  * Drawer tạo / sửa cuộc họp (Scope P9). Giờ nhập theo giờ máy, gửi lên BE dạng UTC.
@@ -72,7 +68,6 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
   readonly roleMeta = roleMeta;
   readonly visibilityOptions = MEETING_VISIBILITY_OPTIONS;
   readonly settingItems = SETTING_ITEMS;
-  readonly timeZones = TIME_ZONES;
 
   tabIndex = 0;
   isLoading = false;
@@ -85,7 +80,6 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
   agenda = '';
   startAt: Date | null = null;
   endAt: Date | null = null;
-  timeZone = 'Asia/Bangkok';
   visibility: MeetingVisibility = MeetingVisibility.InvitedOnly;
   settings: MeetingSettings = defaultMeetingSettings();
   participants: ParticipantRow[] = [];
@@ -240,7 +234,6 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     this.agenda = '';
     this.startAt = start;
     this.endAt = end;
-    this.timeZone = 'Asia/Bangkok';
     this.visibility = MeetingVisibility.InvitedOnly;
     this.settings = this.normalizeSettings(defaultMeetingSettings());
     const account = this.session.accountInfo;
@@ -269,7 +262,6 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     this.agenda = d.agenda ?? '';
     this.startAt = start;
     this.endAt = end;
-    this.timeZone = d.timeZone || 'Asia/Bangkok';
     // Chỉ còn Nội bộ (chỉ người được mời) và Công khai; giá trị cũ "Nội bộ theo mã" (1) coi như Nội bộ.
     this.visibility = d.visibility === MeetingVisibility.Public ? MeetingVisibility.Public : MeetingVisibility.InvitedOnly;
     this.settings = this.normalizeSettings({ ...defaultMeetingSettings(), ...(d.settings ?? {}) });
@@ -439,7 +431,7 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
       agenda: this.agenda.trim(),
       expectedStartTime: DateTimeUtils.toUtc(this.start!),
       expectedEndTime: DateTimeUtils.toUtc(this.end!),
-      timeZone: this.timeZone,
+      timeZone: SYSTEM_TIME_ZONE,
       visibility: this.visibility,
       saveAsDraft: asDraft,
       publishInvitation: !asDraft,
@@ -461,7 +453,7 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
       agenda: this.isOngoing ? o.agenda : this.agenda.trim(),
       expectedStartTime: keepTime ? null : DateTimeUtils.toUtc(this.start!),
       expectedEndTime: keepTime ? null : DateTimeUtils.toUtc(this.end!),
-      timeZone: this.timeZone,
+      timeZone: SYSTEM_TIME_ZONE,
       visibility: this.isOngoing ? o.visibility as MeetingVisibility : this.visibility,
       settings: this.settings,
       rowVersion: o.rowVersion || null,

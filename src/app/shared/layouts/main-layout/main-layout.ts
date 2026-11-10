@@ -77,7 +77,9 @@ export class MainLayout implements OnInit, OnDestroy {
     this.global.accountInfoUpdated$
       .pipe(takeUntil(this.destroy$))
       .subscribe((info: AccountInfo) => {
-        const roleChanged = info?.isAdmin !== this.accountInfo?.isAdmin;
+        // Đổi vai trò hoặc quyền (Admin vừa gán / thu hồi quyền menu) → dựng lại menu.
+        const roleChanged = info?.isAdmin !== this.accountInfo?.isAdmin
+          || (info?.rights ?? []).join(',') !== (this.accountInfo?.rights ?? []).join(',');
         this.accountInfo = info;
         if (roleChanged) this.buildMenu();
       });
@@ -106,7 +108,7 @@ export class MainLayout implements OnInit, OnDestroy {
   // ───────────────────────────── Menu ─────────────────────────────
 
   private buildMenu(): void {
-    this.menuTree = TreeUtils.buildNzMenuTree(menuForRole(!!this.accountInfo?.isAdmin));
+    this.menuTree = TreeUtils.buildNzMenuTree(menuForRole(!!this.accountInfo?.isAdmin, this.accountInfo?.rights ?? []));
     this.displayedMenuTree = [...this.menuTree];
     this.onSearchChangeMenu();
     this.refreshActiveMenuState();

@@ -1,4 +1,5 @@
 import { MENU_PARENT_ROOT } from '../utils/const';
+import { APP_RIGHTS } from './right.constants';
 
 /**
  * Một mục menu — cùng cấu trúc phẳng với dữ liệu menu của 2.FrontEnd
@@ -13,8 +14,8 @@ export interface AppMenuItem {
     /** Tên Bootstrap Icons, không kèm tiền tố `bi-`. */
     icon?: string;
     orderNumber: number;
-    /** Chỉ hiện với Admin (SUPER_ADMIN). Đặt ở nhóm cha thì ẩn cả nhóm. */
-    adminOnly?: boolean;
+    /** Quyền cần có để thấy mục này (Admin luôn thấy). Nhóm cha không đặt: hiện khi còn ít nhất một mục con hiện. */
+    right?: string;
 }
 
 /**
@@ -31,21 +32,26 @@ export const APP_MENU: AppMenuItem[] = [
     { id: 'TASK', pId: MENU_PARENT_ROOT, name: 'Công việc', url: '/tasks', icon: 'kanban', orderNumber: 3 },
     { id: 'MINU', pId: MENU_PARENT_ROOT, name: 'Biên bản họp', url: '/minutes', icon: 'file-earmark-text', orderNumber: 4 },
     { id: 'AI', pId: MENU_PARENT_ROOT, name: 'Trợ lý AI', url: '/ai-assistant', icon: 'robot', orderNumber: 5 },
-    { id: 'CONT', pId: MENU_PARENT_ROOT, name: 'Danh bạ', url: '/contacts', icon: 'person-lines-fill', orderNumber: 6 },
 
-    { id: 'ADM', pId: MENU_PARENT_ROOT, name: 'Quản trị', icon: 'gear', orderNumber: 9, adminOnly: true },
-    { id: 'ADM_ORG', pId: 'ADM', name: 'Cơ cấu tổ chức', url: '/admin/organizations', orderNumber: 1, adminOnly: true },
-    { id: 'ADM_TTL', pId: 'ADM', name: 'Chức danh', url: '/admin/titles', orderNumber: 2, adminOnly: true },
-    { id: 'ADM_ACC', pId: 'ADM', name: 'Tài khoản', url: '/admin/accounts', orderNumber: 3, adminOnly: true },
-    { id: 'ADM_PER', pId: 'ADM', name: 'Phân quyền', url: '/admin/permissions', orderNumber: 4, adminOnly: true },
-    { id: 'ADM_STA', pId: 'ADM', name: 'Thống kê', url: '/admin/dashboard', orderNumber: 5, adminOnly: true },
-    { id: 'ADM_LOG', pId: 'ADM', name: 'Nhật ký hoạt động', url: '/admin/audit-logs', orderNumber: 6, adminOnly: true },
-    { id: 'ADM_CFG', pId: 'ADM', name: 'Cấu hình hệ thống', url: '/admin/settings', orderNumber: 7, adminOnly: true },
+    { id: 'ADM', pId: MENU_PARENT_ROOT, name: 'Quản trị', icon: 'gear', orderNumber: 9 },
+    { id: 'ADM_ORG', pId: 'ADM', name: 'Cơ cấu tổ chức', url: '/admin/organizations', orderNumber: 1, right: APP_RIGHTS.ADMIN_ORGANIZATIONS },
+    { id: 'ADM_TTL', pId: 'ADM', name: 'Chức danh', url: '/admin/titles', orderNumber: 2, right: APP_RIGHTS.ADMIN_TITLES },
+    { id: 'ADM_ACC', pId: 'ADM', name: 'Tài khoản', url: '/admin/accounts', orderNumber: 3, right: APP_RIGHTS.ADMIN_ACCOUNTS },
+    { id: 'ADM_PER', pId: 'ADM', name: 'Phân quyền', url: '/admin/permissions', orderNumber: 4, right: APP_RIGHTS.ADMIN_PERMISSIONS },
+    { id: 'ADM_STA', pId: 'ADM', name: 'Thống kê', url: '/admin/dashboard', orderNumber: 5, right: APP_RIGHTS.ADMIN_STATISTICS },
+    { id: 'ADM_LOG', pId: 'ADM', name: 'Nhật ký hoạt động', url: '/admin/audit-logs', orderNumber: 6, right: APP_RIGHTS.ADMIN_AUDIT_LOGS },
+    { id: 'ADM_CFG', pId: 'ADM', name: 'Cấu hình hệ thống', url: '/admin/settings', orderNumber: 7, right: APP_RIGHTS.ADMIN_SETTINGS },
 ];
 
-/** Lọc menu theo vai trò: bỏ mục adminOnly và mục con của nhóm adminOnly khi không phải Admin. */
-export function menuForRole(isAdmin: boolean): AppMenuItem[] {
+/**
+ * Lọc menu theo quyền: Admin thấy tất cả; người khác chỉ thấy mục không đòi quyền hoặc mục có quyền được gán.
+ * Nhóm cha (Quản trị) tự ẩn khi không còn mục con nào hiện.
+ */
+export function menuForRole(isAdmin: boolean, rights: string[] = []): AppMenuItem[] {
     if (isAdmin) return [...APP_MENU];
-    const hiddenParents = new Set(APP_MENU.filter(m => m.adminOnly).map(m => m.id));
-    return APP_MENU.filter(m => !m.adminOnly && !hiddenParents.has(m.pId));
+    const granted = new Set(rights);
+    const visible = APP_MENU.filter(m => !m.right || granted.has(m.right));
+    const parentsWithChildren = new Set(visible.map(m => m.pId));
+    // Nhóm cha (không có url) chỉ giữ khi còn mục con.
+    return visible.filter(m => m.url || parentsWithChildren.has(m.id));
 }

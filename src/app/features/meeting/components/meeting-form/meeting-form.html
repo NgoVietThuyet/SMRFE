@@ -68,13 +68,6 @@
                     </ng-template>
                     }
 
-                    <label class="text-control">Múi giờ</label>
-                    <nz-select class="space-control full-width" [(ngModel)]="timeZone" aria-label="Múi giờ">
-                        @for (tz of timeZones; track tz.value) {
-                        <nz-option [nzValue]="tz.value" [nzLabel]="tz.label"></nz-option>
-                        }
-                    </nz-select>
-
                     <label class="text-control">Chế độ hiển thị</label>
                     <nz-radio-group class="space-control visibility-group" [(ngModel)]="visibility" [nzDisabled]="isOngoing"
                         aria-label="Chế độ hiển thị">

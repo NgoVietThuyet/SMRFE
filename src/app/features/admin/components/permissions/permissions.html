@@ -97,7 +97,6 @@
                                     <div class="perm-row" [class.is-changed]="current[p.code] !== original[p.code]">
                                         <div class="perm-info">
                                             <span class="perm-name">{{ p.name }}</span>
-                                            <code class="perm-code">{{ p.code }}</code>
                                         </div>
                                         <nz-segmented [nzOptions]="effectOptions" [(ngModel)]="current[p.code]"
                                             [attr.aria-label]="'Quyền ' + p.name"></nz-segmented>

@@ -1,5 +1,6 @@
 import { Route, Routes } from '@angular/router';
-import { AdminGuard, AuthGuard, UnauthGuard, roomGuard } from './core/guards';
+import { AuthGuard, PermissionGuard, UnauthGuard, roomGuard } from './core/guards';
+import { ADMIN_MENU_RIGHTS } from './shared/constants/right.constants';
 
 /**
  * Mục menu chưa làm → trang "Đang phát triển". Phase làm xong mục nào thì thay bằng loadComponent/loadChildren thật.
@@ -57,19 +58,15 @@ export const routes: Routes = [
         loadChildren: () => import('./features/ai-assistant/ai-assistant.routes').then(m => m.aiAssistantRoutes),
       },
       {
-        path: 'contacts',
-        loadChildren: () => import('./features/contacts/contacts.routes').then(m => m.contactsRoutes),
-      },
-
-      {
         path: 'profile',
         loadComponent: () => import('./features/profile/components/profile').then(m => m.Profile),
       },
 
       {
         path: 'admin',
-        canActivate: [AdminGuard],
-        canActivateChild: [AdminGuard],
+        // Vào được /admin khi có ít nhất một quyền menu Quản trị; từng trang kiểm tra quyền riêng ở admin.routes.ts.
+        canActivate: [PermissionGuard],
+        data: { requiredRight: ADMIN_MENU_RIGHTS },
         loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes),
       },
     ],

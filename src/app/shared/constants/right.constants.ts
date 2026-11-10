@@ -1,31 +1,17 @@
 /**
- * Mã quyền — khớp đúng BE-Java service/ad/PermissionCatalog.java (26 mã).
+ * Mã quyền — khớp đúng BE-Java service/ad/PermissionCatalog.java (11 mã).
  * Dùng cho route.data.requiredRight, directive [appPermission].
  * Admin (SUPER_ADMIN) luôn có mọi quyền nên không cần liệt kê.
  */
 export const APP_RIGHTS = {
-    HR_VIEW: 'HR_VIEW',
-
-    HR_ORG_CREATE: 'HR_ORG_CREATE',
-    HR_ORG_UPDATE: 'HR_ORG_UPDATE',
-    HR_ORG_MOVE: 'HR_ORG_MOVE',
-    HR_ORG_DELETE: 'HR_ORG_DELETE',
-    HR_ORG_PERMISSION: 'HR_ORG_PERMISSION',
-
-    HR_TITLE_VIEW: 'HR_TITLE_VIEW',
-    HR_TITLE_CREATE: 'HR_TITLE_CREATE',
-    HR_TITLE_UPDATE: 'HR_TITLE_UPDATE',
-    HR_TITLE_DELETE: 'HR_TITLE_DELETE',
-    HR_TITLE_PERMISSION: 'HR_TITLE_PERMISSION',
-
-    HR_ACCOUNT_VIEW: 'HR_ACCOUNT_VIEW',
-    HR_ACCOUNT_CREATE: 'HR_ACCOUNT_CREATE',
-    HR_ACCOUNT_UPDATE: 'HR_ACCOUNT_UPDATE',
-    HR_ACCOUNT_LOCK: 'HR_ACCOUNT_LOCK',
-    HR_ACCOUNT_RESET_PASSWORD: 'HR_ACCOUNT_RESET_PASSWORD',
-    HR_ACCOUNT_TRANSFER: 'HR_ACCOUNT_TRANSFER',
-    HR_ACCOUNT_CHANGE_TITLE: 'HR_ACCOUNT_CHANGE_TITLE',
-    HR_ACCOUNT_PERMISSION: 'HR_ACCOUNT_PERMISSION',
+    // Quyền vào từng menu Quản trị — Admin gán cho tài khoản / chức danh / phòng ban nào thì người đó thấy menu đó.
+    ADMIN_ORGANIZATIONS: 'ADMIN_ORGANIZATIONS',
+    ADMIN_TITLES: 'ADMIN_TITLES',
+    ADMIN_ACCOUNTS: 'ADMIN_ACCOUNTS',
+    ADMIN_PERMISSIONS: 'ADMIN_PERMISSIONS',
+    ADMIN_STATISTICS: 'ADMIN_STATISTICS',
+    ADMIN_AUDIT_LOGS: 'ADMIN_AUDIT_LOGS',
+    ADMIN_SETTINGS: 'ADMIN_SETTINGS',
 
     MEETING_RECORD: 'MEETING_RECORD',
 
@@ -33,7 +19,12 @@ export const APP_RIGHTS = {
     FILE_DOWNLOAD: 'FILE_DOWNLOAD',
 
     AI_SUMMARY: 'AI_SUMMARY',
-    DASHBOARD_VIEW: 'DASHBOARD_VIEW',
 } as const;
 
 export type AppRight = typeof APP_RIGHTS[keyof typeof APP_RIGHTS];
+
+/** Mọi quyền vào menu Quản trị (có 1 trong các quyền này thì thấy nhóm menu Quản trị). */
+export const ADMIN_MENU_RIGHTS: string[] = [
+    APP_RIGHTS.ADMIN_ORGANIZATIONS, APP_RIGHTS.ADMIN_TITLES, APP_RIGHTS.ADMIN_ACCOUNTS, APP_RIGHTS.ADMIN_PERMISSIONS,
+    APP_RIGHTS.ADMIN_STATISTICS, APP_RIGHTS.ADMIN_AUDIT_LOGS, APP_RIGHTS.ADMIN_SETTINGS,
+];
