@@ -268,7 +268,7 @@ export class MeetingRoom implements OnInit, OnDestroy {
 
   get primaryLabel(): string {
     if (this.isHost && this.meeting?.status === MeetingStatus.Scheduled) return 'Bắt đầu cuộc họp';
-    return this.settings.lobbyEnabled && !this.isHost ? 'Xin vào phòng' : 'Vào phòng';
+    return (this.settings.lobbyEnabled || this.isGuest) && !this.isHost ? 'Xin vào phòng' : 'Vào phòng';
   }
 
   onChoice(choice: PrejoinChoice): void {

@@ -89,7 +89,7 @@ export function defaultMeetingSettings(): MeetingSettings {
         whiteboardEnabled: true,
         fileUploadEnabled: true,
         recordingEnabled: true,
-        captionsEnabled: false,
+        captionsEnabled: true,
         aiMinutesEnabled: true,
         minutesTemplateId: '',
     };

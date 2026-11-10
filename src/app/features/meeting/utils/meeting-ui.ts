@@ -28,9 +28,8 @@ export const MEETING_ROLE_OPTIONS: { value: MeetingRole; label: string; color: s
 export const MEETING_ASSIGNABLE_ROLES = MEETING_ROLE_OPTIONS.filter(r => r.value !== MeetingRole.Host);
 
 export const MEETING_VISIBILITY_OPTIONS: { value: MeetingVisibility; label: string; hint: string }[] = [
-    { value: MeetingVisibility.InvitedOnly, label: 'Chỉ người được mời', hint: 'Chỉ thành viên xem và vào được' },
-    { value: MeetingVisibility.Internal, label: 'Nội bộ', hint: 'Người trong tổ chức có mã phòng' },
-    { value: MeetingVisibility.Public, label: 'Công khai', hint: 'Ai có link đều xin vào được' },
+    { value: MeetingVisibility.InvitedOnly, label: 'Nội bộ', hint: 'Chỉ người được mời mới vào được — vẫn phải được chủ trì duyệt' },
+    { value: MeetingVisibility.Public, label: 'Công khai', hint: 'Ai có link hoặc mã phòng đều xin vào được — phải được chủ trì duyệt' },
 ];
 
 /** Nhãn hoạt động trong MeetingAuditLogs.Action. */
@@ -55,7 +54,8 @@ export function roleMeta(role: number): { label: string; color: string } {
 }
 
 export function visibilityLabel(v: number): string {
-    return MEETING_VISIBILITY_OPTIONS.find(o => o.value === v)?.label ?? '---';
+    // Giá trị cũ 1 (Nội bộ theo mã) nay coi như Nội bộ.
+    return MEETING_VISIBILITY_OPTIONS.find(o => o.value === (v === MeetingVisibility.Public ? v : MeetingVisibility.InvitedOnly))?.label ?? '---';
 }
 
 /** Link mời dành cho người ngoài (màn /join/:roomCode làm ở P10). */

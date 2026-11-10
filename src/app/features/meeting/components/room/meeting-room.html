@@ -235,7 +235,7 @@
                     <button nz-button nzSize="large" (click)="cancelWaiting()">Quay lại</button>
                 </div>
                 } @else {
-                @if (settings.lobbyEnabled && !isHost) {
+                @if ((settings.lobbyEnabled || isGuest) && !isHost) {
                 <nz-alert class="mb" nzType="info" nzShowIcon nzMessage="Cuộc họp bật phòng chờ — chủ trì sẽ duyệt trước khi bạn vào."></nz-alert>
                 }
                 <div class="lobby-actions">

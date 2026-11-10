@@ -30,12 +30,6 @@ const SETTING_LABELS: { key: keyof MeetingSettings; label: string }[] = [
   { key: 'lobbyEnabled', label: 'Phòng chờ' },
   { key: 'allowGuests', label: 'Cho phép khách' },
   { key: 'allowJoinBeforeHost', label: 'Vào trước chủ trì' },
-  { key: 'chatEnabled', label: 'Chat' },
-  { key: 'screenShareEnabled', label: 'Chia sẻ màn hình' },
-  { key: 'whiteboardEnabled', label: 'Bảng trắng' },
-  { key: 'fileUploadEnabled', label: 'Tải tài liệu trong phòng' },
-  { key: 'recordingEnabled', label: 'Ghi hình' },
-  { key: 'captionsEnabled', label: 'Phụ đề' },
   { key: 'aiMinutesEnabled', label: 'Biên bản AI' },
 ];
 

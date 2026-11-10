@@ -22,23 +22,19 @@
                     }
 
                     <div nz-row [nzGutter]="12">
-                        <div nz-col [nzXs]="24" [nzSm]="10">
-                            <label class="text-control">Ngày <span class="required-star">*</span></label>
-                            <nz-date-picker class="space-control full-width" nzFormat="dd/MM/yyyy" [(ngModel)]="date"
-                                (ngModelChange)="queueConflictCheck()" [nzDisabled]="isOngoing" [nzAllowClear]="false"
-                                aria-label="Ngày họp"></nz-date-picker>
-                        </div>
-                        <div nz-col [nzXs]="12" [nzSm]="7">
+                        <div nz-col [nzXs]="24" [nzSm]="12">
                             <label class="text-control">Bắt đầu <span class="required-star">*</span></label>
-                            <nz-time-picker class="space-control full-width" nzFormat="HH:mm" [nzMinuteStep]="5"
-                                [ngModel]="startTime" (ngModelChange)="onStartChange($event)" [nzDisabled]="isOngoing"
-                                [nzAllowEmpty]="false" aria-label="Giờ bắt đầu"></nz-time-picker>
+                            <nz-date-picker class="space-control full-width" nzFormat="dd/MM/yyyy HH:mm"
+                                [nzShowTime]="{ nzFormat: 'HH:mm', nzMinuteStep: 5 }" [nzAllowClear]="false"
+                                [ngModel]="startAt" (ngModelChange)="onStartChange($event)" [nzDisabled]="isOngoing"
+                                aria-label="Thời gian bắt đầu"></nz-date-picker>
                         </div>
-                        <div nz-col [nzXs]="12" [nzSm]="7">
+                        <div nz-col [nzXs]="24" [nzSm]="12">
                             <label class="text-control">Kết thúc <span class="required-star">*</span></label>
-                            <nz-time-picker class="space-control full-width" nzFormat="HH:mm" [nzMinuteStep]="5"
-                                [(ngModel)]="endTime" (ngModelChange)="queueConflictCheck()" [nzDisabled]="isOngoing"
-                                [nzAllowEmpty]="false" aria-label="Giờ kết thúc"></nz-time-picker>
+                            <nz-date-picker class="space-control full-width" nzFormat="dd/MM/yyyy HH:mm"
+                                [nzShowTime]="{ nzFormat: 'HH:mm', nzMinuteStep: 5 }" [nzAllowClear]="false"
+                                [(ngModel)]="endAt" (ngModelChange)="queueConflictCheck()" [nzDisabled]="isOngoing"
+                                aria-label="Thời gian kết thúc"></nz-date-picker>
                         </div>
                     </div>
                     <div class="duration-row">
@@ -109,6 +105,12 @@
                         }
                     </nz-select>
 
+                    <label class="text-control">Mời theo phòng ban</label>
+                    <nz-tree-select class="space-control full-width" [nzNodes]="orgTree" [(ngModel)]="pickedOrg"
+                        (ngModelChange)="addOrg($event)" nzShowSearch nzAllowClear
+                        [nzDisabled]="addingOrg" nzPlaceHolder="Chọn phòng ban để mời tất cả nhân sự"
+                        [nzDropdownStyle]="{ 'max-height': '320px' }" aria-label="Mời theo phòng ban"></nz-tree-select>
+
                     <nz-table #people [nzData]="participants" nzSize="small" nzBordered [nzFrontPagination]="false"
                         [nzShowPagination]="false" [nzScroll]="{ y: 'calc(100vh - 330px)' }">
                         <thead>
@@ -171,6 +173,13 @@
                             <nz-switch [(ngModel)]="$any(settings)[s.key]" [attr.aria-label]="s.label"></nz-switch>
                         </div>
                         }
+                        <div class="setting-item">
+                            <div>
+                                <div>Transcript</div>
+                                <div class="muted small">Mặc định nhận dạng giọng nói của tất cả mọi người để lấy transcript, làm nguồn cho AI tổng hợp biên bản</div>
+                            </div>
+                            <nz-tag nzColor="success">Luôn bật</nz-tag>
+                        </div>
                     </div>
                 </nz-tab>
             </nz-tabset>

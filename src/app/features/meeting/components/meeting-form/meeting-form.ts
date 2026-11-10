@@ -1,6 +1,11 @@
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Observable, Subject, concat, debounceTime, distinctUntilChanged, finalize, map, of, switchMap, takeUntil, toArray } from 'rxjs';
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzTreeNodeOptions } from 'ng-zorro-antd/tree';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
+import { ContactsService } from '../../../contacts/services/contacts.service';
+import { OrganizationService } from '../../../admin/services/organization.service';
+import { OrganizationNode } from '../../../admin/models/admin.models';
 import { SessionService } from '../../../../core';
 import { DateTimeUtils } from '../../../../shared/utils';
 import {
@@ -27,12 +32,6 @@ const SETTING_ITEMS: { key: keyof MeetingSettings; label: string; hint: string }
   { key: 'lobbyEnabled', label: 'Phòng chờ', hint: 'Chủ trì duyệt từng người trước khi vào' },
   { key: 'allowGuests', label: 'Cho phép khách', hint: 'Người ngoài hệ thống vào bằng link (P10)' },
   { key: 'allowJoinBeforeHost', label: 'Vào trước chủ trì', hint: 'Thành viên vào phòng khi chủ trì chưa vào' },
-  { key: 'chatEnabled', label: 'Chat', hint: 'Nhắn tin chung trong phòng' },
-  { key: 'screenShareEnabled', label: 'Chia sẻ màn hình', hint: '' },
-  { key: 'whiteboardEnabled', label: 'Bảng trắng', hint: '' },
-  { key: 'fileUploadEnabled', label: 'Tải tài liệu lên trong phòng', hint: '' },
-  { key: 'recordingEnabled', label: 'Ghi hình', hint: 'Cần quyền MEETING_RECORD' },
-  { key: 'captionsEnabled', label: 'Phụ đề', hint: 'Nhận dạng giọng nói tiếng Việt' },
   { key: 'aiMinutesEnabled', label: 'Biên bản AI', hint: 'Tự tạo bản nháp biên bản sau họp (P13)' },
 ];
 
@@ -84,9 +83,8 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
   name = '';
   description = '';
   agenda = '';
-  date: Date | null = null;
-  startTime: Date | null = null;
-  endTime: Date | null = null;
+  startAt: Date | null = null;
+  endAt: Date | null = null;
   timeZone = 'Asia/Bangkok';
   visibility: MeetingVisibility = MeetingVisibility.InvitedOnly;
   settings: MeetingSettings = defaultMeetingSettings();
@@ -99,10 +97,26 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
 
   private me = '';
 
-  constructor(private service: MeetingService, private session: SessionService) { }
+  orgTree: NzTreeNodeOptions[] = [];
+  private orgs: OrganizationNode[] = [];
+  pickedOrg: string | null = null;
+  addingOrg = false;
+
+  constructor(
+    private service: MeetingService,
+    private session: SessionService,
+    private contacts: ContactsService,
+    private orgService: OrganizationService,
+    private message: NzMessageService,
+  ) { }
 
   ngOnInit(): void {
     this.me = (this.session.accountInfo?.userName ?? '').toLowerCase();
+
+    this.orgService.tree(false).pipe(takeUntil(this.destroy$)).subscribe(list => {
+      this.orgs = (list ?? []).filter(o => o.isActive);
+      this.orgTree = OrganizationService.toNzTree(this.orgs, { expandAll: true, selectableInactive: false });
+    });
 
     this.search$.pipe(
       debounceTime(300),
@@ -153,11 +167,11 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
   }
 
   get start(): Date | null {
-    return this.combine(this.date, this.startTime);
+    return this.startAt;
   }
 
   get end(): Date | null {
-    return this.combine(this.date, this.endTime);
+    return this.endAt;
   }
 
   get nameError(): string {
@@ -166,7 +180,7 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
   }
 
   get timeError(): string {
-    if (!this.submitted && !(this.startTime && this.endTime)) return '';
+    if (!this.submitted && !(this.startAt && this.endAt)) return '';
     const start = this.start;
     const end = this.end;
     if (!start || !end) return this.submitted ? 'Vui lòng chọn ngày, giờ bắt đầu và giờ kết thúc' : '';
@@ -224,12 +238,11 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     this.name = '';
     this.description = '';
     this.agenda = '';
-    this.date = DateTimeUtils.startOfDay(start);
-    this.startTime = start;
-    this.endTime = end;
+    this.startAt = start;
+    this.endAt = end;
     this.timeZone = 'Asia/Bangkok';
     this.visibility = MeetingVisibility.InvitedOnly;
-    this.settings = defaultMeetingSettings();
+    this.settings = this.normalizeSettings(defaultMeetingSettings());
     const account = this.session.accountInfo;
     this.participants = [{
       userName: account?.userName ?? '',
@@ -254,12 +267,12 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     this.name = d.name ?? '';
     this.description = d.description ?? '';
     this.agenda = d.agenda ?? '';
-    this.date = start ? DateTimeUtils.startOfDay(start) : null;
-    this.startTime = start;
-    this.endTime = end;
+    this.startAt = start;
+    this.endAt = end;
     this.timeZone = d.timeZone || 'Asia/Bangkok';
-    this.visibility = d.visibility as MeetingVisibility;
-    this.settings = { ...defaultMeetingSettings(), ...(d.settings ?? {}) };
+    // Chỉ còn Nội bộ (chỉ người được mời) và Công khai; giá trị cũ "Nội bộ theo mã" (1) coi như Nội bộ.
+    this.visibility = d.visibility === MeetingVisibility.Public ? MeetingVisibility.Public : MeetingVisibility.InvitedOnly;
+    this.settings = this.normalizeSettings({ ...defaultMeetingSettings(), ...(d.settings ?? {}) });
     this.participants = (d.participants ?? []).map(p => ({
       userName: p.userName,
       fullName: p.fullName,
@@ -279,29 +292,30 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     return d;
   }
 
-  private combine(date: Date | null, time: Date | null): Date | null {
-    if (!date || !time) return null;
-    const d = new Date(date);
-    d.setHours(time.getHours(), time.getMinutes(), 0, 0);
-    return d;
+  /** Chat, chia sẻ màn hình, bảng trắng, tải tài liệu, ghi hình, transcript luôn có sẵn trong phòng họp. */
+  private normalizeSettings(s: MeetingSettings): MeetingSettings {
+    return {
+      ...s, chatEnabled: true, screenShareEnabled: true, whiteboardEnabled: true,
+      fileUploadEnabled: true, recordingEnabled: true, captionsEnabled: true,
+    };
   }
 
   // ===================== Thời gian =====================
 
   onStartChange(value: Date | null): void {
     // Giữ nguyên thời lượng khi dời giờ bắt đầu.
-    const prevStart = this.combine(this.date, this.startTime);
-    const prevEnd = this.combine(this.date, this.endTime);
-    this.startTime = value;
+    const prevStart = this.startAt;
+    const prevEnd = this.endAt;
+    this.startAt = value;
     if (value && prevStart && prevEnd && prevEnd > prevStart) {
-      this.endTime = new Date(value.getTime() + (prevEnd.getTime() - prevStart.getTime()));
+      this.endAt = new Date(value.getTime() + (prevEnd.getTime() - prevStart.getTime()));
     }
     this.queueConflictCheck();
   }
 
   setDuration(minutes: number): void {
-    if (!this.startTime || this.isOngoing) return;
-    this.endTime = new Date(this.startTime.getTime() + minutes * 60_000);
+    if (!this.startAt || this.isOngoing) return;
+    this.endAt = new Date(this.startAt.getTime() + minutes * 60_000);
     this.queueConflictCheck();
   }
 
@@ -349,6 +363,38 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     // Xóa lựa chọn sau khi thêm để chọn tiếp người khác.
     setTimeout(() => this.pickedUser = null);
     this.searchOptions = this.searchOptions.filter(u => u.userName !== userName);
+  }
+
+  /** Mời cả phòng ban (gồm phòng ban con): thêm từng nhân sự chưa có trong danh sách với vai trò Bắt buộc. */
+  addOrg(orgId: string | null): void {
+    if (!orgId || this.addingOrg) return;
+    const orgName = this.orgs.find(o => o.id === orgId)?.name ?? 'phòng ban';
+    this.addingOrg = true;
+    const loadPage = (page: number, acc: UserSearchItem[]): Observable<UserSearchItem[]> =>
+      this.contacts.search(orgId, '', page, 100).pipe(
+        switchMap(res => {
+          const all = [...acc, ...(res?.items ?? []).map(c => ({ userName: c.userName, fullName: c.fullName, email: c.email ?? '' }))];
+          return page < (res?.totalPages ?? 1) ? loadPage(page + 1, all) : of(all);
+        }),
+      );
+    loadPage(1, []).pipe(finalize(() => { this.addingOrg = false; setTimeout(() => this.pickedOrg = null); }), takeUntil(this.destroy$))
+      .subscribe({
+        next: users => {
+          const taken = new Set(this.participants.map(p => p.userName.toLowerCase()));
+          const fresh = users.filter(u => u.userName && !taken.has(u.userName.toLowerCase()));
+          if (fresh.length) {
+            this.participants = [...this.participants, ...fresh.map(u => ({
+              userName: u.userName, fullName: u.fullName, email: u.email,
+              role: MeetingRole.Required, existing: false, isMe: false,
+            }))];
+            this.queueConflictCheck();
+          }
+          this.message.success(fresh.length
+            ? `Đã mời ${fresh.length} người từ "${orgName}"`
+            : `Mọi nhân sự của "${orgName}" đã có trong danh sách (hoặc phòng ban chưa có nhân sự)`);
+        },
+        error: () => this.message.error('Không lấy được danh sách nhân sự của phòng ban'),
+      });
   }
 
   removeParticipant(row: ParticipantRow): void {
