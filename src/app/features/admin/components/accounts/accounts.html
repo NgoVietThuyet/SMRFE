@@ -137,21 +137,9 @@
 <nz-drawer [nzWidth]="480" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzMask]="!isEdit"
     [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA TÀI KHOẢN' : 'THÊM TÀI KHOẢN'" (nzOnClose)="close()">
     <ng-container *nzDrawerContent>
-        @if (!isEdit) {
-        <nz-segmented class="space-control" [nzOptions]="[
-            { label: 'Tự đặt tên đăng nhập', value: 'manual' },
-            { label: 'Sinh từ họ tên', value: 'directory' }
-          ]" [(ngModel)]="createMode"></nz-segmented>
-        }
-
-        @if (isEdit || createMode === 'manual') {
         <label class="text-control">Tên đăng nhập <span class="required-star">*</span></label>
         <input nz-input [(ngModel)]="dto.userName" [disabled]="isEdit" maxlength="100" placeholder="nguyen.van.a"
             aria-label="Tên đăng nhập" autocomplete="off" class="space-control" />
-        } @else {
-        <nz-alert class="mb-3" nzType="info" nzShowIcon
-            nzMessage="Tên đăng nhập được sinh từ họ tên (bỏ dấu), thêm số nếu trùng."></nz-alert>
-        }
 
         <label class="text-control">Họ tên <span class="required-star">*</span></label>
         <input nz-input [(ngModel)]="dto.fullName" maxlength="200" placeholder="Nguyễn Văn A" aria-label="Họ tên"
@@ -183,7 +171,7 @@
 
         @if (!isEdit) {
         <nz-alert nzType="warning" nzShowIcon
-            nzMessage="Hệ thống tạo mật khẩu tạm ngẫu nhiên và chỉ hiển thị một lần. Người dùng phải đổi mật khẩu ở lần đăng nhập đầu."></nz-alert>
+            nzMessage="Mật khẩu khởi tạo là tên đăng nhập + 123 (ví dụ: thuyet → thuyet123). Người dùng phải đổi mật khẩu ở lần đăng nhập đầu."></nz-alert>
         }
     </ng-container>
 

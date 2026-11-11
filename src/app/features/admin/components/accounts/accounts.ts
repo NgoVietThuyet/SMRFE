@@ -35,7 +35,6 @@ export class Accounts implements OnInit, OnDestroy {
   visible = false;
   isEdit = false;
   isSaving = false;
-  createMode: 'manual' | 'directory' = 'manual';
   dto: EmployeeDto = new EmployeeDto();
 
   // Modal thao tác (điều chuyển / đổi chức danh / khóa-mở)
@@ -144,7 +143,6 @@ export class Accounts implements OnInit, OnDestroy {
 
   open(item: Employee | null): void {
     this.isEdit = !!item;
-    this.createMode = 'manual';
     this.dto = item
       ? {
         userName: item.userName, fullName: item.fullName, email: item.email, phone: item.phone ?? '',
@@ -160,8 +158,7 @@ export class Accounts implements OnInit, OnDestroy {
 
   save(): void {
     const d = this.dto;
-    const needUserName = !this.isEdit && this.createMode === 'manual';
-    if ((needUserName && !d.userName?.trim()) || !d.fullName?.trim() || !d.email?.trim() || !d.organizationId || !d.titleCode) {
+    if (!d.userName?.trim() || !d.fullName?.trim() || !d.email?.trim() || !d.organizationId || !d.titleCode) {
       this.message.warning('Vui lòng nhập đủ các trường bắt buộc (*)');
       return;
     }
@@ -176,7 +173,7 @@ export class Accounts implements OnInit, OnDestroy {
     }
 
     const create$: Observable<{ userName: string; temporaryPassword: string }> =
-      this.createMode === 'manual' ? this.service.create(body) : this.service.createFromDirectory(body);
+      this.service.create(body);
     create$
       .pipe(finalize(() => this.isSaving = false), takeUntil(this.destroy$))
       .subscribe(res => {
