@@ -48,8 +48,34 @@ export class Organizations implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(list => {
         this.list = list ?? [];
+        this.computeTotals();
         this.rebuild();
       });
+  }
+
+  /** Nhân sự hiển thị của một đơn vị = nhân sự trực tiếp + nhân sự của mọi đơn vị con (kể cả cháu). */
+  private totals = new Map<string, number>();
+
+  totalOf(node: OrganizationNode): number {
+    return this.totals.get(node.id) ?? node.employeeCount ?? 0;
+  }
+
+  private computeTotals(): void {
+    const children = new Map<string, OrganizationNode[]>();
+    for (const o of this.list) {
+      const k = o.pId || '';
+      if (!children.has(k)) children.set(k, []);
+      children.get(k)!.push(o);
+    }
+    this.totals = new Map();
+    const sum = (o: OrganizationNode, seen: Set<string>): number => {
+      if (seen.has(o.id)) return 0; // chặn vòng lặp dữ liệu lỗi
+      seen.add(o.id);
+      const total = (o.employeeCount ?? 0) + (children.get(o.id) ?? []).reduce((acc, c) => acc + sum(c, seen), 0);
+      this.totals.set(o.id, total);
+      return total;
+    };
+    this.list.filter(o => !o.pId || !this.list.some(p => p.id === o.pId)).forEach(root => sum(root, new Set()));
   }
 
   private rebuild(): void {

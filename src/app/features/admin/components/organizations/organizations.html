@@ -29,8 +29,8 @@
                         <div class="item-org-main" (click)="edit(node.origin.origin)">
                             <nz-icon [nzType]="node.level === 0 ? 'apartment' : 'team'" class="org-icon" [class.is-root]="node.level === 0" />
                             <span class="org-name">{{ node.title }}</span>
-                            @if (node.origin.origin.employeeCount) {
-                            <nz-tag nzColor="blue" class="org-count">{{ node.origin.origin.employeeCount }} nhân sự</nz-tag>
+                            @if (totalOf(node.origin.origin)) {
+                            <nz-tag nzColor="blue" class="org-count">{{ totalOf(node.origin.origin) }} nhân sự</nz-tag>
                             }
                             @if (!node.origin.origin.isActive) {
                             <nz-tag nzColor="error" class="org-count">Khoá</nz-tag>
