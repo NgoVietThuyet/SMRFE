@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, debounceTime, finalize, takeUntil } from 'rxjs';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
-import { GlobalService } from '../../../../core';
+import { GlobalService, SessionService } from '../../../../core';
 import { DateTimeUtils } from '../../../../shared/utils';
 import { MEETING_STATUS_META } from '../../../meeting/utils/meeting-ui';
 import { MeetingStatus } from '../../../meeting/models/meeting.models';
@@ -31,7 +31,9 @@ export class MinutesList implements OnInit, OnDestroy {
   total = 0;
   loading = false;
 
-  constructor(private global: GlobalService, private service: MinutesService, private router: Router) {
+  get isAdmin(): boolean { return this.session.isAdmin; }
+
+  constructor(private global: GlobalService, private service: MinutesService, private router: Router, private session: SessionService) {
     this.global.setBreadcrumb([{ name: 'Biên bản họp', path: 'minutes' }]);
   }
 
