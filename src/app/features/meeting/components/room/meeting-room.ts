@@ -118,7 +118,7 @@ export class MeetingRoom implements OnInit, OnDestroy {
       const info = this.session.accountInfo;
       this.userName = info?.userName ?? '';
       this.displayName = info?.fullName || info?.userName || '';
-      this.canRecord = this.session.isAdmin || this.global.hasRight(APP_RIGHTS.MEETING_RECORD);
+      this.canRecord = true;
     }
 
     void this.hub.start();

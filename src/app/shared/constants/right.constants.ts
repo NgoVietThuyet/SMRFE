@@ -16,12 +16,6 @@ export const APP_RIGHTS = {
     ADMIN_AUDIT_LOGS: 'ADMIN_AUDIT_LOGS',
     ADMIN_SETTINGS: 'ADMIN_SETTINGS',
 
-    MEETING_RECORD: 'MEETING_RECORD',
-
-    FILE_UPLOAD: 'FILE_UPLOAD',
-    FILE_DOWNLOAD: 'FILE_DOWNLOAD',
-
-    AI_SUMMARY: 'AI_SUMMARY',
 } as const;
 
 export type AppRight = typeof APP_RIGHTS[keyof typeof APP_RIGHTS];

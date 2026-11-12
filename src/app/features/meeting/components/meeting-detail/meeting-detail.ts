@@ -109,8 +109,8 @@ export class MeetingDetailPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const isAdmin = this.session.isAdmin;
-    this.canUpload = isAdmin || this.global.hasRight(APP_RIGHTS.FILE_UPLOAD);
-    this.canDownload = isAdmin || this.global.hasRight(APP_RIGHTS.FILE_DOWNLOAD);
+    this.canUpload = true;
+    this.canDownload = true;
 
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.meetingId = params.get('id') ?? '';
