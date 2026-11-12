@@ -56,6 +56,8 @@ export class MeetingList implements OnInit, OnDestroy {
   isLoading = false;
   now = new Date();
   canCreate = false;
+  /** Trang "Toàn bộ cuộc họp" (Admin): mọi cuộc họp của hệ thống. */
+  isAll = false;
 
   // Drawer + modal
   formVisible = false;
@@ -74,12 +76,15 @@ export class MeetingList implements OnInit, OnDestroy {
     private router: Router,
     private message: NzMessageService,
   ) {
-    this.global.setBreadcrumb([{ name: 'Cuộc họp của tôi', path: 'meetings' }]);
+    this.isAll = this.route.snapshot.data['scope'] === 'all';
+    this.global.setBreadcrumb(this.isAll
+      ? [{ name: 'Toàn bộ cuộc họp', path: 'meetings/all' }]
+      : [{ name: 'Cuộc họp của tôi', path: 'meetings' }]);
   }
 
   ngOnInit(): void {
     // Ai cũng tạo được cuộc họp (người tạo là chủ trì).
-    this.canCreate = true;
+    this.canCreate = !this.isAll;
 
     this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
       const tab = params.get('tab') as MeetingTab | null;
@@ -126,7 +131,7 @@ export class MeetingList implements OnInit, OnDestroy {
       pageSize: this.pageSize,
       startDate: from ? DateTimeUtils.toUtc(DateTimeUtils.startOfDay(from)) : null,
       endDate: to ? DateTimeUtils.toUtc(DateTimeUtils.endOfDay(to)) : null,
-    }, false)
+    }, false, this.isAll)
       .pipe(finalize(() => this.isLoading = false), takeUntil(this.destroy$))
       .subscribe(res => {
         this.items = res?.items ?? [];

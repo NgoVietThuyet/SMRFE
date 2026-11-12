@@ -1,9 +1,12 @@
 /**
- * Mã quyền — khớp đúng BE-Java service/ad/PermissionCatalog.java (11 mã).
+ * Mã quyền — khớp đúng BE-Java service/ad/PermissionCatalog.java (12 mã).
  * Dùng cho route.data.requiredRight, directive [appPermission].
  * Admin (SUPER_ADMIN) luôn có mọi quyền nên không cần liệt kê.
  */
 export const APP_RIGHTS = {
+    // Có quyền này = toàn quyền như quản trị viên (thấy mọi menu, xem toàn bộ cuộc họp...).
+    ADMIN: 'ADMIN',
+
     // Quyền vào từng menu Quản trị — Admin gán cho tài khoản / chức danh / phòng ban nào thì người đó thấy menu đó.
     ADMIN_ORGANIZATIONS: 'ADMIN_ORGANIZATIONS',
     ADMIN_TITLES: 'ADMIN_TITLES',

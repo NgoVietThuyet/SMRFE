@@ -77,7 +77,8 @@ export class SessionService {
           organizationName: profile.organizationName ?? '',
           titleName: profile.titleName ?? '',
           rights: list.filter(p => p.allowed).map(p => p.code),
-          isAdmin: list.some(p => p.sourceType === 'ROLE' && p.sourceId === SUPER_ADMIN),
+          // Admin = role SUPER_ADMIN hoặc được gán quyền ADMIN (toàn quyền).
+          isAdmin: list.some(p => (p.sourceType === 'ROLE' && p.sourceId === SUPER_ADMIN) || (p.code === 'ADMIN' && p.allowed)),
           mustChangePassword: extra.mustChangePassword ?? current?.mustChangePassword ?? false,
         };
         LocalStorageUtils.setItem('accountInfo', info);

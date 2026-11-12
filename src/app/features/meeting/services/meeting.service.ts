@@ -14,9 +14,10 @@ import {
 export class MeetingService {
     constructor(private common: CommonService) { }
 
-    query(query: Partial<MeetingQuery>, showLoading = true): Observable<PagedResult<MeetingListItem>> {
+    /** allMeetings = true → toàn bộ cuộc họp của hệ thống (chỉ Admin). */
+    query(query: Partial<MeetingQuery>, showLoading = true, allMeetings = false): Observable<PagedResult<MeetingListItem>> {
         const body: MeetingQuery = { tab: 'all', keyword: '', status: null, page: 1, pageSize: 20, startDate: null, endDate: null, ...query };
-        return this.common.post<ApiResponse<PagedResult<MeetingListItem>>>('Meeting/query', body, showLoading, false).pipe(map(res => res.data));
+        return this.common.post<ApiResponse<PagedResult<MeetingListItem>>>(allMeetings ? 'Meeting/query-all' : 'Meeting/query', body, showLoading, false).pipe(map(res => res.data));
     }
 
     detail(id: string, showLoading = true): Observable<MeetingDetail> { return this.common.get<MeetingDetail>(`Meeting/${encodeURIComponent(id)}`, null, showLoading) }

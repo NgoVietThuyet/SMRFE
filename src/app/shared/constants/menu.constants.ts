@@ -28,6 +28,7 @@ export const APP_MENU: AppMenuItem[] = [
     { id: 'MEET', pId: MENU_PARENT_ROOT, name: 'Cuộc họp', icon: 'camera-video', orderNumber: 2 },
     { id: 'MEET_MY', pId: 'MEET', name: 'Cuộc họp của tôi', url: '/meetings', orderNumber: 1 },
     { id: 'MEET_CAL', pId: 'MEET', name: 'Lịch họp', url: '/calendar', orderNumber: 2 },
+    { id: 'MEET_ALL', pId: 'MEET', name: 'Toàn bộ cuộc họp', url: '/meetings/all', orderNumber: 3, right: APP_RIGHTS.ADMIN },
 
     { id: 'TASK', pId: MENU_PARENT_ROOT, name: 'Công việc', url: '/tasks', icon: 'kanban', orderNumber: 3 },
     { id: 'MINU', pId: MENU_PARENT_ROOT, name: 'Biên bản họp', url: '/minutes', icon: 'file-earmark-text', orderNumber: 4 },

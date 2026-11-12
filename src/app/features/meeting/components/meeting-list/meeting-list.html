@@ -1,5 +1,5 @@
 <nz-page-header>
-    <nz-page-header-title>CUỘC HỌP CỦA TÔI</nz-page-header-title>
+    <nz-page-header-title>{{ isAll ? 'TOÀN BỘ CUỘC HỌP' : 'CUỘC HỌP CỦA TÔI' }}</nz-page-header-title>
     <nz-page-header-extra>
         <nz-space nzWrap>
             <nz-range-picker *nzSpaceItem nzFormat="dd/MM/yyyy" [(ngModel)]="range" (ngModelChange)="searchFirstPage()"
