@@ -184,7 +184,7 @@ export class MeetingDetailPage implements OnInit, OnDestroy {
   /** Tab Tài liệu / Công việc chỉ tải khi mở lần đầu. */
   private loadTabData(): void {
     const tab = this.tabs[this.tabIndex];
-    if (tab === 'people' && this.meeting?.isHost && this.meeting.actualStartTime) this.loadAttendance();
+    if (tab === 'people' && this.meeting?.actualStartTime) this.loadAttendance();
     if (tab === 'files' && !this.filesLoaded) this.loadFiles();
     if (tab === 'tasks' && !this.tasksLoaded) this.loadTasks();
   }

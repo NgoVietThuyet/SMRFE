@@ -136,7 +136,7 @@
                     </button>
                 </div>
                 }
-                @if (meeting.isHost && meeting.actualStartTime) {
+                @if (meeting.actualStartTime) {
                 <div class="add-row attendance-row">
                     <button nz-button [nzLoading]="exporting" (click)="exportAttendance()">
                         <nz-icon nzType="file-excel" /> Xuất XLSX tham dự
@@ -255,8 +255,8 @@
                 <ng-template #noTasks><nz-empty nzNotFoundContent="Cuộc họp chưa có công việc"></nz-empty></ng-template>
             </nz-tab>
 
-            <!-- ===== Lịch sử hoạt động (chủ trì) — luôn là tab cuối để chỉ số các tab trước không đổi ===== -->
-            @if (meeting.isHost) {
+            <!-- ===== Lịch sử hoạt động — luôn là tab cuối để chỉ số các tab trước không đổi ===== -->
+            @if (true) {
             <nz-tab nzTitle="Lịch sử hoạt động">
                 @if (meeting.activity.length) {
                 <nz-timeline class="activity">
