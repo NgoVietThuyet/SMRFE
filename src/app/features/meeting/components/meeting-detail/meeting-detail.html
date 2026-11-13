@@ -145,7 +145,7 @@
                 </div>
                 }
                 <nz-table #people [nzData]="sortedParticipants" nzSize="small" nzBordered [nzFrontPagination]="false"
-                    [nzShowPagination]="false">
+                    [nzShowPagination]="false" [nzScroll]="{ x: '640px' }">
                     <thead>
                         <tr>
                             <th nzWidth="56px" nzAlign="center">STT</th>
@@ -232,7 +232,7 @@
                 </div>
                 }
                 <nz-table #taskTable [nzData]="tasks" nzSize="small" nzBordered [nzLoading]="!tasksLoaded"
-                    [nzFrontPagination]="false" [nzShowPagination]="false" [nzNoResult]="noTasks">
+                    [nzFrontPagination]="false" [nzShowPagination]="false" [nzNoResult]="noTasks" [nzScroll]="{ x: '520px' }">
                     <thead>
                         <tr>
                             <th>Công việc</th>

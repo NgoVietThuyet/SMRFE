@@ -84,3 +84,13 @@ nz-input-number {
 .item-org.is-inactive .org-icon {
     color: #bfbfbf;
 }
+
+@media (max-width: 768px) {
+    .org-container {
+        height: calc(100vh - 210px);
+    }
+
+    .item-org-actions {
+        opacity: 1;
+    }
+}

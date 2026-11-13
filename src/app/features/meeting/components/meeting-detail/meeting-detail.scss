@@ -106,3 +106,19 @@
         width: 100%;
     }
 }
+
+@media (max-width: 640px) {
+    .overview-main ::ng-deep .ant-descriptions-item-label {
+        width: 110px;
+        white-space: normal;
+    }
+
+    .add-row {
+        .add-user,
+        .add-role {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+        }
+    }
+}

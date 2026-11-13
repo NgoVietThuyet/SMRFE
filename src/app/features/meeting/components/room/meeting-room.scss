@@ -419,11 +419,20 @@
         padding: 16px;
     }
 
+    .room-top {
+        padding: 0 10px;
+        gap: 6px;
+
+        .chip.mono {
+            display: none;
+        }
+    }
+
     .side {
         position: fixed;
         top: 48px;
         right: 0;
-        bottom: 72px;
+        bottom: 68px;
         width: min(360px, 100%);
         z-index: 10;
         border-radius: 10px 0 0 10px;
@@ -434,17 +443,43 @@
     }
 
     .controls {
-        padding: 0 8px;
-    }
-
-    .controls-center {
+        height: auto;
+        min-height: 60px;
+        padding: 6px 8px;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 6px;
     }
 
+    .controls-center {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .controls-right {
+        width: auto;
+        gap: 4px;
+    }
+
     .ctl {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
+        width: 38px;
+        height: 38px;
+        font-size: 15px;
+
+        &.leave {
+            width: 48px;
+        }
+
+        &.small {
+            width: 36px;
+            height: 36px;
+        }
+    }
+
+    .caption {
+        font-size: 13px;
+        padding: 4px 8px;
     }
 }
 

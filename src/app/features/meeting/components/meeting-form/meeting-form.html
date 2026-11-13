@@ -2,11 +2,6 @@
     [nzExtra]="extra" [nzFooter]="footer" [nzMaskClosable]="!isSaving" (nzOnClose)="close()" nzWrapClassName="meeting-form-drawer">
     <ng-container *nzDrawerContent>
         <nz-spin [nzSpinning]="isLoading">
-            @if (isOngoing) {
-            <nz-alert class="mb-3" nzType="info" nzShowIcon
-                nzMessage="Cuộc họp đang diễn ra: chỉ sửa được mô tả, cài đặt phòng và mời thêm người."></nz-alert>
-            }
-
             <nz-tabset [(nzSelectedIndex)]="tabIndex" nzSize="small">
                 <!-- ===== Thông tin ===== -->
                 <nz-tab [nzTitle]="infoTitle">
@@ -16,7 +11,7 @@
 
                     <label class="text-control" for="mf-name">Tên cuộc họp <span class="required-star">*</span></label>
                     <input id="mf-name" nz-input class="space-control" maxlength="200" [(ngModel)]="name"
-                        [disabled]="isOngoing" placeholder="VD: Giao ban tuần 41" [class.input-error]="!!nameError" />
+                        placeholder="VD: Giao ban tuần 41" [class.input-error]="!!nameError" />
                     @if (nameError) {
                     <div class="field-error">{{ nameError }}</div>
                     }
@@ -26,14 +21,14 @@
                             <label class="text-control">Bắt đầu <span class="required-star">*</span></label>
                             <nz-date-picker class="space-control full-width" nzFormat="dd/MM/yyyy HH:mm"
                                 [nzShowTime]="{ nzFormat: 'HH:mm', nzMinuteStep: 5 }" [nzAllowClear]="false"
-                                [ngModel]="startAt" (ngModelChange)="onStartChange($event)" [nzDisabled]="isOngoing"
+                                [ngModel]="startAt" (ngModelChange)="onStartChange($event)"
                                 aria-label="Thời gian bắt đầu"></nz-date-picker>
                         </div>
                         <div nz-col [nzXs]="24" [nzSm]="12">
                             <label class="text-control">Kết thúc <span class="required-star">*</span></label>
                             <nz-date-picker class="space-control full-width" nzFormat="dd/MM/yyyy HH:mm"
                                 [nzShowTime]="{ nzFormat: 'HH:mm', nzMinuteStep: 5 }" [nzAllowClear]="false"
-                                [(ngModel)]="endAt" (ngModelChange)="queueConflictCheck()" [nzDisabled]="isOngoing"
+                                [(ngModel)]="endAt" (ngModelChange)="queueConflictCheck()"
                                 aria-label="Thời gian kết thúc"></nz-date-picker>
                         </div>
                     </div>
@@ -43,7 +38,7 @@
                         } @else if (durationText) {
                         <span class="muted">Thời lượng: {{ durationText }}</span>
                         }
-                        @if (!isOngoing) {
+                        @if (true) {
                         <span class="duration-presets">
                             @for (d of [30, 60, 90, 120]; track d) {
                             <a (click)="setDuration(d)">{{ d < 60 ? d + ' phút' : (d / 60) + ' giờ' }}</a>
@@ -69,7 +64,7 @@
                     }
 
                     <label class="text-control">Chế độ hiển thị</label>
-                    <nz-radio-group class="space-control visibility-group" [(ngModel)]="visibility" [nzDisabled]="isOngoing"
+                    <nz-radio-group class="space-control visibility-group" [(ngModel)]="visibility"
                         aria-label="Chế độ hiển thị">
                         @for (v of visibilityOptions; track v.value) {
                         <label nz-radio [nzValue]="v.value" nz-tooltip [nzTooltipTitle]="v.hint">{{ v.label }}</label>
@@ -81,7 +76,7 @@
                         placeholder="Mục tiêu, bối cảnh cuộc họp"></textarea>
 
                     <label class="text-control" for="mf-agenda">Chương trình</label>
-                    <textarea id="mf-agenda" nz-input rows="4" maxlength="4000" [(ngModel)]="agenda" [disabled]="isOngoing"
+                    <textarea id="mf-agenda" nz-input rows="4" maxlength="4000" [(ngModel)]="agenda"
                         placeholder="Mỗi dòng một nội dung, VD:&#10;1. Báo cáo tiến độ&#10;2. Kế hoạch tuần tới"></textarea>
                 </nz-tab>
 

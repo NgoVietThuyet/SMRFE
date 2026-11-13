@@ -549,3 +549,41 @@ $group-colors: #189AD6, #7C3AED, #059669, #D97706, #DC2626, #0891B2, #7C3AED;
   cursor: default;
   opacity: 0.6;
 }
+
+.list-table-wrapper {
+  min-width: 0;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.list-header-row,
+.group-header,
+.task-row {
+  min-width: 640px;
+}
+
+@media (max-width: 768px) {
+  .list-toolbar {
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .group-add-btn {
+    opacity: 1;
+  }
+
+  .add-task-container {
+    padding-left: 16px;
+    min-width: 640px;
+  }
+
+  .add-list-section {
+    padding: 12px;
+
+    .add-list-form {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+}

@@ -82,7 +82,8 @@ export function meetingInviteText(m: Pick<MeetingListItem, 'name' | 'expectedSta
 export const MeetingActions = {
     canJoin: (m: MeetingListItem) => m.status === MeetingStatus.Scheduled || m.status === MeetingStatus.Ongoing,
     canStart: (m: MeetingListItem) => m.isHost && m.status === MeetingStatus.Scheduled,
-    canEdit: (m: MeetingListItem) => m.isHost && m.status <= MeetingStatus.Ongoing,
+    // Luôn sửa được (mọi trạng thái); chủ trì và admin có isHost = true.
+    canEdit: (m: MeetingListItem) => m.isHost,
     // Bản nháp chưa mời ai → xóa thay vì hủy.
     canCancel: (m: MeetingListItem) => m.isHost && m.status === MeetingStatus.Scheduled,
     canArchive: (m: MeetingListItem) => m.isHost && (m.status === MeetingStatus.Ended || m.status === MeetingStatus.Cancelled),

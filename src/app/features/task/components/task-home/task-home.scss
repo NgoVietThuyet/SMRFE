@@ -523,11 +523,98 @@
 }
 
 @media (max-width: 768px) {
+  :host {
+    height: calc(100vh - 48px);
+    height: calc(100svh - 48px);
+  }
+
+  .task-home {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
   .task-sidebar {
-    display: none;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid #e8e8e8;
+    overflow: visible;
+    flex-shrink: 0;
+
+    .sidebar-header {
+      padding: 10px 12px;
+    }
+
+    .sidebar-search {
+      padding: 8px 12px 4px;
+    }
+
+    .workspace-list {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      gap: 6px;
+      padding: 8px 12px;
+      height: auto;
+      align-items: center;
+      -webkit-overflow-scrolling: touch;
+
+      .sidebar-section-label {
+        display: none;
+      }
+
+      nz-select.full-width {
+        min-width: 180px;
+        flex-shrink: 0;
+      }
+    }
+
+    .workspace-item {
+      flex-shrink: 0;
+      padding: 6px 10px;
+      border: 1px solid #e8e8e8;
+      background: #fafafa;
+
+      &.active {
+        border-color: #0079bf;
+        background: #e6f0fb;
+      }
+
+      .workspace-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
+      }
+
+      .workspace-info .workspace-desc {
+        display: none;
+      }
+    }
   }
 
   .task-main {
-    padding: 16px;
+    padding: 12px;
+    overflow-y: visible;
+
+    .main-header {
+      margin-bottom: 14px;
+
+      .workspace-title {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .due-panel {
+    height: calc(100vh - 240px);
+    min-height: 360px;
+  }
+
+  .board-card .board-card-actions {
+    opacity: 1;
   }
 }

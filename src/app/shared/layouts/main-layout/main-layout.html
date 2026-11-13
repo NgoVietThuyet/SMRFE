@@ -189,7 +189,54 @@
     </nz-dropdown-menu>
   </nz-sider>
 
-  <nz-layout>
+  @if (!sidebarCollapsed) {
+  <div class="mobile-sider-backdrop" (click)="toggleSidebar()"></div>
+  }
+
+  <nz-layout class="main-body-layout">
+    <div class="mobile-topbar">
+      <button
+        type="button"
+        class="mobile-menu-btn"
+        aria-label="Mở menu"
+        (click)="toggleSidebar()"
+      >
+        <nz-icon [nzType]="sidebarCollapsed ? 'menu-unfold' : 'menu-fold'" />
+      </button>
+      <img src="img/smr_logo.svg" alt="Smart Meeting" class="mobile-topbar-logo" />
+      <div class="mobile-topbar-actions">
+        <button
+          type="button"
+          class="mobile-noti-btn"
+          aria-label="Thông báo"
+          nz-popover
+          [nzPopoverContent]="notificationPopover"
+          nzPopoverTrigger="click"
+          [(nzPopoverVisible)]="isMobileNotificationPopoverVisible"
+          (nzPopoverVisibleChange)="onMobileNotificationPopoverVisibleChange($event)"
+          nzPopoverPlacement="bottomRight"
+          nzPopoverOverlayClassName="notification-popover"
+        >
+          <nz-badge [nzCount]="unreadNotificationCount" [nzOverflowCount]="99" nzSize="small">
+            <nz-icon nzType="bell" />
+          </nz-badge>
+        </button>
+        <div
+          class="mobile-user-trigger"
+          nz-dropdown
+          [nzDropdownMenu]="userMenu"
+          nzTrigger="click"
+          nzPlacement="bottomRight"
+          nzOverlayClassName="sidebar-user-dropdown"
+        >
+          <nz-avatar
+            [nzText]="userAvatarText"
+            [nzSize]="30"
+            [ngStyle]="{ 'background-color': userAvatarColor }"
+          ></nz-avatar>
+        </div>
+      </div>
+    </div>
     <nz-content>
       <router-outlet></router-outlet>
     </nz-content>

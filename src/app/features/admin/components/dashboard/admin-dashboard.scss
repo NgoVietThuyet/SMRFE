@@ -112,3 +112,23 @@
 .mt-3 {
     margin-top: 16px;
 }
+
+@media (max-width: 768px) {
+    .dash-body {
+        height: auto;
+        overflow: visible;
+    }
+
+    .filter-org,
+    .export-group {
+        width: 100%;
+    }
+
+    .stat-card ::ng-deep .ant-card-body {
+        padding: 14px 16px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+    }
+}

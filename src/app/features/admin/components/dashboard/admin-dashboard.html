@@ -2,7 +2,7 @@
     <nz-page-header-title>THỐNG KÊ</nz-page-header-title>
     <nz-page-header-subtitle>Số liệu cuộc họp và công việc toàn hệ thống</nz-page-header-subtitle>
     <nz-page-header-extra>
-        <nz-space>
+        <nz-space nzWrap>
             <nz-range-picker *nzSpaceItem [(ngModel)]="range" nzFormat="dd/MM/yyyy" [nzAllowClear]="false"
                 (ngModelChange)="load()" aria-label="Khoảng thời gian"></nz-range-picker>
             <nz-tree-select *nzSpaceItem class="filter-org" [nzNodes]="orgTree" [(ngModel)]="organizationId"

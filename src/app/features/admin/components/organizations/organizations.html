@@ -2,7 +2,7 @@
     <nz-page-header-title>CƠ CẤU TỔ CHỨC</nz-page-header-title>
     <nz-page-header-subtitle>{{ list.length }} phòng ban · {{ totalEmployees }} nhân sự</nz-page-header-subtitle>
     <nz-page-header-extra>
-        <nz-space>
+        <nz-space nzWrap>
             <input *nzSpaceItem nz-input placeholder="Tìm phòng ban" aria-label="Tìm phòng ban" [(ngModel)]="keyword"
                 (ngModelChange)="onSearch()" />
 

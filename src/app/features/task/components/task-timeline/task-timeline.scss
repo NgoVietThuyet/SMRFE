@@ -559,3 +559,38 @@ $header-height: 48px;
     margin: 0;
   }
 }
+
+@media (max-width: 768px) {
+  .gantt-toolbar {
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    &-right {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+  }
+
+  .gantt-sidebar-header-cell {
+    width: 145px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  .gantt-row .gantt-sidebar-cell {
+    width: 145px;
+    min-width: 145px;
+    max-width: 145px;
+    padding: 0 8px;
+
+    &.gantt-add-task-cell,
+    &.gantt-add-list-cell {
+      padding-left: 12px;
+    }
+  }
+
+  .task-sidebar-assignees {
+    display: none;
+  }
+}

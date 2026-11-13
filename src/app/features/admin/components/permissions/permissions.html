@@ -51,7 +51,7 @@
             <nz-page-header-subtitle>{{ selected ? selected.name : 'Chọn phòng ban, chức danh hoặc tài khoản' }}</nz-page-header-subtitle>
             <nz-page-header-extra>
                 @if (selected && !selected.isAdmin) {
-                <nz-space>
+                <nz-space nzWrap>
                     @if (hasChanges) {
                     <button *nzSpaceItem nz-button (click)="discard()">
                         <nz-icon nzType="rollback" /> Bỏ thay đổi

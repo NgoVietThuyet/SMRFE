@@ -371,8 +371,8 @@ nz-sider.ant-layout-sider-collapsed {
 }
 
 .notification-panel {
-  width: 360px;
-  max-height: 480px;
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(480px, 75vh);
   display: flex;
   flex-direction: column;
 
@@ -585,4 +585,105 @@ nz-content {
 .notification-item:hover .notification-remove,
 .notification-remove:focus-visible {
   opacity: 1;
+}
+
+.mobile-topbar {
+  display: none;
+}
+
+.mobile-sider-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .notification-remove {
+    opacity: 1;
+  }
+
+  .mobile-sider-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+  }
+
+  nz-sider {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    height: 100svh;
+    z-index: 1001;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+    transition: transform 0.22s ease, width 0.22s ease !important;
+
+    &.ant-layout-sider-collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+      flex: 0 0 0 !important;
+      border-right: none !important;
+      box-shadow: none !important;
+      transform: translateX(-100%);
+      pointer-events: none;
+    }
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    padding: 0 12px;
+    background: #ffffff;
+    border-bottom: 1px solid $border-color;
+    flex-shrink: 0;
+    z-index: 100;
+
+    .mobile-menu-btn,
+    .mobile-noti-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #262626;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+
+      &:active {
+        background: #f5f5f5;
+      }
+    }
+
+    .mobile-topbar-logo {
+      height: 28px;
+      max-width: 150px;
+      object-fit: contain;
+    }
+
+    .mobile-topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mobile-user-trigger {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+
+  nz-content {
+    height: calc(100vh - 48px);
+    height: calc(100svh - 48px);
+    width: 100%;
+    overflow-x: hidden;
+  }
 }

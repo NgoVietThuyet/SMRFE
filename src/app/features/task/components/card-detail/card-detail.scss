@@ -590,3 +590,41 @@
   align-items: center;
   gap: 6px;
 }
+
+@media (max-width: 768px) {
+  .card-detail-layout {
+    flex-direction: column;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .card-content {
+    padding: 14px 12px;
+    overflow: visible;
+  }
+
+  .card-title {
+    font-size: 17px;
+
+    .edit-hint {
+      opacity: 1;
+    }
+  }
+
+  .card-labels-display {
+    margin-left: 0;
+  }
+
+  .checklist-item .delete-item-btn {
+    opacity: 1;
+  }
+
+  .card-sidebar {
+    width: 100%;
+    min-width: 0;
+    border-left: none;
+    border-top: 1px solid #ebecf0;
+    padding: 12px;
+    overflow: visible;
+  }
+}

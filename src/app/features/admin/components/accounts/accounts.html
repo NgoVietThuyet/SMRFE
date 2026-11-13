@@ -27,7 +27,11 @@
             <nz-page-header-title>TÀI KHOẢN</nz-page-header-title>
             <nz-page-header-subtitle>{{ selectedOrgName }}</nz-page-header-subtitle>
             <nz-page-header-extra>
-                <nz-space>
+                <nz-space nzWrap>
+                    <nz-tree-select *nzSpaceItem class="filter-org-mobile" [nzNodes]="orgTree"
+                        [(ngModel)]="filter.organizationId" (ngModelChange)="searchFirstPage()" nzAllowClear
+                        nzShowSearch nzPlaceHolder="Tất cả phòng ban"
+                        [nzDropdownStyle]="{ 'max-height': '320px' }" aria-label="Lọc phòng ban"></nz-tree-select>
                     <nz-select *nzSpaceItem class="filter-title" [(ngModel)]="filter.titleCode"
                         (ngModelChange)="searchFirstPage()" nzAllowClear nzShowSearch nzPlaceHolder="Chức danh"
                         aria-label="Lọc chức danh">

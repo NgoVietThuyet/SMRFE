@@ -150,14 +150,9 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     return !this.isEdit || this.original?.status === MeetingStatus.Draft;
   }
 
-  /** Đang họp: chỉ sửa mô tả và thêm người. */
-  get isOngoing(): boolean {
-    return this.original?.status === MeetingStatus.Ongoing;
-  }
-
   get title(): string {
     if (!this.isEdit) return 'TẠO CUỘC HỌP';
-    return this.isOngoing ? 'SỬA CUỘC HỌP ĐANG DIỄN RA' : 'SỬA CUỘC HỌP';
+    return 'SỬA CUỘC HỌP';
   }
 
   get start(): Date | null {
@@ -180,7 +175,9 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     if (!start || !end) return this.submitted ? 'Vui lòng chọn ngày, giờ bắt đầu và giờ kết thúc' : '';
     if (end <= start) return 'Giờ kết thúc phải sau giờ bắt đầu';
     // Chỉ chặn giờ quá khứ khi tạo mới / đổi giờ (cho lệch 5 phút để kịp thao tác).
-    if (!this.isOngoing && this.timeChanged && start.getTime() < Date.now() - 5 * 60_000) return 'Giờ bắt đầu đã qua';
+    const st = this.original?.status;
+    const pending = st === undefined || st === MeetingStatus.Draft || st === MeetingStatus.Scheduled;
+    if (pending && this.timeChanged && start.getTime() < Date.now() - 5 * 60_000) return 'Giờ bắt đầu đã qua';
     return '';
   }
 
@@ -306,7 +303,7 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
   }
 
   setDuration(minutes: number): void {
-    if (!this.startAt || this.isOngoing) return;
+    if (!this.startAt) return;
     this.endAt = new Date(this.startAt.getTime() + minutes * 60_000);
     this.queueConflictCheck();
   }
@@ -396,8 +393,7 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
   }
 
   canRemove(row: ParticipantRow): boolean {
-    // Đang họp: không mời ra ở đây (làm trong phòng họp, P10).
-    return !row.isMe && !(this.isOngoing && row.existing);
+    return !row.isMe;
   }
 
   get coHostCount(): number {
@@ -445,16 +441,16 @@ export class MeetingForm implements OnInit, OnChanges, OnDestroy {
     const o = this.original!;
     const id = o.id;
     // Không đổi giờ → không gửi giờ (BE giữ nguyên, tránh báo "dời lịch" vì lệch phần giây).
-    const keepTime = this.isOngoing || !this.timeChanged;
+    const keepTime = !this.timeChanged;
     const update$ = this.service.update(id, {
       id,
-      name: this.isOngoing ? o.name : this.name.trim(),
+      name: this.name.trim(),
       description: this.description.trim(),
-      agenda: this.isOngoing ? o.agenda : this.agenda.trim(),
+      agenda: this.agenda.trim(),
       expectedStartTime: keepTime ? null : DateTimeUtils.toUtc(this.start!),
       expectedEndTime: keepTime ? null : DateTimeUtils.toUtc(this.end!),
       timeZone: SYSTEM_TIME_ZONE,
-      visibility: this.isOngoing ? o.visibility as MeetingVisibility : this.visibility,
+      visibility: this.visibility,
       settings: this.settings,
       rowVersion: o.rowVersion || null,
       publish,

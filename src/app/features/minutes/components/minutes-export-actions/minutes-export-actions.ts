@@ -48,7 +48,7 @@ const MAX_BYTES = 10 * 1024 * 1024;
     </nz-space>
   `,
   styles: [`
-    .tpl { font-size: 13px; display: inline-flex; align-items: center; gap: 4px; max-width: 420px; }
+    .tpl { font-size: 13px; display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px; max-width: min(420px, 100%); }
     .tpl b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; display: inline-block; vertical-align: bottom; }
     .muted { color: rgba(0, 0, 0, 0.45); }
     .del { color: rgba(0, 0, 0, 0.45); margin-left: 4px; }

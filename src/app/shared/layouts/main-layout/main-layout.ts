@@ -42,6 +42,7 @@ export class MainLayout implements OnInit, OnDestroy {
   notifications: NotificationItem[] = [];
   unreadNotificationCount = 0;
   isNotificationPopoverVisible = false;
+  isMobileNotificationPopoverVisible = false;
   private notificationCursor: string | null = null;
   notificationHasMoreData = true;
   isLoadingMoreNotifications = false;
@@ -74,6 +75,9 @@ export class MainLayout implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      this.isCollapsed = true;
+    }
     this.buildMenu();
     this.global.accountInfoUpdated$
       .pipe(takeUntil(this.destroy$))
@@ -89,7 +93,12 @@ export class MainLayout implements OnInit, OnDestroy {
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
         takeUntil(this.destroy$)
       )
-      .subscribe((event: NavigationEnd) => this.refreshActiveMenuState(event.urlAfterRedirects));
+      .subscribe((event: NavigationEnd) => {
+        this.refreshActiveMenuState(event.urlAfterRedirects);
+        if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+          this.isCollapsed = true;
+        }
+      });
 
     this.initNotifications();
     this.ngZone.runOutsideAngular(() => {
@@ -330,7 +339,11 @@ export class MainLayout implements OnInit, OnDestroy {
   }
 
   openNotifications(): void {
-    this.isNotificationPopoverVisible = true;
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      this.isMobileNotificationPopoverVisible = true;
+    } else {
+      this.isNotificationPopoverVisible = true;
+    }
     this.loadNotifications(false);
   }
 
@@ -340,10 +353,18 @@ export class MainLayout implements OnInit, OnDestroy {
       event.preventDefault();
     }
     this.isNotificationPopoverVisible = false;
+    this.isMobileNotificationPopoverVisible = false;
   }
 
   onNotificationPopoverVisibleChange(visible: boolean): void {
     this.isNotificationPopoverVisible = visible;
+    if (visible) {
+      this.loadNotifications(false);
+    }
+  }
+
+  onMobileNotificationPopoverVisibleChange(visible: boolean): void {
+    this.isMobileNotificationPopoverVisible = visible;
     if (visible) {
       this.loadNotifications(false);
     }
@@ -359,6 +380,7 @@ export class MainLayout implements OnInit, OnDestroy {
         });
     }
     this.isNotificationPopoverVisible = false;
+    this.isMobileNotificationPopoverVisible = false;
     if (noti.type === 'MINUTES_EXPORT_READY' && noti.data?.['exportId'] && noti.data?.['success'] !== false) {
       this.minutesExports.downloadAgain(noti.data['exportId'], noti.data['meetingName'] ?? '');
       return;
@@ -515,16 +537,18 @@ export class MainLayout implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.isNotificationPopoverVisible) return;
+    if (!this.isNotificationPopoverVisible && !this.isMobileNotificationPopoverVisible) return;
     const target = event.target as HTMLElement;
     if (
       target.closest('.notification-popover') ||
       target.closest('.user-profile-trigger') ||
+      target.closest('.mobile-noti-btn') ||
       target.closest('.sidebar-user-dropdown')
     ) {
       return;
     }
     this.isNotificationPopoverVisible = false;
+    this.isMobileNotificationPopoverVisible = false;
   }
 
   private handleVisibilityChange = (): void => {

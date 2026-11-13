@@ -88,3 +88,14 @@
     font-size: 12px;
     pointer-events: none;
 }
+
+@media (max-width: 640px) {
+    .wb-toolbar {
+        padding: 6px 8px;
+        gap: 6px;
+    }
+
+    .wb-spacer {
+        display: none;
+    }
+}

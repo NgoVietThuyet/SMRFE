@@ -2,7 +2,7 @@
     <nz-page-header-title>CẤU HÌNH HỆ THỐNG</nz-page-header-title>
     <nz-page-header-subtitle>Giới hạn tài liệu, bản ghi và mẫu biên bản</nz-page-header-subtitle>
     <nz-page-header-extra>
-        <nz-space>
+        <nz-space nzWrap>
             @if (isDirty) {
             <button *nzSpaceItem nz-button (click)="discard()"><nz-icon nzType="rollback" /> Bỏ thay đổi</button>
             }

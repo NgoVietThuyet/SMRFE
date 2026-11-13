@@ -376,3 +376,77 @@ $border-color: #e5e7eb;
     text-align: center;
     margin-top: 6px;
 }
+
+@media (max-width: 768px) {
+    .ai-layout {
+        flex-direction: column;
+        height: calc(100vh - 48px);
+        height: calc(100svh - 48px);
+    }
+
+    .meeting-panel {
+        width: 100%;
+        max-height: 185px;
+        border-right: none;
+        border-bottom: 1px solid #f0f0f0;
+
+        .panel-head {
+            height: 40px;
+            padding: 0 12px;
+        }
+
+        .panel-search {
+            padding: 6px 10px;
+        }
+
+        .panel-list {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0 10px 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .meeting-item {
+            flex: 0 0 220px;
+            margin-bottom: 0;
+            padding: 8px 10px;
+        }
+    }
+
+    .chat-head {
+        padding: 6px 10px;
+        flex-wrap: wrap;
+    }
+
+    .welcome {
+        padding: 16px 12px;
+
+        &.small {
+            padding: 20px 12px 10px;
+        }
+    }
+
+    .message-row {
+        padding: 10px 12px;
+        gap: 10px;
+
+        &.user .message-body {
+            max-width: 85%;
+        }
+    }
+
+    .message-actions {
+        visibility: visible;
+    }
+
+    .citation-content {
+        max-width: calc(100vw - 48px);
+    }
+
+    .input-area {
+        padding: 8px 10px 10px;
+    }
+}

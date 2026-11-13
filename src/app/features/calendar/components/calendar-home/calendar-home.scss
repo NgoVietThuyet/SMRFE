@@ -425,6 +425,36 @@ $text-muted: #8c8c8c;
 }
 
 @media (max-width: 768px) {
+    :host {
+        height: calc(100vh - 48px);
+        height: calc(100svh - 48px);
+    }
+
+    .cal-toolbar {
+        padding: 8px 10px;
+        gap: 8px;
+
+        .toolbar-left,
+        .toolbar-right {
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .toolbar-title {
+            font-size: 14px;
+            margin: 0 4px;
+        }
+
+        .toolbar-right label[nz-checkbox] {
+            display: none;
+        }
+    }
+
+    .legend {
+        padding: 6px 10px;
+        gap: 8px 12px;
+    }
+
     .month-grid {
         grid-auto-rows: minmax(72px, 1fr);
     }
@@ -433,7 +463,30 @@ $text-muted: #8c8c8c;
         display: none;
     }
 
-    .cal-toolbar .toolbar-right label[nz-checkbox] {
-        display: none;
+    .week-header-row {
+        .time-gutter-header {
+            width: 42px;
+        }
+
+        .week-day-header {
+            padding: 4px 2px;
+
+            .wdh-name {
+                font-size: 10px;
+            }
+
+            .wdh-num {
+                font-size: 14px;
+                line-height: 22px;
+            }
+        }
+    }
+
+    .time-labels-col {
+        width: 42px;
+    }
+
+    .week-cols {
+        left: 42px;
     }
 }

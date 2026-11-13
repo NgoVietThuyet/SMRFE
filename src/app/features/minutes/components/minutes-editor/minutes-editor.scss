@@ -309,3 +309,61 @@
 .mb-2 {
     margin-bottom: 8px;
 }
+
+@media (max-width: 900px) {
+    :host {
+        height: auto;
+        min-height: calc(100vh - 48px);
+        min-height: calc(100svh - 48px);
+    }
+
+    .editor {
+        height: auto;
+        min-height: calc(100vh - 48px);
+    }
+
+    .bar {
+        padding: 8px 10px;
+
+        .bar-title {
+            max-width: calc(100vw - 70px);
+        }
+
+        .version-select {
+            width: 100%;
+            max-width: 100%;
+        }
+    }
+
+    .export-bar,
+    .banners {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .panes {
+        flex-direction: column;
+        overflow: visible;
+    }
+
+    .transcript {
+        width: 100%;
+        min-width: 0;
+        max-height: 40vh;
+        border-right: none;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .minutes {
+        width: 100%;
+    }
+
+    .seg-edit {
+        visibility: visible;
+    }
+
+    .action-meta .assignee {
+        width: 100%;
+        max-width: 240px;
+    }
+}

@@ -43,3 +43,12 @@
     white-space: pre-wrap;
     word-break: break-word;
 }
+
+@media (max-width: 640px) {
+    .filter-category,
+    .filter-result,
+    .filter-actor,
+    .filter-keyword {
+        width: 140px;
+    }
+}

@@ -2,7 +2,7 @@
     <nz-page-header-title>BIÊN BẢN HỌP</nz-page-header-title>
     <nz-page-header-subtitle>{{ isAdmin ? 'Tất cả cuộc họp đã hoặc đang diễn ra' : 'Cuộc họp bạn tham gia đã hoặc đang diễn ra' }}</nz-page-header-subtitle>
     <nz-page-header-extra>
-        <nz-space>
+        <nz-space nzWrap>
             <nz-input-group *nzSpaceItem [nzPrefix]="searchIcon" class="search-box">
                 <input nz-input placeholder="Tên cuộc họp hoặc mã phòng" aria-label="Tìm cuộc họp"
                     [(ngModel)]="keyword" (ngModelChange)="onKeywordChange()" />

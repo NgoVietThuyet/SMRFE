@@ -44,6 +44,11 @@
     width: 130px;
 }
 
+.filter-org-mobile {
+    display: none;
+    width: 180px;
+}
+
 .must-change {
     margin-left: 4px;
     color: #faad14;
@@ -86,6 +91,23 @@ nz-segmented {
 @media (max-width: 900px) {
     .org-panel {
         display: none;
+    }
+
+    .filter-org-mobile {
+        display: inline-block;
+    }
+}
+
+@media (max-width: 768px) {
+    .accounts-layout {
+        height: calc(100vh - 48px);
+        height: calc(100svh - 48px);
+    }
+
+    .filter-org-mobile,
+    .filter-title,
+    .filter-status {
+        width: 140px;
     }
 }
 
