@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, finalize, switchMap, takeUntil } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModules } from '../../../shared/ng-zorro.module';
+import { PlatformUtils } from '../../../shared/utils';
 import { AuthService } from '../../../shared/services';
 import { SessionService, TokenService } from '../../../core';
 
@@ -113,6 +114,8 @@ export class Login implements OnInit, OnDestroy {
     welcomeMessage = '';
     private welcomeMessageIndex = 0;
     private messageTimer: any = null;
+    private isFormFocused = false;
+    private focusOutTimer: any = null;
     private readonly welcomeMessages: string[] = [
         'Mật khẩu mạnh giúp bảo vệ dữ liệu cuộc họp.',
         'Quên mật khẩu? Bạn có thể đặt lại qua email đã đăng ký.',
@@ -138,11 +141,44 @@ export class Login implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '';
+        if (this.isLowPowerOrMobile()) {
+            // Trên mobile / thiết bị cảm ứng: tắt các timer nền gây ре-render liên tục làm giật màn hình và lag khi nhập mật khẩu
+            this.typedText = this.typewriterPhrases[0];
+            for (const s of this.stats) {
+                s.current = s.target;
+            }
+            this.welcomeMessage = this.welcomeMessages[0];
+            return;
+        }
         this.initParticles();
         this.startTypewriter();
         this.startCounters();
         this.startCarousel();
         this.startWelcomeMessageCycle();
+    }
+
+    private isLowPowerOrMobile(): boolean {
+        if (typeof window === 'undefined') return false;
+        const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+        const coarsePointer = window.matchMedia?.('(hover: none) and (pointer: coarse)').matches ?? false;
+        return reducedMotion || coarsePointer || window.innerWidth <= 1024 || PlatformUtils.isMobile();
+    }
+
+    onFormFocusIn(): void {
+        if (this.focusOutTimer) {
+            clearTimeout(this.focusOutTimer);
+            this.focusOutTimer = null;
+        }
+        this.isFormFocused = true;
+    }
+
+    onFormFocusOut(): void {
+        this.ngZone.runOutsideAngular(() => {
+            if (this.focusOutTimer) clearTimeout(this.focusOutTimer);
+            this.focusOutTimer = setTimeout(() => {
+                this.isFormFocused = false;
+            }, 150);
+        });
     }
 
     togglePasswordVisibility(): void {
@@ -233,11 +269,12 @@ export class Login implements OnInit, OnDestroy {
         if (this.statTimer) { clearInterval(this.statTimer); this.statTimer = null; }
         if (this.slideTickTimer) { clearInterval(this.slideTickTimer); this.slideTickTimer = null; }
         if (this.messageTimer) { clearInterval(this.messageTimer); this.messageTimer = null; }
+        if (this.focusOutTimer) { clearTimeout(this.focusOutTimer); this.focusOutTimer = null; }
     }
 
     // ===================== Landing animations =====================
     private initParticles(): void {
-        this.particles = Array.from({ length: 28 }).map(() => ({
+        this.particles = Array.from({ length: 16 }).map(() => ({
             x: Math.random() * 100,
             y: Math.random() * 100,
             size: 2 + Math.random() * 4,
@@ -247,68 +284,85 @@ export class Login implements OnInit, OnDestroy {
     }
 
     private startTypewriter(): void {
-        const typeSpeed = 55;
-        const deleteSpeed = 28;
-        const holdMs = 1800;
-
-        const tick = () => {
-            const phrase = this.typewriterPhrases[this.typePhraseIndex];
-            if (!this.typeDeleting) {
-                this.typeCharIndex++;
-                this.typedText = phrase.substring(0, this.typeCharIndex);
-                if (this.typeCharIndex >= phrase.length) {
-                    this.typeDeleting = true;
-                    this.typeTimer = setTimeout(tick, holdMs);
-                    return;
-                }
-                this.typeTimer = setTimeout(tick, typeSpeed);
-            } else {
-                this.typeCharIndex--;
-                this.typedText = phrase.substring(0, Math.max(0, this.typeCharIndex));
-                if (this.typeCharIndex <= 0) {
-                    this.typeDeleting = false;
-                    this.typePhraseIndex = (this.typePhraseIndex + 1) % this.typewriterPhrases.length;
-                    this.typeTimer = setTimeout(tick, 400);
-                    return;
-                }
-                this.typeTimer = setTimeout(tick, deleteSpeed);
-            }
-        };
+        const typeSpeed = 65;
+        const deleteSpeed = 35;
+        const holdMs = 2000;
 
         this.ngZone.runOutsideAngular(() => {
-            this.typeTimer = setTimeout(() => this.ngZone.run(tick), 600);
+            const scheduleNext = (delay: number) => {
+                this.typeTimer = setTimeout(tick, delay);
+            };
+
+            const tick = () => {
+                if (this.isFormFocused) {
+                    scheduleNext(400);
+                    return;
+                }
+                const phrase = this.typewriterPhrases[this.typePhraseIndex];
+                if (!this.typeDeleting) {
+                    this.typeCharIndex++;
+                    const nextText = phrase.substring(0, this.typeCharIndex);
+                    this.ngZone.run(() => { this.typedText = nextText; });
+                    if (this.typeCharIndex >= phrase.length) {
+                        this.typeDeleting = true;
+                        scheduleNext(holdMs);
+                        return;
+                    }
+                    scheduleNext(typeSpeed);
+                } else {
+                    this.typeCharIndex--;
+                    const nextText = phrase.substring(0, Math.max(0, this.typeCharIndex));
+                    this.ngZone.run(() => { this.typedText = nextText; });
+                    if (this.typeCharIndex <= 0) {
+                        this.typeDeleting = false;
+                        this.typePhraseIndex = (this.typePhraseIndex + 1) % this.typewriterPhrases.length;
+                        scheduleNext(400);
+                        return;
+                    }
+                    scheduleNext(deleteSpeed);
+                }
+            };
+
+            scheduleNext(600);
         });
     }
 
     private startCounters(): void {
-        const durationMs = 1800;
-        const frameMs = 30;
+        const durationMs = 1500;
+        const frameMs = 50;
         const steps = Math.max(1, Math.floor(durationMs / frameMs));
         let i = 0;
-        this.statTimer = setInterval(() => {
-            i++;
-            const progress = Math.min(1, i / steps);
-            const eased = 1 - Math.pow(1 - progress, 3);
-            for (const s of this.stats) {
-                s.current = Math.round(s.target * eased);
-            }
-            if (progress >= 1) {
-                clearInterval(this.statTimer);
-                this.statTimer = null;
-            }
-        }, frameMs);
+        this.ngZone.runOutsideAngular(() => {
+            this.statTimer = setInterval(() => {
+                i++;
+                const progress = Math.min(1, i / steps);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                this.ngZone.run(() => {
+                    for (const s of this.stats) {
+                        s.current = Math.round(s.target * eased);
+                    }
+                });
+                if (progress >= 1) {
+                    clearInterval(this.statTimer);
+                    this.statTimer = null;
+                }
+            }, frameMs);
+        });
     }
 
     private startCarousel(): void {
-        const tickMs = 60;
+        const tickMs = 200;
         this.ngZone.runOutsideAngular(() => {
             this.slideTickTimer = setInterval(() => {
+                if (this.isFormFocused) return;
                 this.slideElapsed += tickMs;
                 const pct = Math.min(100, (this.slideElapsed / this.slideDurationMs) * 100);
-                this.ngZone.run(() => { this.slideProgress = pct; });
-                if (this.slideElapsed >= this.slideDurationMs) {
-                    this.ngZone.run(() => this.nextSlide());
-                }
+                this.ngZone.run(() => {
+                    this.slideProgress = pct;
+                    if (this.slideElapsed >= this.slideDurationMs) {
+                        this.nextSlide();
+                    }
+                });
             }, tickMs);
         });
     }
@@ -325,19 +379,17 @@ export class Login implements OnInit, OnDestroy {
         this.slideProgress = 0;
     }
 
-    onMouseMove(ev: MouseEvent): void {
-        const w = window.innerWidth || 1;
-        const h = window.innerHeight || 1;
-        this.parallaxX = ((ev.clientX / w) - 0.5) * -24;
-        this.parallaxY = ((ev.clientY / h) - 0.5) * -24;
-    }
-
     private startWelcomeMessageCycle(): void {
         this.welcomeMessageIndex = 0;
         this.welcomeMessage = this.welcomeMessages[this.welcomeMessageIndex];
-        this.messageTimer = setInterval(() => {
-            this.welcomeMessageIndex = (this.welcomeMessageIndex + 1) % this.welcomeMessages.length;
-            this.welcomeMessage = this.welcomeMessages[this.welcomeMessageIndex];
-        }, 3000);
+        this.ngZone.runOutsideAngular(() => {
+            this.messageTimer = setInterval(() => {
+                if (this.isFormFocused) return;
+                this.ngZone.run(() => {
+                    this.welcomeMessageIndex = (this.welcomeMessageIndex + 1) % this.welcomeMessages.length;
+                    this.welcomeMessage = this.welcomeMessages[this.welcomeMessageIndex];
+                });
+            }, 4000);
+        });
     }
 }

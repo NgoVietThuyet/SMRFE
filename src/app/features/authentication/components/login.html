@@ -1,4 +1,4 @@
-<div class="landing-login" (mousemove)="onMouseMove($event)">
+<div class="landing-login">
     <!-- ===================== Animated AI Background ===================== -->
     <div class="bg-layer bg-mesh" aria-hidden="true">
         <div class="mesh-blob blob-1"></div>
@@ -161,7 +161,8 @@
                     <p>Chào mừng bạn quay lại Smart Meeting.</p>
                 </div>
 
-                <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="loginByAccount()">
+                <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="loginByAccount()"
+                    (focusin)="onFormFocusIn()" (focusout)="onFormFocusOut()">
                     <nz-form-item style="margin-bottom: 12px;">
                         <nz-form-control nzErrorTip="Vui lòng nhập tên đăng nhập!">
                             <nz-input-group nzPrefixIcon="user" nzSize="large">

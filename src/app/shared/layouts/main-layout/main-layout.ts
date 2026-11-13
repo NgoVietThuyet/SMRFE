@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { filter, finalize, takeUntil } from 'rxjs/operators';
@@ -66,6 +66,7 @@ export class MainLayout implements OnInit, OnDestroy {
     private notification: NzNotificationService,
     private router: Router,
     private minutesExports: MinutesExportService,
+    private ngZone: NgZone,
   ) {
     this.accountInfo = this.session.accountInfo;
     // Job "Tải biên bản họp" chạy ngầm: khôi phục sau khi tải lại trang, tự tải file khi xong.
@@ -91,7 +92,11 @@ export class MainLayout implements OnInit, OnDestroy {
       .subscribe((event: NavigationEnd) => this.refreshActiveMenuState(event.urlAfterRedirects));
 
     this.initNotifications();
-    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    this.ngZone.runOutsideAngular(() => {
+      document.addEventListener('visibilitychange', this.handleVisibilityChange);
+      document.addEventListener('mousemove', this.handleUserInteraction, { passive: true });
+      document.addEventListener('keydown', this.handleUserInteraction, { passive: true });
+    });
 
     if (this.accountInfo?.mustChangePassword) {
       this.forceChangePassword = true;
@@ -103,6 +108,8 @@ export class MainLayout implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    document.removeEventListener('mousemove', this.handleUserInteraction);
+    document.removeEventListener('keydown', this.handleUserInteraction);
   }
 
   // ───────────────────────────── Menu ─────────────────────────────
@@ -498,15 +505,13 @@ export class MainLayout implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  @HostListener('document:mousemove')
-  @HostListener('document:keydown')
-  onUserInteraction(): void {
+  private handleUserInteraction = (): void => {
     const now = Date.now();
     if (now - this.lastCheckedToken > this.CHECK_INTERVAL) {
       this.lastCheckedToken = now;
-      this.checkToken();
+      this.ngZone.run(() => this.checkToken());
     }
-  }
+  };
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
