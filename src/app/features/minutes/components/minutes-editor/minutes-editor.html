@@ -67,6 +67,10 @@
         } @else if (detail.job?.status === JobStatus.Failed) {
         <nz-alert nzType="error" nzShowIcon [nzMessage]="'Lần sinh biên bản gần nhất thất bại: ' + (detail.job?.error || 'không rõ lỗi')"></nz-alert>
         }
+        @if (detail.sourceChanged && !generating) {
+        <nz-alert nzType="warning" nzShowIcon
+            nzMessage="Transcript hoặc tài liệu đã thay đổi sau khi AI sinh bản này. Bấm Sinh lại bằng AI để cập nhật (bản hiện tại vẫn được giữ trong danh sách phiên bản)."></nz-alert>
+        }
         @if (current; as c) {
         @if (c.source === 'AI' && c.status !== Status.Published) {
         <nz-alert nzType="warning" nzShowIcon

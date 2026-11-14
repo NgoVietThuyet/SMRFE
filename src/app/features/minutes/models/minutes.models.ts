@@ -97,6 +97,8 @@ export interface MinutesDetail {
     job: MinutesJob | null;
     participants: { userName: string; fullName: string }[];
     transcriptCount: number;
+    /** Bản AI đang xem sinh từ nguồn khác với nguồn hiện tại → nên sinh lại. */
+    sourceChanged?: boolean;
 }
 
 export interface MinutesListItem {
