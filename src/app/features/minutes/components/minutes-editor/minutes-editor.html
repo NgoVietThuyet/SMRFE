@@ -56,7 +56,8 @@
 
     <!-- Mẫu biên bản + tải biên bản (mọi thành viên; tổng hợp chạy ngầm) -->
     <div class="export-bar">
-        <app-minutes-export-actions [meetingId]="detail.meetingId" [meetingName]="detail.meetingName"></app-minutes-export-actions>
+        <app-minutes-export-actions [meetingId]="detail.meetingId" [meetingName]="detail.meetingName"
+            [ready]="hasOfficialVersion"></app-minutes-export-actions>
     </div>
 
     <!-- ===== Thông báo ===== -->

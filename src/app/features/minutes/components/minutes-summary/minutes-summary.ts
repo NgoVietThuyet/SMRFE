@@ -30,7 +30,8 @@ import { MinutesExportActions } from '../minutes-export-actions/minutes-export-a
         }
       </nz-descriptions>
       <div class="export">
-        <app-minutes-export-actions [meetingId]="d.meetingId" [meetingName]="d.meetingName"></app-minutes-export-actions>
+        <app-minutes-export-actions [meetingId]="d.meetingId" [meetingName]="d.meetingName"
+          [ready]="hasOfficial(d)"></app-minutes-export-actions>
       </div>
       <div class="actions">
         <button nz-button nzType="primary" [routerLink]="['/minutes', d.meetingId]">
@@ -52,6 +53,10 @@ import { MinutesExportActions } from '../minutes-export-actions/minutes-export-a
   `],
 })
 export class MinutesSummary implements OnChanges, OnDestroy {
+  hasOfficial(d: MinutesDetail): boolean {
+    return !!d.versions?.some(v => v.status === MinutesStatus.Approved || v.status === MinutesStatus.Published);
+  }
+
   @Input({ required: true }) meetingId!: string;
   private destroy$ = new Subject<void>();
   readonly meta = MINUTES_STATUS_META;

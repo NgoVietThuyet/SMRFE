@@ -138,6 +138,12 @@ export class MeetingRoom implements OnInit, OnDestroy {
   }
 
   /** Đóng tab / F5: báo rời phòng (hub tự ghi "rời" khi kết nối đóng). */
+  /** Esc: đóng bảng trắng, quay lại cuộc họp. */
+  @HostListener('window:keydown.escape')
+  onEscape(): void {
+    if (this.whiteboardOpen) this.closeWhiteboard();
+  }
+
   @HostListener('window:beforeunload', ['$event'])
   onUnload(event?: BeforeUnloadEvent): void {
     // Đang ghi hình: phần chưa tải lên sẽ mất nếu đóng tab → hỏi lại.

@@ -26,8 +26,8 @@ const MAX_BYTES = 10 * 1024 * 1024;
         nz-tooltip nzTooltipTitle="Mẫu biên bản của đơn vị (.docx hoặc .pdf, tối đa 10 MB). Chỉ lưu mẫu, chưa tổng hợp.">
         <nz-icon nzType="upload" /> Tải mẫu lên
       </button>
-      <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="exports.isPending(meetingId)" (click)="download()"
-        nz-tooltip nzTooltipTitle="Tổng hợp biên bản theo mẫu ở chế độ chạy ngầm; xong sẽ tự tải về máy">
+      <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="exports.isPending(meetingId)" (click)="download()" [disabled]="!ready"
+        nz-tooltip [nzTooltipTitle]="ready ? 'Đóng gói biên bản đã duyệt / phát hành vào mẫu; xong sẽ tự tải về máy' : 'Chưa có biên bản đã duyệt hoặc đã phát hành. Hãy sinh biên bản bằng AI, duyệt rồi mới tải.'">
         <nz-icon nzType="download" /> {{ exports.isPending(meetingId) ? 'Đang tổng hợp…' : 'Tải biên bản họp' }}
       </button>
       @if (template) {
@@ -58,6 +58,8 @@ const MAX_BYTES = 10 * 1024 * 1024;
 export class MinutesExportActions implements OnChanges {
   @Input({ required: true }) meetingId!: string;
   @Input() meetingName = '';
+  /** Có phiên bản biên bản đã duyệt / đã phát hành thì mới tải được file Word. */
+  @Input() ready = true;
   @ViewChild('fileInput') private fileInput?: ElementRef<HTMLInputElement>;
 
   template: MinutesTemplateInfo | null = null;

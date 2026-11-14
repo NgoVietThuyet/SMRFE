@@ -179,6 +179,11 @@ export class MinutesEditor implements OnInit, OnDestroy {
     return this.detail?.current ?? null;
   }
 
+  /** Có phiên bản đã duyệt hoặc đã phát hành → tải được file Word. */
+  get hasOfficialVersion(): boolean {
+    return !!this.detail?.versions?.some(v => v.status === MinutesStatus.Approved || v.status === MinutesStatus.Published);
+  }
+
   get editable(): boolean {
     const c = this.current;
     return !!this.detail?.canEdit && !!c && (c.status === MinutesStatus.Draft || c.status === MinutesStatus.Rejected);

@@ -97,6 +97,9 @@
 
         @if (whiteboardOpen) {
         <div class="whiteboard-layer">
+            <button class="wb-back" type="button" (click)="closeWhiteboard()" aria-label="Quay lại cuộc họp">
+                <nz-icon nzType="arrow-left" /> Quay lại cuộc họp
+            </button>
             <app-room-whiteboard [meetingId]="meetingId" [userName]="userName" [isModerator]="isModerator"
                 (closed)="closeWhiteboard()"></app-room-whiteboard>
         </div>
@@ -160,7 +163,7 @@
                 <nz-icon nzType="font-size" />
             </button>
             }
-            @if (canWhiteboard) {
+            @if (canWhiteboard || whiteboardOpen) {
             <button class="ctl" [class.on]="whiteboardOpen" (click)="toggleWhiteboard()" nz-tooltip nzTooltipTitle="Bảng trắng"
                 aria-label="Bảng trắng"><nz-icon nzType="highlight" /></button>
             }

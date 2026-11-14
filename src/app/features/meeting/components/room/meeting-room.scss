@@ -243,6 +243,31 @@
     overflow: hidden;
 }
 
+/* Nút quay lại cuộc họp luôn nằm trên bảng trắng, ai cũng thấy (kể cả khi bảng do chủ trì mở). */
+.wb-back {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    z-index: 7;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: #1677ff;
+    color: #fff;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Panel Người tham gia / Chat / Tài liệu phải nằm trên bảng trắng để còn dùng được. */
+.side {
+    position: relative;
+    z-index: 6;
+}
+
 .captions {
     position: absolute;
     left: 50%;
