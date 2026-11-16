@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable, Subject, filter, finalize, interval, switchMap, takeUntil, throttleTime } from 'rxjs';
+import { Observable, Subject, filter, finalize, interval, map, merge, switchMap, takeUntil, throttleTime } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
@@ -470,19 +470,36 @@ export class MeetingRoom implements OnInit, OnDestroy {
       return;
     }
     this.captionSegment = this.newId();
+    this.segmentStartedAt = null;
     this.speech.startListening('vi-VN');
-    // Kết quả tạm gửi tối đa ~3 lần/giây (để người khác xem phụ đề); kết quả cuối luôn gửi.
-    this.transcriptSub = this.speech.captionResult
-      .pipe(throttleTime(300, undefined, { leading: true, trailing: true }), takeUntil(this.leave$))
-      .subscribe(r => {
-        if (this.audioMuted) return;
+    // Kết quả tạm gửi tối đa ~3 lần/giây (để người khác xem phụ đề). Kết quả cuối (final) KHÔNG bị giảm tốc:
+    // trước đây throttle chung làm rơi câu final khi có kết quả khác tới trong vòng 300 ms → mất lời trong transcript.
+    const seq$ = this.speech.captionResult.pipe(map(r => ({ r, seq: ++this.captionSeq })));
+    const interim$ = seq$.pipe(filter(x => !x.r.isFinal), throttleTime(300, undefined, { leading: true, trailing: true }));
+    const final$ = seq$.pipe(filter(x => x.r.isFinal));
+    this.transcriptSub = merge(interim$, final$)
+      .pipe(takeUntil(this.leave$))
+      .subscribe(({ r, seq }) => {
+        if (r.isFinal) this.lastFinalSeq = seq;
+        else if (seq < this.lastFinalSeq) return; // kết quả tạm đến muộn sau khi câu đã chốt
+        // Mic tắt: bỏ câu mới, nhưng vẫn lưu nốt câu đã bắt đầu nói lúc mic còn bật.
+        if (this.audioMuted && (!r.isFinal || !this.segmentStartedAt)) return;
+        // Giờ của câu = lúc bắt đầu nói (không phải lúc nói xong) để các người nói chen nhau vẫn xếp đúng thứ tự.
+        if (!this.segmentStartedAt) this.segmentStartedAt = new Date();
         this.hub.sendCaption(this.meetingId, {
           id: this.captionSegment, meetingId: this.meetingId, text: r.text, language: r.language,
-          isFinal: r.isFinal, timestamp: new Date().toISOString(),
+          isFinal: r.isFinal, timestamp: this.segmentStartedAt.toISOString(),
         });
-        if (r.isFinal) this.captionSegment = this.newId();
+        if (r.isFinal) {
+          this.captionSegment = this.newId();
+          this.segmentStartedAt = null;
+        }
       });
   }
+
+  private segmentStartedAt: Date | null = null;
+  private captionSeq = 0;
+  private lastFinalSeq = 0;
 
   private stopTranscription(): void {
     this.speech.stopListening();

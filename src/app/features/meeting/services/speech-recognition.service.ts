@@ -45,6 +45,16 @@ export class SpeechRecognitionService {
     private recognition: IWindowSpeechRecognition | null = null;
     private shouldKeepListening = false;
     private restartTimer: ReturnType<typeof setTimeout> | null = null;
+    /** Câu tạm (chưa final) gần nhất — nếu phiên bị ngắt trước khi có final thì đẩy nốt ra, không để mất lời nói. */
+    private pendingInterim = '';
+
+    private flushPendingInterim(): void {
+        const text = this.pendingInterim.trim();
+        this.pendingInterim = '';
+        if (text) {
+            this.captionResult.next({ text, isFinal: true, language: this.currentLanguage() });
+        }
+    }
 
     constructor() {
         this.checkSupport();
@@ -83,6 +93,7 @@ export class SpeechRecognitionService {
     stopListening(): void {
         this.shouldKeepListening = false;
         this.clearRestartTimer();
+        this.flushPendingInterim();
         this.stopRecognitionInstance();
         this.isListening.set(false);
     }
@@ -123,12 +134,14 @@ export class SpeechRecognitionService {
                 const trimmedInterim = interim.trim();
 
                 if (trimmedFinal) {
+                    this.pendingInterim = '';
                     this.captionResult.next({
                         text: trimmedFinal,
                         isFinal: true,
                         language: this.currentLanguage(),
                     });
                 } else if (trimmedInterim) {
+                    this.pendingInterim = trimmedInterim;
                     this.captionResult.next({
                         text: trimmedInterim,
                         isFinal: false,
@@ -168,6 +181,8 @@ export class SpeechRecognitionService {
 
             instance.onend = () => {
                 this.isListening.set(false);
+                // Trình duyệt ngắt phiên (im lặng lâu, ~1 phút...) khi còn câu dở → lưu luôn thay vì bỏ.
+                this.flushPendingInterim();
                 // Nếu người dùng vẫn muốn bật và không có lỗi từ chối mic, tự động kết nối lại sau 200ms
                 if (this.shouldKeepListening) {
                     this.restartTimer = setTimeout(() => {
@@ -188,6 +203,8 @@ export class SpeechRecognitionService {
 
     private stopRecognitionInstance(): void {
         if (this.recognition) {
+            // Gỡ onend trước khi stop() nên phải đẩy câu dở ra ở đây, nếu không sẽ mất khi đổi ngôn ngữ / khởi động lại.
+            this.flushPendingInterim();
             try {
                 this.recognition.onstart = null;
                 this.recognition.onresult = null;

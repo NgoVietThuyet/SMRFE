@@ -64,6 +64,9 @@ export class MinutesEditor implements OnInit, OnDestroy {
   rejectVisible = false;
   rejectReason = '';
 
+  // Bản ghi hình / âm thanh (Drawer)
+  recordingDrawerVisible = false;
+
   private start: Date | null = null;
 
   constructor(
@@ -129,12 +132,18 @@ export class MinutesEditor implements OnInit, OnDestroy {
   private loadRecordings(): void {
     this.meetingService.files(this.meetingId).pipe(takeUntil(this.destroy$)).subscribe({
       next: files => {
-        this.recordings = (files ?? []).filter(f => f.type === 2 || f.mimeType?.startsWith('video/'))
+        this.recordings = (files ?? []).filter(f => f.type === 2 || f.mimeType?.startsWith('video/') || f.mimeType?.startsWith('audio/'))
           .map(file => ({ file, url: null }));
         this.recordings.forEach(r => this.meetingService.downloadUrl(r.file.id).subscribe(res => r.url = res?.url ?? null));
       },
       error: () => this.recordings = [],
     });
+  }
+
+  isAudioRecording(r: { file: MeetingFile }): boolean {
+    const mime = r.file.mimeType?.toLowerCase() ?? '';
+    const name = r.file.fileName?.toLowerCase() ?? '';
+    return mime.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac)$/.test(name);
   }
 
   /** Dự phòng khi mất realtime: hỏi lại mỗi 4 giây trong lúc AI đang soạn. */
@@ -243,6 +252,19 @@ export class MinutesEditor implements OnInit, OnDestroy {
       const el = this.host.nativeElement.querySelector(`[data-seg="${CSS.escape(segmentId)}"]`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
+    if (this.recordingDrawerVisible) {
+      const seg = this.segmentById.get(segmentId);
+      const base = this.start ?? DateTimeUtils.fromUtc(this.segments[0]?.timestamp);
+      const at = seg ? DateTimeUtils.fromUtc(seg.timestamp) : null;
+      if (base && at) {
+        const sec = Math.max(0, Math.floor((at.getTime() - base.getTime()) / 1000));
+        const media = document.querySelector('.recording-drawer video, .recording-drawer audio') as HTMLMediaElement | null;
+        if (media && Number.isFinite(sec)) {
+          media.currentTime = sec;
+          media.play().catch(() => { });
+        }
+      }
+    }
   }
 
   startPick(target: PickTarget): void {

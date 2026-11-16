@@ -54,10 +54,16 @@
         }
     </header>
 
-    <!-- Mẫu biên bản + tải biên bản (mọi thành viên; tổng hợp chạy ngầm) -->
+    <!-- Mẫu biên bản + tải biên bản + nút mở bản ghi (mọi thành viên) -->
     <div class="export-bar">
         <app-minutes-export-actions [meetingId]="detail.meetingId" [meetingName]="detail.meetingName"
             [ready]="hasOfficialVersion"></app-minutes-export-actions>
+        @if (recordings.length) {
+        <button nz-button (click)="recordingDrawerVisible = true"
+            nz-tooltip nzTooltipTitle="Mở trình phát bản ghi âm / ghi hình cuộc họp">
+            <nz-icon nzType="play-circle" /> Xem bản ghi ({{ recordings.length }})
+        </button>
+        }
     </div>
 
     <!-- ===== Thông báo ===== -->
@@ -73,7 +79,7 @@
         }
         @if (current; as c) {
         @if (c.source === 'AI' && c.status !== Status.Published) {
-        <nz-alert nzType="warning" nzShowIcon
+        <nz-alert nzType="warning" nzShowIcon nzCloseable
             nzMessage="Biên bản do AI tạo, cần người kiểm tra và duyệt trước khi phát hành. Bấm chip ⏱ để đối chiếu với transcript."></nz-alert>
         }
         @if (c.status === Status.Rejected && c.rejectReason) {
@@ -252,23 +258,41 @@
                     @if (current.approvedBy) { · duyệt bởi {{ current.approvedBy }} }
                 </div>
                 }
-
-                <!-- Bản ghi -->
-                @if (recordings.length) {
-                <div class="block">
-                    <div class="block-head"><span class="block-title">Bản ghi hình</span></div>
-                    @for (r of recordings; track r.file.id) {
-                    <div class="recording">
-                        <div class="muted">{{ r.file.fileName }}</div>
-                        @if (r.url) { <video controls preload="metadata" [src]="r.url"></video> }
-                    </div>
-                    }
-                </div>
-                }
             </div>
         </section>
     </div>
 </div>
+
+<!-- Drawer Bản ghi âm / ghi hình -->
+<nz-drawer [nzVisible]="recordingDrawerVisible" nzPlacement="right" [nzWidth]="520"
+    nzTitle="Bản ghi cuộc họp ({{ recordings.length }})" (nzOnClose)="recordingDrawerVisible = false">
+    <ng-container *nzDrawerContent>
+        <div class="recording-drawer">
+            @for (r of recordings; track r.file.id) {
+            <div class="recording-item">
+                <div class="recording-head">
+                    <nz-icon [nzType]="isAudioRecording(r) ? 'audio' : 'video-camera'" />
+                    <span class="recording-name" [title]="r.file.fileName">{{ r.file.fileName }}</span>
+                    @if (r.url) {
+                    <a [href]="r.url" target="_blank" rel="noopener" nz-tooltip nzTooltipTitle="Tải xuống">
+                        <nz-icon nzType="download" />
+                    </a>
+                    }
+                </div>
+                @if (!r.url) {
+                <div class="muted">Đang tải liên kết phát…</div>
+                } @else if (isAudioRecording(r)) {
+                <audio controls preload="metadata" [src]="r.url"></audio>
+                } @else {
+                <video controls preload="metadata" [src]="r.url"></video>
+                }
+            </div>
+            } @empty {
+            <nz-empty nzNotFoundContent="Cuộc họp chưa có bản ghi nào."></nz-empty>
+            }
+        </div>
+    </ng-container>
+</nz-drawer>
 
 <!-- Chip nguồn dùng chung -->
 <ng-template #chips let-sources="sources" let-target="target">
