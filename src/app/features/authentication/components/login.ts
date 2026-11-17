@@ -160,9 +160,6 @@ export class Login implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '';
-        if (this.route.snapshot.queryParamMap.get('faceRequired')) {
-            this.message.info('Tài khoản của bạn chưa đăng ký khuôn mặt. Hãy đăng nhập lại để đăng ký khuôn mặt.', { nzDuration: 6000 });
-        }
         if (this.isLowPowerOrMobile()) {
             // Trên mobile / thiết bị cảm ứng: tắt các timer nền gây ре-render liên tục làm giật màn hình và lag khi nhập mật khẩu
             this.typedText = this.typewriterPhrases[0];
@@ -363,8 +360,6 @@ export class Login implements OnInit, OnDestroy {
     }
 
     private navigateAfterLogin(): void {
-        // Bước khuôn mặt của phiên đăng nhập này đã xong (đã đăng ký, hoặc "Để sau", hoặc không áp dụng).
-        this.session.markFaceGateDone();
         if (this.returnUrl && !this.returnUrl.startsWith('/login')) {
             this.router.navigateByUrl(this.returnUrl);
             return;
