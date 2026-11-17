@@ -1,8 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subject, finalize, takeUntil } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzFormatEmitEvent, NzTreeNodeOptions } from 'ng-zorro-antd/tree';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
+import { AuthService } from '../../../../shared/services';
+import { FaceCapture } from '../../../../shared/components/face-capture/face-capture';
 import { GlobalService, SessionService } from '../../../../core';
 import { PaginationResult } from '../../../../shared/models';
 import { AccountService } from '../../services/account.service';
@@ -16,12 +18,13 @@ type ActionKind = 'transfer' | 'title' | 'lock' | 'unlock';
 @Component({
   selector: 'app-accounts',
   standalone: true,
-  imports: [SharedModules],
+  imports: [SharedModules, FaceCapture],
   templateUrl: './accounts.html',
   styleUrl: './accounts.scss'
 })
 export class Accounts implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private auth = inject(AuthService);
 
   filter: EmployeeFilter = new EmployeeFilter();
   data: PaginationResult = new PaginationResult();
@@ -49,6 +52,15 @@ export class Accounts implements OnInit, OnDestroy {
   passwordVisible = false;
   passwordUser = '';
   temporaryPassword = '';
+
+  // ===== Quét mặt cho tài khoản vừa tạo (bước đăng ký) =====
+  faceVisible = false;
+  faceScanning = false;
+  faceBusy = false;
+  faceConsent = false;
+  faceError = '';
+  faceUser = '';
+  private pendingPassword = '';
 
   constructor(
     private global: GlobalService,
@@ -178,8 +190,63 @@ export class Accounts implements OnInit, OnDestroy {
       .pipe(finalize(() => this.isSaving = false), takeUntil(this.destroy$))
       .subscribe(res => {
         this.afterSave('Đã tạo tài khoản');
-        this.showPassword(res.userName, res.temporaryPassword);
+        this.offerFace(res.userName, res.temporaryPassword);
       });
+  }
+
+  /** Bước đăng ký: nếu hệ thống bật khuôn mặt thì mời quét mặt cho người dùng (có thể bỏ qua), rồi mới hiện mật khẩu tạm. */
+  private offerFace(userName: string, password: string): void {
+    this.auth.faceStatus().pipe(takeUntil(this.destroy$)).subscribe({
+      next: s => {
+        if (!s.enabled) { this.showPassword(userName, password); return; }
+        this.faceUser = userName;
+        this.pendingPassword = password;
+        this.faceConsent = false;
+        this.faceError = '';
+        this.faceScanning = false;
+        this.faceBusy = false;
+        this.faceVisible = true;
+      },
+      error: () => this.showPassword(userName, password),
+    });
+  }
+
+  startFaceScan(): void {
+    this.faceError = '';
+    this.faceScanning = true;
+  }
+
+  onFaceFailed(message: string): void {
+    this.faceError = message;
+    this.faceScanning = false;
+  }
+
+  onFaceCaptured(frames: string[]): void {
+    if (this.faceBusy) return;
+    this.faceBusy = true;
+    this.service.enrollFace(this.faceUser, { consent: this.faceConsent, frames })
+      .pipe(finalize(() => this.faceBusy = false), takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.message.success('Đã đăng ký khuôn mặt cho ' + this.faceUser);
+          this.finishFace();
+        },
+        // CommonService đã báo lý do (ảnh không đạt, trùng tài khoản khác...); cho quét lại hoặc bỏ qua.
+        error: () => {
+          this.faceScanning = false;
+          this.faceError = 'Đăng ký khuôn mặt chưa thành công. Hãy quét lại hoặc bỏ qua.';
+        },
+      });
+  }
+
+  /** Bỏ qua hoặc xong bước quét mặt → hiện mật khẩu tạm. Người dùng chưa có mặt sẽ được yêu cầu quét ở lần đăng nhập đầu. */
+  finishFace(): void {
+    this.faceVisible = false;
+    this.faceScanning = false;
+    const user = this.faceUser;
+    const pw = this.pendingPassword;
+    this.pendingPassword = '';
+    this.showPassword(user, pw);
   }
 
   private afterSave(text: string): void {

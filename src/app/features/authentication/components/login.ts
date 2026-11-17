@@ -33,6 +33,14 @@ export class Login implements OnInit, OnDestroy {
     faceBusy = false;
     faceError = '';
 
+    // ===================== Bắt buộc quét mặt khi chưa đăng ký =====================
+    isEnrollModalVisible = false;
+    enrollScanning = false;
+    enrollBusy = false;
+    enrollConsent = false;
+    enrollError = '';
+    private enrollPassword = '';
+
     isForgotModalVisible = false;
     forgotEmail = '';
     isForgotLoading = false;
@@ -218,7 +226,7 @@ export class Login implements OnInit, OnDestroy {
                         this.message.error('Không tải được thông tin tài khoản. Vui lòng thử lại.');
                         return;
                     }
-                    this.navigateAfterLogin();
+                    this.afterPasswordLogin(password);
                 },
                 error: () => {
                     this.validateForm.controls.password.setValue('');
@@ -231,6 +239,65 @@ export class Login implements OnInit, OnDestroy {
         this.session.clear();
         this.tokenService.setTokens(res.data);
         return this.session.load({ mustChangePassword: !!res.data?.mustChangePassword });
+    }
+
+    /**
+     * Đăng nhập mật khẩu xong: tài khoản chưa có dữ liệu khuôn mặt (và được phép dùng) thì yêu cầu quét luôn.
+     * Dùng chính mật khẩu vừa nhập để xác nhận đăng ký, không bắt nhập lại.
+     */
+    private afterPasswordLogin(password: string): void {
+        this.authService.faceStatus().pipe(takeUntil(this.destroy$)).subscribe({
+            next: s => {
+                if (s.enabled && s.allowed && !s.enrolled) {
+                    this.enrollPassword = password;
+                    this.enrollConsent = false;
+                    this.enrollError = '';
+                    this.enrollScanning = false;
+                    this.enrollBusy = false;
+                    this.isEnrollModalVisible = true;
+                    return;
+                }
+                this.navigateAfterLogin();
+            },
+            error: () => this.navigateAfterLogin(),
+        });
+    }
+
+    startEnroll(): void {
+        this.enrollError = '';
+        this.enrollScanning = true;
+    }
+
+    onEnrollFailed(message: string): void {
+        this.enrollError = message;
+        this.enrollScanning = false;
+    }
+
+    onEnrollCaptured(frames: string[]): void {
+        if (this.enrollBusy) return;
+        this.enrollBusy = true;
+        this.authService.faceEnroll({ password: this.enrollPassword, consent: this.enrollConsent, frames })
+            .pipe(finalize(() => this.enrollBusy = false), takeUntil(this.destroy$))
+            .subscribe({
+                next: () => this.closeEnrollAndGo(),
+                // CommonService đã báo lý do; cho quét lại hoặc để sau.
+                error: () => {
+                    this.enrollScanning = false;
+                    this.enrollError = 'Đăng ký khuôn mặt chưa thành công. Hãy quét lại hoặc để sau.';
+                },
+            });
+    }
+
+    /** "Để sau": vào hệ thống bình thường, lần đăng nhập tới sẽ hỏi lại. */
+    skipEnroll(): void {
+        this.closeEnrollAndGo();
+    }
+
+    private closeEnrollAndGo(): void {
+        this.isEnrollModalVisible = false;
+        this.enrollScanning = false;
+        this.enrollPassword = '';
+        this.navigateAfterLogin();
     }
 
     openFaceModal(): void {

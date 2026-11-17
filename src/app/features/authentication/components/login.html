@@ -247,6 +247,27 @@
                 </ng-container>
             </nz-modal>
 
+            <!-- Chưa có khuôn mặt: yêu cầu quét sau khi đăng nhập bằng mật khẩu -->
+            <nz-modal [(nzVisible)]="isEnrollModalVisible" nzTitle="Đăng ký khuôn mặt" [nzClosable]="false"
+                [nzMaskClosable]="false" [nzFooter]="null">
+                <ng-container *nzModalContent>
+                    @if (!enrollScanning) {
+                    <p>Tài khoản của bạn chưa có dữ liệu khuôn mặt. Hãy quét mặt một lần để lần sau đăng nhập và vào họp nhanh
+                        bằng khuôn mặt. Hệ thống chỉ lưu đặc trưng khuôn mặt đã mã hóa, không lưu ảnh.</p>
+                    <label nz-checkbox [(ngModel)]="enrollConsent" [ngModelOptions]="{standalone: true}">
+                        Tôi đồng ý để hệ thống xử lý dữ liệu khuôn mặt (dữ liệu sinh trắc học) của tôi.
+                    </label>
+                    @if (enrollError) { <div class="face-error">{{ enrollError }}</div> }
+                    <button nz-button nzType="primary" nzBlock nzSize="large" class="mt-4" [disabled]="!enrollConsent"
+                        (click)="startEnroll()">Bắt đầu quét</button>
+                    <button nz-button nzType="link" nzBlock (click)="skipEnroll()">Để sau</button>
+                    } @else {
+                    <app-face-capture mode="enroll" (captured)="onEnrollCaptured($event)" (failed)="onEnrollFailed($event)"></app-face-capture>
+                    @if (enrollBusy) { <div class="face-note">Đang lưu khuôn mặt…</div> }
+                    }
+                </ng-container>
+            </nz-modal>
+
             <!-- Forgot password modal -->
             <nz-modal [(nzVisible)]="isForgotModalVisible" nzTitle="Quên mật khẩu" (nzOnCancel)="closeForgotModal()"
                 [nzFooter]="null">

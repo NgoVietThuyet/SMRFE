@@ -229,6 +229,24 @@
     </ng-container>
 </nz-modal>
 
+<!-- ===== Bước đăng ký: quét khuôn mặt cho tài khoản vừa tạo ===== -->
+<nz-modal [(nzVisible)]="faceVisible" nzTitle="QUÉT KHUÔN MẶT CHO TÀI KHOẢN MỚI" [nzClosable]="false" [nzMaskClosable]="false"
+    [nzFooter]="null">
+    <ng-container *nzModalContent>
+        @if (!faceScanning) {
+        <p>Tài khoản <b>{{ faceUser }}</b> đã được tạo. Nếu người dùng đang ở trước camera, hãy quét khuôn mặt để họ đăng nhập và vào họp nhanh bằng khuôn mặt.
+            Hệ thống chỉ lưu đặc trưng khuôn mặt đã mã hóa, không lưu ảnh.</p>
+        <label nz-checkbox [(ngModel)]="faceConsent">Người dùng đã đồng ý để hệ thống xử lý dữ liệu khuôn mặt (dữ liệu sinh trắc học) của họ.</label>
+        @if (faceError) { <div class="face-error">{{ faceError }}</div> }
+        <button nz-button nzType="primary" nzBlock nzSize="large" class="mt-3" [disabled]="!faceConsent" (click)="startFaceScan()">Bắt đầu quét</button>
+        <button nz-button nzType="link" nzBlock (click)="finishFace()">Bỏ qua (người dùng sẽ được yêu cầu quét ở lần đăng nhập đầu)</button>
+        } @else {
+        <app-face-capture mode="enroll" (captured)="onFaceCaptured($event)" (failed)="onFaceFailed($event)"></app-face-capture>
+        @if (faceBusy) { <div class="face-busy">Đang lưu khuôn mặt…</div> }
+        }
+    </ng-container>
+</nz-modal>
+
 <!-- ===== Modal mật khẩu tạm (hiển thị một lần) ===== -->
 <nz-modal [(nzVisible)]="passwordVisible" nzTitle="MẬT KHẨU TẠM" [nzClosable]="false" [nzMaskClosable]="false"
     [nzFooter]="passwordFooter">

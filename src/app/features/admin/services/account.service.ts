@@ -21,6 +21,9 @@ export class AccountService {
     /** Tạo từ danh bạ — BE tự sinh username từ họ tên. */
     createFromDirectory(data: EmployeeDto): Observable<{ userName: string; temporaryPassword: string }> { return this.common.post<any>('human-resources/directory-employees', { fullName: data.fullName, email: data.email, phone: data.phone, address: data.address, organizationId: data.organizationId, titleCode: data.titleCode }, true, false).pipe(map(res => res.data)) }
 
+    /** Quản trị viên đăng ký khuôn mặt cho tài khoản (người dùng đứng trước camera). */
+    enrollFace(userName: string, data: { consent: boolean; frames: string[] }) { return this.common.post(`human-resources/employees/${encodeURIComponent(userName)}/face`, data, true, false) }
+
     update(userName: string, data: EmployeeDto) { return this.common.put(`human-resources/employees/${encodeURIComponent(userName)}`, { fullName: data.fullName, email: data.email, phone: data.phone, address: data.address, organizationId: data.organizationId, titleCode: data.titleCode }) }
 
     transfer(userName: string, organizationId: string, reason: string) { return this.common.put(`human-resources/employees/${encodeURIComponent(userName)}/organization`, { organizationId, reason }) }
