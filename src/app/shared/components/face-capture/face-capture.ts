@@ -4,20 +4,22 @@ import {
 import { SharedModules } from '../../ng-zorro.module';
 
 export type FaceGesture = 'BLINK' | 'TURN_LEFT' | 'TURN_RIGHT';
-type Pose = 'straight' | 'left' | 'right' | 'blink';
+type Pose = 'straight' | 'turn' | 'turnBack' | 'blink';
 interface Step { pose: Pose; capture: number; hint: string; strictTurn?: boolean }
 
 /** Mô hình và wasm MediaPipe nằm trong public/mediapipe (xem face-service/README.md). */
 export const FACE_MODEL_URL = '/mediapipe/face_landmarker.task';
 export const FACE_WASM_URL = '/mediapipe/wasm';
 
-const HOLD_FRAMES = 5;          // số khung liên tiếp đạt tư thế mới tính
+const HOLD_FRAMES = 4;          // số khung liên tiếp nhìn thẳng mới tính
+const HOLD_TURN = 3;            // số khung liên tiếp khi đang nghiêng đầu
 const CAPTURE_GAP_MS = 350;     // khoảng cách giữa hai ảnh chụp
 const MIN_FACE_WIDTH = 0.28;    // mặt chiếm ≥ 28% bề rộng khung
 const STRAIGHT_DELTA = 0.07;    // |tỉ lệ mũi − 0,5| nhỏ hơn mức này là nhìn thẳng
-const TURN_DELTA = 0.12;        // quay đầu đủ để tính là cử chỉ
-const ENROLL_TURN_MIN = 0.07;   // lúc đăng ký chỉ cần nghiêng nhẹ
-const ENROLL_TURN_MAX = 0.2;    // không quay quá để đặc trưng vẫn giống ảnh nhìn thẳng
+const TURN_DELTA = 0.1;         // quay đầu đủ để tính là cử chỉ (khi đăng nhập)
+const TURN_MAX_VERIFY = 0.45;   // cử chỉ đăng nhập: quay bao nhiêu cũng được
+const ENROLL_TURN_MIN = 0.07;   // lúc đăng ký chỉ cần nghiêng nhẹ (~13°)
+const ENROLL_TURN_MAX = 0.32;   // không quay quá (~45°) để đặc trưng vẫn giống ảnh nhìn thẳng
 
 /**
  * Chụp khuôn mặt bằng camera + MediaPipe Face Landmarker (chạy trong trình duyệt): kiểm tra một mặt, đủ to, đủ sáng,
@@ -106,21 +108,20 @@ export class FaceCapture implements AfterViewInit, OnDestroy {
   private buildSteps(): Step[] {
     if (this.mode === 'enroll') {
       return [
-        { pose: 'straight', capture: 2, hint: 'Nhìn thẳng vào camera, giữ yên' },
-        { pose: 'left', capture: 1, hint: 'Nghiêng đầu nhẹ sang TRÁI của bạn', strictTurn: true },
-        { pose: 'right', capture: 1, hint: 'Nghiêng đầu nhẹ sang PHẢI của bạn', strictTurn: true },
+        { pose: 'straight', capture: 1, hint: 'Nhìn thẳng vào camera, giữ yên' },
+        // Không phụ thuộc hướng trái/phải: nghiêng về một bên, rồi sang bên ngược lại.
+        { pose: 'turn', capture: 1, hint: 'Nghiêng đầu nhẹ sang một bên', strictTurn: true },
+        { pose: 'turnBack', capture: 1, hint: 'Giờ nghiêng đầu nhẹ sang bên kia', strictTurn: true },
       ];
     }
     const g = this.gesture;
     const gestureStep: Step = g === 'BLINK'
       ? { pose: 'blink', capture: 0, hint: 'Hãy chớp mắt một lần' }
-      : g === 'TURN_LEFT'
-        ? { pose: 'left', capture: 0, hint: 'Hãy quay đầu sang TRÁI của bạn rồi quay lại' }
-        : { pose: 'right', capture: 0, hint: 'Hãy quay đầu sang PHẢI của bạn rồi quay lại' };
+      : { pose: 'turn', capture: 0, hint: 'Hãy quay đầu sang một bên rồi quay lại nhìn thẳng' };
     return [
       { pose: 'straight', capture: 0, hint: 'Nhìn thẳng vào camera, giữ yên' },
       gestureStep,
-      { pose: 'straight', capture: 3, hint: 'Nhìn thẳng vào camera, giữ yên' },
+      { pose: 'straight', capture: 2, hint: 'Nhìn thẳng vào camera, giữ yên' },
     ];
   }
 
@@ -131,7 +132,8 @@ export class FaceCapture implements AfterViewInit, OnDestroy {
     this.stepIndex = 0;
     this.stepFrames = 0;
     this.okFrames = 0;
-    this.blinkSeenOpen = this.blinkSeenClosed = false;
+    this.blinkSeenOpen = this.blinkSeenClosed = this.reopened = false;
+    this.firstTurnSign = 0;
     this.progress = 0;
     this.steps = this.buildSteps();
     this.totalToCapture = this.steps.reduce((n, s) => n + s.capture, 0);
@@ -246,14 +248,14 @@ export class FaceCapture implements AfterViewInit, OnDestroy {
 
     const step = this.steps[this.stepIndex];
     const okPose = !problem && this.poseOk(step, ratio, result);
-    this.setStatus(!problem, problem || step.hint);
+    this.setStatus(!problem, problem || (okPose ? step.hint : this.poseHint(step, ratio - 0.5)));
     this.okFrames = okPose ? this.okFrames + 1 : 0;
     if (step.pose === 'blink') {
       // Cử chỉ chớp mắt: mở → nhắm → mở lại (poseOk cập nhật các cờ). Phải thấy mở mắt trước rồi mới nhắm.
       if (this.reopened) this.nextStep();
       return;
     }
-    if (this.okFrames < HOLD_FRAMES) return;
+    if (this.okFrames < (step.pose === 'straight' ? HOLD_FRAMES : HOLD_TURN)) return;
 
     if (step.capture === 0) {
       this.nextStep();
@@ -269,16 +271,39 @@ export class FaceCapture implements AfterViewInit, OnDestroy {
   }
 
   private reopened = false;
+  private firstTurnSign = 0;
+
+  private turnMin(step: Step): number { return step.strictTurn ? ENROLL_TURN_MIN : TURN_DELTA; }
+  private turnMax(step: Step): number { return step.strictTurn ? ENROLL_TURN_MAX : TURN_MAX_VERIFY; }
+
+  /** Gợi ý theo tình trạng hiện tại (nghiêng thiếu, quá, hay sai bên). */
+  private poseHint(step: Step, delta: number): string {
+    if (step.pose === 'turn' || step.pose === 'turnBack') {
+      const a = Math.abs(delta);
+      if (a > this.turnMax(step)) return 'Quay lại một chút, chỉ cần nghiêng nhẹ';
+      if (step.pose === 'turnBack' && this.firstTurnSign !== 0 && delta * this.firstTurnSign >= 0 && a >= this.turnMin(step)) {
+        return 'Nghiêng sang bên ngược lại';
+      }
+    }
+    return step.hint;
+  }
 
   private poseOk(step: Step, ratio: number, result: any): boolean {
     const delta = ratio - 0.5; // >0: quay sang trái của người dùng
     switch (step.pose) {
       case 'straight':
         return Math.abs(delta) < STRAIGHT_DELTA;
-      case 'left':
-        return step.strictTurn ? delta >= ENROLL_TURN_MIN && delta <= ENROLL_TURN_MAX : delta >= TURN_DELTA;
-      case 'right':
-        return step.strictTurn ? -delta >= ENROLL_TURN_MIN && -delta <= ENROLL_TURN_MAX : -delta >= TURN_DELTA;
+      case 'turn': {
+        const a = Math.abs(delta);
+        const ok = a >= this.turnMin(step) && a <= this.turnMax(step);
+        if (ok && this.firstTurnSign === 0) this.firstTurnSign = Math.sign(delta);
+        return ok;
+      }
+      case 'turnBack': {
+        // Bên ngược với lần nghiêng đầu tiên.
+        const a = Math.abs(delta);
+        return this.firstTurnSign !== 0 && delta * this.firstTurnSign < 0 && a >= this.turnMin(step) && a <= this.turnMax(step);
+      }
       case 'blink': {
         const eyes = Math.min(this.blend(result, 'eyeBlinkLeft'), this.blend(result, 'eyeBlinkRight'));
         if (eyes < 0.3) {
