@@ -69,7 +69,7 @@ const REASONS: Record<string, string> = {
   styles: [`
     .page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
       background: linear-gradient(135deg, #e6f4ff 0%, #f5f7fa 60%); }
-    .card { width: 100%; max-width: 440px; background: #fff; border-radius: 16px; padding: 28px;
+    .card { width: 100%; max-width: 560px; background: #fff; border-radius: 16px; padding: 28px;
       box-shadow: 0 10px 40px rgba(22, 119, 255, 0.08); }
     .brand { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 2px; color: #1677ff; font-weight: 600; margin-bottom: 12px; }
     .brand img { height: 30px; }

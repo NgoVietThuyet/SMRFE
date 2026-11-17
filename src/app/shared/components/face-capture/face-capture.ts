@@ -19,7 +19,7 @@ const STRAIGHT_DELTA = 0.07;    // |tỉ lệ mũi − 0,5| nhỏ hơn mức nà
 const TURN_DELTA = 0.1;         // quay đầu đủ để tính là cử chỉ (khi đăng nhập)
 const TURN_MAX_VERIFY = 0.45;   // cử chỉ đăng nhập: quay bao nhiêu cũng được
 const ENROLL_TURN_MIN = 0.07;   // lúc đăng ký chỉ cần nghiêng nhẹ (~13°)
-const ENROLL_TURN_MAX = 0.32;   // không quay quá (~45°) để đặc trưng vẫn giống ảnh nhìn thẳng
+const ENROLL_TURN_MAX = 0.2;    // không quay quá (~30°): máy chủ phải còn dò được mặt và đặc trưng còn giống ảnh nhìn thẳng
 
 /**
  * Chụp khuôn mặt bằng camera + MediaPipe Face Landmarker (chạy trong trình duyệt): kiểm tra một mặt, đủ to, đủ sáng,
@@ -46,14 +46,14 @@ const ENROLL_TURN_MAX = 0.32;   // không quay quá (~45°) để đặc trưng 
   `,
   styles: [`
     .fc { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .stage { position: relative; width: 100%; max-width: 360px; aspect-ratio: 4 / 3; background: #000; border-radius: 12px; overflow: hidden; }
+    .stage { position: relative; width: 100%; max-width: 500px; aspect-ratio: 4 / 3; background: #000; border-radius: 12px; overflow: hidden; }
     video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
     .oval { position: absolute; inset: 8% 24%; border: 3px dashed rgba(255, 255, 255, .85); border-radius: 50%; transition: border-color .2s; pointer-events: none; }
     .oval.ok { border-style: solid; border-color: #52c41a; }
     .cover { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; color: #fff; background: rgba(0, 0, 0, .55); }
     .hint { min-height: 22px; text-align: center; font-weight: 500; }
     .hint.err { color: #cf1322; }
-    .bar { width: 100%; max-width: 360px; height: 6px; border-radius: 3px; background: #f0f0f0; overflow: hidden; }
+    .bar { width: 100%; max-width: 500px; height: 6px; border-radius: 3px; background: #f0f0f0; overflow: hidden; }
     .fill { height: 100%; background: #1677ff; transition: width .2s; }
     .retry { margin-top: 4px; }
   `],

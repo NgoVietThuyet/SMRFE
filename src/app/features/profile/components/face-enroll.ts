@@ -41,7 +41,7 @@ import { FaceCapture } from '../../../shared/components/face-capture/face-captur
       }
     </div>
 
-    <nz-modal [(nzVisible)]="visible" nzTitle="Đăng ký khuôn mặt" (nzOnCancel)="close()" [nzFooter]="null" [nzMaskClosable]="false">
+    <nz-modal [(nzVisible)]="visible" [nzWidth]="580" nzTitle="Đăng ký khuôn mặt" (nzOnCancel)="close()" [nzFooter]="null" [nzMaskClosable]="false">
       <ng-container *nzModalContent>
         @if (!scanning) {
         <label class="lbl" for="face-pw">Nhập lại mật khẩu để xác nhận</label>

@@ -230,7 +230,7 @@
 </nz-modal>
 
 <!-- ===== Bước đăng ký: quét khuôn mặt cho tài khoản vừa tạo ===== -->
-<nz-modal [(nzVisible)]="faceVisible" nzTitle="QUÉT KHUÔN MẶT CHO TÀI KHOẢN MỚI" [nzClosable]="false" [nzMaskClosable]="false"
+<nz-modal [(nzVisible)]="faceVisible" [nzWidth]="580" nzTitle="QUÉT KHUÔN MẶT CHO TÀI KHOẢN MỚI" [nzClosable]="false" [nzMaskClosable]="false"
     [nzFooter]="null">
     <ng-container *nzModalContent>
         @if (!faceScanning) {

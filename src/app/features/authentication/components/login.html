@@ -224,7 +224,7 @@
             </div>
 
             <!-- Đăng nhập bằng khuôn mặt -->
-            <nz-modal [(nzVisible)]="isFaceModalVisible" nzTitle="Đăng nhập bằng khuôn mặt" (nzOnCancel)="closeFaceModal()"
+            <nz-modal [(nzVisible)]="isFaceModalVisible" [nzWidth]="580" nzTitle="Đăng nhập bằng khuôn mặt" (nzOnCancel)="closeFaceModal()"
                 [nzFooter]="null" [nzMaskClosable]="false">
                 <ng-container *nzModalContent>
                     <nz-input-group nzPrefixIcon="user" nzSize="large">
@@ -248,7 +248,7 @@
             </nz-modal>
 
             <!-- Chưa có khuôn mặt: yêu cầu quét sau khi đăng nhập bằng mật khẩu -->
-            <nz-modal [(nzVisible)]="isEnrollModalVisible" nzTitle="Đăng ký khuôn mặt" [nzClosable]="false"
+            <nz-modal [(nzVisible)]="isEnrollModalVisible" [nzWidth]="580" nzTitle="Đăng ký khuôn mặt" [nzClosable]="false"
                 [nzMaskClosable]="false" [nzFooter]="null">
                 <ng-container *nzModalContent>
                     @if (!enrollScanning) {
