@@ -291,9 +291,17 @@ export class Login implements OnInit, OnDestroy {
             });
     }
 
-    /** "Để sau": vào hệ thống bình thường, lần đăng nhập tới sẽ hỏi lại. */
-    skipEnroll(): void {
-        this.closeEnrollAndGo();
+    /** Bắt buộc đăng ký khuôn mặt: không thể vào hệ thống nếu chưa đăng ký. Muốn thôi thì đăng xuất, quay lại màn đăng nhập. */
+    cancelEnroll(): void {
+        this.tokenService.logout().pipe(takeUntil(this.destroy$)).subscribe(() => {
+            this.session.clear();
+            this.tokenService.clear();
+            this.session.resetFaceGate();
+            this.isEnrollModalVisible = false;
+            this.enrollScanning = false;
+            this.enrollPassword = '';
+            this.validateForm.controls.password.setValue('');
+        });
     }
 
     private closeEnrollAndGo(): void {
@@ -363,7 +371,7 @@ export class Login implements OnInit, OnDestroy {
     }
 
     private navigateAfterLogin(): void {
-        // Bước khuôn mặt của phiên đăng nhập này đã xong (đã đăng ký, hoặc "Để sau", hoặc không áp dụng).
+        // Bước khuôn mặt của phiên đăng nhập này đã xong (đã có khuôn mặt, vừa đăng ký, hoặc không áp dụng).
         this.session.markFaceGateDone();
         if (this.returnUrl && !this.returnUrl.startsWith('/login')) {
             this.router.navigateByUrl(this.returnUrl);

@@ -37,11 +37,11 @@ export const SUPER_ADMIN = 'SUPER_ADMIN';
 export interface FaceGateStatus { enabled: boolean; allowed: boolean; enrolled: boolean }
 
 /**
- * Cờ trong sessionStorage (mất khi đóng tab): bước kiểm tra khuôn mặt đã xong trong phiên trình duyệt này.
- * Đăng nhập xong (đã đăng ký, hoặc chọn "Để sau") thì đặt cờ; phiên khôi phục từ refresh token ở lần mở mới thì chưa có cờ
- * nên AuthGuard kiểm tra lại và đăng xuất tài khoản chưa có khuôn mặt.
+ * Cờ chỉ lưu trong bộ nhớ trang (mất mỗi lần tải lại: F5, mở tab mới): bước kiểm tra khuôn mặt đã xong trong lần chạy này.
+ * Đăng nhập xong (đã có khuôn mặt hoặc vừa đăng ký) thì đặt cờ. Mỗi lần tải lại trang mà phiên được khôi phục từ refresh
+ * token thì chưa có cờ, AuthGuard kiểm tra lại và đăng xuất tài khoản chưa có khuôn mặt.
  */
-const FACE_GATE_KEY = 'smr.faceGate';
+let faceGateDone = false;
 
 /**
  * Nạp hồ sơ + quyền của người đang đăng nhập.
@@ -109,15 +109,15 @@ export class SessionService {
   }
 
   isFaceGateDone(): boolean {
-    try { return sessionStorage.getItem(FACE_GATE_KEY) === '1'; } catch { return false; }
+    return faceGateDone;
   }
 
   markFaceGateDone(): void {
-    try { sessionStorage.setItem(FACE_GATE_KEY, '1'); } catch { /* sessionStorage bị chặn */ }
+    faceGateDone = true;
   }
 
   resetFaceGate(): void {
-    try { sessionStorage.removeItem(FACE_GATE_KEY); } catch { /* sessionStorage bị chặn */ }
+    faceGateDone = false;
   }
 
   setMustChangePassword(value: boolean): void {
