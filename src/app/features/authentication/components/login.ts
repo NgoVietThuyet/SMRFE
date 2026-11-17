@@ -7,11 +7,14 @@ import { SharedModules } from '../../../shared/ng-zorro.module';
 import { PlatformUtils } from '../../../shared/utils';
 import { AuthService } from '../../../shared/services';
 import { SessionService, TokenService } from '../../../core';
+import { FaceCapture, FaceGesture } from '../../../shared/components/face-capture/face-capture';
+import type { ApiResponse } from '../../../shared/services';
+import type { AuthResult } from '../../../core';
 
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [SharedModules],
+    imports: [SharedModules, FaceCapture],
     templateUrl: './login.html',
     styleUrl: './login.scss'
 })
@@ -21,6 +24,14 @@ export class Login implements OnInit, OnDestroy {
     returnUrl = '';
     isLoggingIn = false;
     isPasswordVisible = false;
+
+    // ===================== Đăng nhập bằng khuôn mặt =====================
+    isFaceModalVisible = false;
+    faceUser = '';
+    faceChallengeId = '';
+    faceGesture: FaceGesture | null = null;
+    faceBusy = false;
+    faceError = '';
 
     isForgotModalVisible = false;
     forgotEmail = '';
@@ -196,11 +207,7 @@ export class Login implements OnInit, OnDestroy {
         const { username, password } = this.validateForm.getRawValue();
         this.authService.login({ userName: username.trim(), password })
             .pipe(
-                switchMap(res => {
-                    this.session.clear();
-                    this.tokenService.setTokens(res.data);
-                    return this.session.load({ mustChangePassword: !!res.data?.mustChangePassword });
-                }),
+                switchMap(res => this.establishSession(res)),
                 finalize(() => this.isLoggingIn = false),
                 takeUntil(this.destroy$),
             )
@@ -216,6 +223,72 @@ export class Login implements OnInit, OnDestroy {
                 error: () => {
                     this.validateForm.controls.password.setValue('');
                 }
+            });
+    }
+
+    /** Lưu token + tải thông tin tài khoản sau khi xác thực thành công (mật khẩu hoặc khuôn mặt). */
+    private establishSession(res: ApiResponse<AuthResult>) {
+        this.session.clear();
+        this.tokenService.setTokens(res.data);
+        return this.session.load({ mustChangePassword: !!res.data?.mustChangePassword });
+    }
+
+    openFaceModal(): void {
+        this.faceUser = (this.validateForm.getRawValue().username ?? '').trim();
+        this.faceError = '';
+        this.isFaceModalVisible = true;
+        if (this.faceUser) this.beginFaceScan();
+    }
+
+    closeFaceModal(): void {
+        this.isFaceModalVisible = false;
+        this.faceGesture = null;
+        this.faceBusy = false;
+    }
+
+    /** Xin mã thử thách mới rồi mở camera (FaceCapture chỉ được tạo khi đã có cử chỉ). */
+    beginFaceScan(): void {
+        if (!this.faceUser.trim()) {
+            this.faceError = 'Vui lòng nhập tên đăng nhập.';
+            return;
+        }
+        this.faceError = '';
+        this.faceGesture = null;
+        this.authService.faceChallenge().pipe(takeUntil(this.destroy$)).subscribe({
+            next: c => {
+                if (!c.enabled || !c.challengeId || !c.gesture) {
+                    this.faceError = 'Đăng nhập bằng khuôn mặt chưa được bật. Hãy dùng mật khẩu.';
+                    return;
+                }
+                this.faceChallengeId = c.challengeId;
+                this.faceGesture = c.gesture;
+            },
+            error: () => this.faceError = 'Không kết nối được dịch vụ khuôn mặt. Hãy dùng mật khẩu.',
+        });
+    }
+
+    onFaceCaptured(frames: string[]): void {
+        if (this.faceBusy) return;
+        this.faceBusy = true;
+        this.authService.faceLogin({ userName: this.faceUser.trim(), challengeId: this.faceChallengeId, frames })
+            .pipe(
+                switchMap(res => this.establishSession(res)),
+                finalize(() => this.faceBusy = false),
+                takeUntil(this.destroy$),
+            )
+            .subscribe({
+                next: ok => {
+                    if (!ok) {
+                        this.tokenService.clear();
+                        this.faceError = 'Không tải được thông tin tài khoản. Vui lòng thử lại.';
+                        this.faceGesture = null;
+                        return;
+                    }
+                    this.closeFaceModal();
+                    this.navigateAfterLogin();
+                },
+                // Thông báo lỗi đã hiện từ CommonService; mở lại camera với mã thử thách mới.
+                error: () => this.beginFaceScan(),
             });
     }
 

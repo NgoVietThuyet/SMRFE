@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, of, switchMap } from 'rxjs';
+import { AuthService } from '../../../../shared/services';
+import { FaceCapture, FaceGesture } from '../../../../shared/components/face-capture/face-capture';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
 import { SessionService, TokenService } from '../../../../core';
 import { DateTimeUtils } from '../../../../shared/utils';
@@ -24,7 +26,7 @@ const REASONS: Record<string, string> = {
 @Component({
   selector: 'app-guest-join',
   standalone: true,
-  imports: [SharedModules],
+  imports: [SharedModules, FaceCapture],
   template: `
     <div class="page">
       <div class="card">
@@ -49,6 +51,17 @@ const REASONS: Record<string, string> = {
           Tham gia với tư cách khách
         </button>
         <div class="alt">Có tài khoản? <a (click)="login()">Đăng nhập</a> để vào với tên của bạn.</div>
+        <button nz-button nzSize="large" nzBlock class="face" [disabled]="busy" (click)="startFace()">
+          <nz-icon nzType="scan" /> Quét mặt để vào bằng tài khoản
+        </button>
+        @if (faceMsg) { <div class="field-error">{{ faceMsg }}</div> }
+        @if (faceGesture) {
+        <div class="face-box">
+          <app-face-capture mode="verify" [gesture]="faceGesture" (captured)="onFaceCaptured($event)"
+            (failed)="faceMsg = $event; faceGesture = null"></app-face-capture>
+          <button nz-button nzType="link" (click)="cancelFace()">Hủy quét mặt</button>
+        </div>
+        }
         }
       </div>
     </div>
@@ -66,6 +79,8 @@ const REASONS: Record<string, string> = {
     .text-control { margin-top: 16px; display: block; }
     .go { margin-top: 16px; }
     .alt { margin-top: 12px; text-align: center; color: #8c8c8c; }
+    .face { margin-top: 12px; }
+    .face-box { margin-top: 14px; text-align: center; }
   `],
 })
 export class GuestJoin implements OnInit {
@@ -76,6 +91,9 @@ export class GuestJoin implements OnInit {
   reason = '';
   name = '';
   error = '';
+  faceGesture: FaceGesture | null = null;
+  faceMsg = '';
+  private faceChallengeId = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -84,6 +102,7 @@ export class GuestJoin implements OnInit {
     private session: SessionService,
     private room: RoomService,
     private dashboard: DashboardService,
+    private auth: AuthService,
   ) { }
 
   get start(): Date | null {
@@ -145,6 +164,56 @@ export class GuestJoin implements OnInit {
         this.router.navigate(['/meetings', meetingId, 'join'], { replaceUrl: true });
       }
     });
+  }
+
+  /** Quét mặt: chỉ nhận dạng trong số thành viên cuộc họp này. Khớp → đăng nhập tài khoản đó rồi vào như thành viên. */
+  startFace(): void {
+    this.faceMsg = '';
+    this.faceGesture = null;
+    this.auth.faceChallenge().subscribe({
+      next: c => {
+        if (!c.enabled || !c.challengeId || !c.gesture) {
+          this.faceMsg = 'Vào họp bằng khuôn mặt chưa được bật. Hãy nhập tên khách hoặc đăng nhập.';
+          return;
+        }
+        this.faceChallengeId = c.challengeId;
+        this.faceGesture = c.gesture;
+      },
+      error: () => this.faceMsg = 'Không kết nối được dịch vụ khuôn mặt.',
+    });
+  }
+
+  cancelFace(): void {
+    this.faceGesture = null;
+  }
+
+  onFaceCaptured(frames: string[]): void {
+    this.faceGesture = null;
+    this.busy = true;
+    this.auth.faceJoin({ roomCode: this.roomCode, challengeId: this.faceChallengeId, frames })
+      .pipe(finalize(() => this.busy = false))
+      .subscribe({
+        next: res => {
+          if (!res?.data?.token) {
+            this.faceMsg = 'Không nhận ra khuôn mặt. Hãy nhập tên khách hoặc đăng nhập.';
+            return;
+          }
+          this.tokens.clear();
+          this.session.clear();
+          this.tokens.setTokens(res.data);
+          this.session.load().subscribe(ok => {
+            if (ok) {
+              this.loading = true;
+              this.asMember();
+            } else {
+              this.tokens.clear();
+              this.faceMsg = 'Không tải được thông tin tài khoản. Vui lòng thử lại.';
+            }
+          });
+        },
+        // Thông báo lỗi đã hiện từ CommonService (không nhận ra mặt, thử quá nhiều...); giữ biểu mẫu khách.
+        error: () => this.faceMsg = 'Không nhận ra khuôn mặt. Hãy thử lại, nhập tên khách hoặc đăng nhập.',
+      });
   }
 
   login(): void {

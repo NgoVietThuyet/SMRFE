@@ -4,6 +4,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModules } from '../../../shared/ng-zorro.module';
 import { AuthService } from '../../../shared/services';
 import { AccountInfo, GlobalService, SessionService } from '../../../core';
+import { FaceEnroll } from './face-enroll';
 
 /** UserProfileResponse — GET/PUT /api/Auth/Profile. */
 class ProfileDto {
@@ -19,7 +20,7 @@ class ProfileDto {
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [SharedModules],
+  imports: [SharedModules, FaceEnroll],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
 })

@@ -156,6 +156,17 @@
             </nz-alert>
           </div>
         </nz-tab>
+        <nz-tab [nzTitle]="titleFace">
+          <ng-template #titleFace>
+            <span class="tab-label">
+              <nz-icon nzType="scan" nzTheme="outline" />
+              Khuôn mặt
+            </span>
+          </ng-template>
+          <div class="tab-body">
+            <app-face-enroll></app-face-enroll>
+          </div>
+        </nz-tab>
       </nz-tabs>
     </nz-card>
   </div>

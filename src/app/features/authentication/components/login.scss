@@ -1026,3 +1026,24 @@ $bp-sm: 640px;    // mobile ↓
         transition: none !important;
     }
 }
+
+.btn-face {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.face-error {
+    margin-top: 10px;
+    color: #cf1322;
+}
+
+.face-capture {
+    margin-top: 16px;
+}
+
+.face-note {
+    margin-top: 14px;
+    font-size: 12px;
+    color: #8c8c8c;
+    text-align: center;
+}

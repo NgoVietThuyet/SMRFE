@@ -197,6 +197,11 @@
                         <span>Đăng nhập an toàn</span>
                     </button>
 
+                    <button nz-button type="button" nzSize="large" class="btn-face" (click)="openFaceModal()">
+                        <nz-icon nzType="scan" nzTheme="outline" />
+                        <span>Đăng nhập bằng khuôn mặt</span>
+                    </button>
+
                 </form>
 
                 <div class="login-card-foot">
@@ -217,6 +222,30 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Đăng nhập bằng khuôn mặt -->
+            <nz-modal [(nzVisible)]="isFaceModalVisible" nzTitle="Đăng nhập bằng khuôn mặt" (nzOnCancel)="closeFaceModal()"
+                [nzFooter]="null" [nzMaskClosable]="false">
+                <ng-container *nzModalContent>
+                    <nz-input-group nzPrefixIcon="user" nzSize="large">
+                        <input type="text" nz-input [(ngModel)]="faceUser" [ngModelOptions]="{standalone: true}"
+                            placeholder="Tên đăng nhập hoặc email" aria-label="Tên đăng nhập" autocomplete="username"
+                            [disabled]="!!faceGesture || faceBusy" (keydown.enter)="beginFaceScan()" />
+                    </nz-input-group>
+                    @if (faceError) { <div class="face-error">{{ faceError }}</div> }
+                    @if (faceGesture) {
+                    <div class="face-capture">
+                        <app-face-capture mode="verify" [gesture]="faceGesture" (captured)="onFaceCaptured($event)"
+                            (failed)="faceError = $event"></app-face-capture>
+                    </div>
+                    } @else {
+                    <button nz-button nzType="primary" nzBlock nzSize="large" class="mt-4" (click)="beginFaceScan()">
+                        Bắt đầu quét mặt
+                    </button>
+                    }
+                    <div class="face-note">Tài khoản chưa đăng ký khuôn mặt hoặc tài khoản quản trị vui lòng dùng mật khẩu.</div>
+                </ng-container>
+            </nz-modal>
 
             <!-- Forgot password modal -->
             <nz-modal [(nzVisible)]="isForgotModalVisible" nzTitle="Quên mật khẩu" (nzOnCancel)="closeForgotModal()"

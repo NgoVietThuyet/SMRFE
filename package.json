@@ -20,6 +20,7 @@
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@ant-design/icons-angular": "^20.0.0",
+    "@mediapipe/tasks-vision": "^1.2.3",
     "@microsoft/signalr": "^10.0.0",
     "apexcharts": "^5.16.0",
     "bootstrap-icons": "^1.13.1",
