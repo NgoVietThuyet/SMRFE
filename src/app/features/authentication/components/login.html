@@ -252,16 +252,15 @@
                 [nzMaskClosable]="false" [nzFooter]="null">
                 <ng-container *nzModalContent>
                     @if (!enrollScanning) {
-                    <p><b>Bắt buộc:</b> tài khoản của bạn chưa có dữ liệu khuôn mặt. Bạn cần quét mặt một lần để tiếp tục vào hệ thống;
-                        từ lần sau có thể đăng nhập và vào họp nhanh bằng khuôn mặt. Hệ thống chỉ lưu đặc trưng khuôn mặt đã mã hóa,
-                        không lưu ảnh.</p>
+                    <p>Tài khoản của bạn chưa có dữ liệu khuôn mặt. Hãy quét mặt một lần để lần sau đăng nhập và vào họp nhanh
+                        bằng khuôn mặt. Hệ thống chỉ lưu đặc trưng khuôn mặt đã mã hóa, không lưu ảnh.</p>
                     <label nz-checkbox [(ngModel)]="enrollConsent" [ngModelOptions]="{standalone: true}">
                         Tôi đồng ý để hệ thống xử lý dữ liệu khuôn mặt (dữ liệu sinh trắc học) của tôi.
                     </label>
                     @if (enrollError) { <div class="face-error">{{ enrollError }}</div> }
                     <button nz-button nzType="primary" nzBlock nzSize="large" class="mt-4" [disabled]="!enrollConsent"
                         (click)="startEnroll()">Bắt đầu quét</button>
-                    <button nz-button nzType="link" nzBlock (click)="cancelEnroll()">Đăng xuất</button>
+                    <button nz-button nzType="link" nzBlock (click)="skipEnroll()">Để sau</button>
                     } @else {
                     <app-face-capture mode="enroll" (captured)="onEnrollCaptured($event)" (failed)="onEnrollFailed($event)"></app-face-capture>
                     @if (enrollBusy) { <div class="face-note">Đang lưu khuôn mặt…</div> }
