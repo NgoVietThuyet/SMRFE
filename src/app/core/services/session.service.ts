@@ -33,6 +33,16 @@ export interface AccountInfo {
 
 export const SUPER_ADMIN = 'SUPER_ADMIN';
 
+/** Trạng thái khuôn mặt của chính mình (GET /api/Auth/FaceStatus). */
+export interface FaceGateStatus { enabled: boolean; allowed: boolean; enrolled: boolean }
+
+/**
+ * Cờ trong sessionStorage (mất khi đóng tab): bước kiểm tra khuôn mặt đã xong trong phiên trình duyệt này.
+ * Đăng nhập xong (đã đăng ký, hoặc chọn "Để sau") thì đặt cờ; phiên khôi phục từ refresh token ở lần mở mới thì chưa có cờ
+ * nên AuthGuard kiểm tra lại và đăng xuất tài khoản chưa có khuôn mặt.
+ */
+const FACE_GATE_KEY = 'smr.faceGate';
+
 /**
  * Nạp hồ sơ + quyền của người đang đăng nhập.
  * Admin = mọi quyền đến từ role SUPER_ADMIN (PermissionServiceImpl trả sourceType ROLE, sourceId SUPER_ADMIN).
@@ -87,6 +97,27 @@ export class SessionService {
       }),
       catchError(() => of(false)),
     );
+  }
+
+  /** null nếu lỗi (không khóa người dùng chỉ vì không hỏi được trạng thái). */
+  faceStatus(): Observable<FaceGateStatus | null> {
+    const base = this.env.getEnv('baseUrl');
+    return this.http.get<any>(`${base}/Auth/FaceStatus`).pipe(
+      map(res => (res?.data ?? null) as FaceGateStatus | null),
+      catchError(() => of(null)),
+    );
+  }
+
+  isFaceGateDone(): boolean {
+    try { return sessionStorage.getItem(FACE_GATE_KEY) === '1'; } catch { return false; }
+  }
+
+  markFaceGateDone(): void {
+    try { sessionStorage.setItem(FACE_GATE_KEY, '1'); } catch { /* sessionStorage bị chặn */ }
+  }
+
+  resetFaceGate(): void {
+    try { sessionStorage.removeItem(FACE_GATE_KEY); } catch { /* sessionStorage bị chặn */ }
   }
 
   setMustChangePassword(value: boolean): void {
