@@ -182,6 +182,28 @@
                     <ng-container *ngTemplateOutlet="chips; context: { sources: draft.summarySources, target: summaryTarget }"></ng-container>
                 </div>
 
+                <!-- Diễn biến thảo luận (AI viết trước khi chốt quyết định; chỉ để tham khảo) -->
+                @if (draft.discussion?.length) {
+                <div class="block">
+                    <div class="block-head"><span class="block-title">Diễn biến thảo luận ({{ draft.discussion!.length }})</span></div>
+                    @for (d of draft.discussion!; track $index; let i = $index) {
+                    <div class="item">
+                        <div class="item-no">{{ i + 1 }}</div>
+                        <div class="item-main">
+                            @if (d.topic) { <div class="text"><b>{{ d.topic }}</b></div> }
+                            <div class="text">{{ d.text }}</div>
+                            <div class="chips">
+                                @for (id of d.sources; track id) {
+                                <nz-tag class="chip" nzColor="blue" nz-tooltip [nzTooltipTitle]="chipTooltip(id)" (click)="jumpTo(id)">{{ chipLabel(id) }}</nz-tag>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    }
+                    <div class="muted">AI ghi lại ai đề xuất, ai phản biện và kết luận cuối cùng của từng chủ đề trước khi chốt quyết định. Phần này để tham khảo, không sửa.</div>
+                </div>
+                }
+
                 <!-- Quyết định -->
                 <div class="block">
                     <div class="block-head">

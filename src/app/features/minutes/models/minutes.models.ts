@@ -42,11 +42,19 @@ export interface MinutesActionItem {
     taskId: string | null;
 }
 
+/** Diễn biến thảo luận theo chủ đề: ai đề xuất, ai phản biện, cuối cùng chốt thế nào (do AI viết trước khi chốt quyết định). */
+export interface MinutesDiscussion {
+    topic: string;
+    text: string;
+    sources: string[];
+}
+
 export interface MinutesContent {
     summary: string;
     summarySources: string[];
     decisions: MinutesDecision[];
     actions: MinutesActionItem[];
+    discussion?: MinutesDiscussion[];
 }
 
 export interface MinutesVersion {
