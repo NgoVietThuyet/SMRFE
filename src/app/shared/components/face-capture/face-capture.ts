@@ -34,10 +34,10 @@ const ENROLL_TURN_MAX = 0.2;    // không quay quá (~30°): máy chủ phải c
   imports: [SharedModules],
   template: `
     <div class="fc">
-      <div class="stage">
-        <video #video autoplay playsinline muted></video>
+      <div class="stage" [style.aspect-ratio]="stageRatio">
+        <video #video autoplay playsinline muted webkit-playsinline></video>
         <div class="oval" [class.ok]="faceOk"></div>
-        @if (loading) { <div class="cover"><nz-spin nzSimple></nz-spin><span>Đang mở camera…</span></div> }
+        @if (loading) { <div class="cover"><nz-spin nzSimple></nz-spin><span>{{ loadingText }}</span></div> }
       </div>
       <div class="hint" [class.err]="!!error">{{ error || hint }}</div>
       <div class="bar"><div class="fill" [style.width.%]="progress"></div></div>
@@ -46,7 +46,7 @@ const ENROLL_TURN_MAX = 0.2;    // không quay quá (~30°): máy chủ phải c
   `,
   styles: [`
     .fc { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .stage { position: relative; width: 100%; max-width: 500px; aspect-ratio: 4 / 3; background: #000; border-radius: 12px; overflow: hidden; }
+    .stage { position: relative; width: 100%; max-width: 500px; background: #000; border-radius: 12px; overflow: hidden; max-height: 68vh; }
     video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
     .oval { position: absolute; inset: 8% 24%; border: 3px dashed rgba(255, 255, 255, .85); border-radius: 50%; transition: border-color .2s; pointer-events: none; }
     .oval.ok { border-style: solid; border-color: #52c41a; }
@@ -67,12 +67,21 @@ export class FaceCapture implements AfterViewInit, OnDestroy {
   @ViewChild('video', { static: true }) videoRef!: ElementRef<HTMLVideoElement>;
 
   loading = true;
+  loadingText = 'Đang mở camera…';
+  /** Tỉ lệ khung xem trước theo camera thật (điện thoại thường dọc 3:4); mặc định 4:3 cho tới khi biết. */
+  stageRatio = '4 / 3';
   hint = '';
   error = '';
   faceOk = false;
   progress = 0;
 
   private landmarker: any = null;
+  private fileset: any = null;
+  private delegate: 'GPU' | 'CPU' = 'CPU';
+  private detectErrors = 0;
+  private recreating = false;
+  private startedAt = 0;
+  private gotResult = false;
   private stream: MediaStream | null = null;
   private raf = 0;
   private alive = false;
@@ -128,6 +137,10 @@ export class FaceCapture implements AfterViewInit, OnDestroy {
   private async start(): Promise<void> {
     this.error = '';
     this.loading = true;
+    this.loadingText = 'Đang mở camera…';
+    this.detectErrors = 0;
+    this.recreating = false;
+    this.gotResult = false;
     this.frames = [];
     this.stepIndex = 0;
     this.stepFrames = 0;
@@ -150,27 +163,82 @@ export class FaceCapture implements AfterViewInit, OnDestroy {
       return this.fail('Chưa được cấp quyền camera. Hãy cho phép camera rồi thử lại.');
     }
     const video = this.videoRef.nativeElement;
+    // iOS Safari chỉ tự phát video khi thuộc tính muted/playsinline được đặt bằng mã (Angular chỉ đặt attribute, không đặt property).
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('webkit-playsinline', 'true');
     video.srcObject = this.stream;
-    try { await video.play(); } catch { /* autoplay đã bật */ }
+    video.onloadedmetadata = () => {
+      if (video.videoWidth && video.videoHeight) {
+        this.zone.run(() => this.stageRatio = `${video.videoWidth} / ${video.videoHeight}`);
+      }
+    };
+    try { await video.play(); } catch { /* người dùng chạm vào màn hình sẽ phát; vòng quét tự chờ khung hình */ }
 
     try {
-      const { FaceLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
-      const fileset = await FilesetResolver.forVisionTasks(FACE_WASM_URL);
-      const make = (delegate: 'GPU' | 'CPU') => FaceLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: FACE_MODEL_URL, delegate },
-        runningMode: 'VIDEO',
-        numFaces: 2,
-        outputFaceBlendshapes: true,
-      });
-      try { this.landmarker = await make('GPU'); } catch { this.landmarker = await make('CPU'); }
+      this.loadingText = 'Đang tải mô hình nhận diện (lần đầu có thể mất vài giây)…';
+      const { FilesetResolver } = await import('@mediapipe/tasks-vision');
+      this.fileset = await FilesetResolver.forVisionTasks(FACE_WASM_URL);
+      // iPhone / iPad (Safari): bộ xử lý đồ họa (GPU) của MediaPipe hay lỗi hoặc treo → dùng CPU. Nơi khác thử GPU trước.
+      this.landmarker = await this.createLandmarker(this.isIos() ? 'CPU' : 'GPU');
     } catch {
-      return this.fail('Không tải được mô hình nhận diện khuôn mặt. Hãy kiểm tra mạng và thử lại.');
+      return this.fail('Không tải được mô hình nhận diện khuôn mặt. Hãy kiểm tra mạng, dùng trình duyệt bản mới rồi thử lại.');
     }
 
     this.alive = true;
     this.loading = false;
+    this.startedAt = performance.now();
     this.hint = this.steps[0].hint;
     this.zone.runOutsideAngular(() => this.loop());
+  }
+
+  private isIos(): boolean {
+    const ua = navigator.userAgent || '';
+    return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints ?? 0) > 1);
+  }
+
+  private async createLandmarker(delegate: 'GPU' | 'CPU'): Promise<any> {
+    const { FaceLandmarker } = await import('@mediapipe/tasks-vision');
+    const make = (d: 'GPU' | 'CPU') => FaceLandmarker.createFromOptions(this.fileset, {
+      baseOptions: { modelAssetPath: FACE_MODEL_URL, delegate: d },
+      runningMode: 'VIDEO',
+      numFaces: 2,
+      outputFaceBlendshapes: true,
+    });
+    try {
+      const lm = await make(delegate);
+      this.delegate = delegate;
+      return lm;
+    } catch (e) {
+      if (delegate === 'GPU') {
+        const lm = await make('CPU');
+        this.delegate = 'CPU';
+        return lm;
+      }
+      throw e;
+    }
+  }
+
+  /** Nhận dạng khung hình lỗi nhiều lần: GPU hỏng → chuyển sang CPU; CPU cũng hỏng → báo lỗi thay vì đứng im. */
+  private async onDetectError(): Promise<void> {
+    this.detectErrors++;
+    if (this.recreating) return;
+    if (this.detectErrors >= 5 && this.delegate === 'GPU') {
+      this.recreating = true;
+      try {
+        try { this.landmarker?.close(); } catch { /* đã đóng */ }
+        this.landmarker = null;
+        this.landmarker = await this.createLandmarker('CPU');
+        this.detectErrors = 0;
+      } catch {
+        this.fail('Thiết bị này không chạy được nhận diện khuôn mặt. Hãy dùng trình duyệt bản mới hơn.');
+      } finally {
+        this.recreating = false;
+      }
+    } else if (this.detectErrors >= 30) {
+      this.fail('Nhận diện khuôn mặt bị lỗi trên thiết bị này. Hãy tải lại trang hoặc thử trình duyệt khác.');
+    }
   }
 
   private stop(): void {
@@ -196,12 +264,26 @@ export class FaceCapture implements AfterViewInit, OnDestroy {
     if (!this.alive) return;
     this.raf = requestAnimationFrame(() => this.loop());
     const video = this.videoRef.nativeElement;
+    // Canh chừng: quá 15 giây mà chưa có khung hình / kết quả nào thì báo lỗi rõ ràng, không để đứng im.
+    if (!this.gotResult && performance.now() - this.startedAt > 15000 && !this.recreating) {
+      this.fail(video.readyState < 2
+        ? 'Camera không phát hình. Hãy cho phép camera, đóng ứng dụng khác đang dùng camera rồi thử lại.'
+        : 'Không nhận diện được hình từ camera. Hãy tải lại trang và thử lại.');
+      return;
+    }
     if (video.readyState < 2 || video.currentTime === this.lastVideoTime || !this.landmarker) return;
     this.lastVideoTime = video.currentTime;
     this.frameCounter++;
     if (this.frameCounter % 8 === 1) this.measureBrightness(video);
     let result: any;
-    try { result = this.landmarker.detectForVideo(video, performance.now()); } catch { return; }
+    try {
+      result = this.landmarker.detectForVideo(video, performance.now());
+    } catch {
+      void this.onDetectError();
+      return;
+    }
+    this.gotResult = true;
+    this.detectErrors = 0;
     this.evaluate(result, video);
   }
 
