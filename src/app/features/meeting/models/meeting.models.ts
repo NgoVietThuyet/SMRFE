@@ -46,6 +46,8 @@ export interface MeetingListItem {
     participantCount: number;
     isHost: boolean;
     hostName: string;
+    /** Người tạo (hoặc quản trị viên), cuộc họp không đang diễn ra: xóa kèm biên bản, bản ghi. */
+    canDelete?: boolean;
 }
 
 /** MeetingSearchRequest — POST /api/Meeting/query. */

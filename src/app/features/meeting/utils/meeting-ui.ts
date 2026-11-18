@@ -87,7 +87,7 @@ export const MeetingActions = {
     // Bản nháp chưa mời ai → xóa thay vì hủy.
     canCancel: (m: MeetingListItem) => m.isHost && m.status === MeetingStatus.Scheduled,
     canArchive: (m: MeetingListItem) => m.isHost && (m.status === MeetingStatus.Ended || m.status === MeetingStatus.Cancelled),
-    canDelete: (m: MeetingListItem) => m.isHost && m.status === MeetingStatus.Draft,
+    canDelete: (m: MeetingListItem) => !!m.canDelete,
     canShare: (m: MeetingListItem) => m.status <= MeetingStatus.Ongoing && m.status !== MeetingStatus.Draft,
 };
 

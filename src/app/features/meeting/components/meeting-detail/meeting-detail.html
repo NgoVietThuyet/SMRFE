@@ -46,8 +46,8 @@
                 <li nz-menu-item nzDanger (click)="cancelTarget = meeting"><nz-icon nzType="stop" />&nbsp; Hủy cuộc họp</li>
                 }
                 @if (actions.canDelete(meeting)) {
-                <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa bản nháp này?" (nzOnConfirm)="remove()">
-                    <nz-icon nzType="delete" />&nbsp; Xóa bản nháp</li>
+                <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa cuộc họp này? Biên bản và bản ghi hình của cuộc họp cũng bị xóa, không khôi phục được." (nzOnConfirm)="remove()">
+                    <nz-icon nzType="delete" />&nbsp; Xóa cuộc họp</li>
                 }
             </ul>
         </nz-dropdown-menu>
