@@ -134,7 +134,7 @@ export class MinutesExportService {
     }
 
     private fileName(meetingName: string): string {
-        return `BienBan_${(meetingName || 'CuocHop').replace(/[\\/:*?"<>|]+/g, '_')}.docx`;
+        return `Biên bản ${(meetingName || 'cuộc họp').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim()}.docx`;
     }
 
     private load(): PendingExport[] {

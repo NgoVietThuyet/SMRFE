@@ -281,7 +281,7 @@ export class CommonService {
                 this.refreshTokenInProgress = true
                 this.refreshTokenSubject.next(null)
 
-                return this.tokenService.refreshSession().pipe(
+                return this.tokenService.refreshSession(true).pipe(
                     switchMap((ok) => {
                         this.refreshTokenInProgress = false
                         this.refreshTokenSubject.next(ok)

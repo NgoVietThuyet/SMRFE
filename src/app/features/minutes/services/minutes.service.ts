@@ -78,19 +78,33 @@ export class MinutesService {
     exportFile(exportId: string, fallbackName: string): Observable<{ blob: Blob; fileName: string }> {
         return this.common.downloadFile(`minutes/exports/${encodeURIComponent(exportId)}/file`, null, false).pipe(map(res => {
             const disposition = res.headers.get('Content-Disposition') ?? '';
-            const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(disposition);
-            return { blob: res.body as Blob, fileName: decodeURIComponent(match?.[1] ?? match?.[2] ?? fallbackName) };
+            return { blob: res.body as Blob, fileName: fileNameFromDisposition(disposition, fallbackName) };
         }));
     }
 
     docx(meetingId: string, version: number): Observable<{ blob: Blob; fileName: string }> {
         return this.common.downloadFile(`${this.base(meetingId)}/minutes/${version}/docx`, null, true).pipe(map(res => {
             const disposition = res.headers.get('Content-Disposition') ?? '';
-            const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(disposition);
-            const fileName = decodeURIComponent(match?.[1] ?? match?.[2] ?? `BienBan_v${version}.docx`);
+            const fileName = fileNameFromDisposition(disposition, `BienBan_v${version}.docx`);
             return { blob: res.body as Blob, fileName };
         }));
     }
+}
+
+/**
+ * Tên file từ Content-Disposition. Ưu tiên filename*=UTF-8'' (RFC 5987); filename="..." của Spring có thể là dạng
+ * =?UTF-8?Q?...?= mà trình duyệt/JS không giải mã được nên chỉ dùng làm phương án cuối.
+ */
+export function fileNameFromDisposition(disposition: string, fallback: string): string {
+    const star = /filename\*\s*=\s*UTF-8''([^;]+)/i.exec(disposition);
+    if (star) {
+        try { return decodeURIComponent(star[1].trim()); } catch { /* rơi xuống phương án sau */ }
+    }
+    const plain = /filename\s*=\s*"?([^";]+)"?/i.exec(disposition);
+    if (plain && !plain[1].startsWith('=?')) {
+        try { return decodeURIComponent(plain[1].trim()); } catch { return plain[1].trim(); }
+    }
+    return fallback;
 }
 
 /** Lưu blob thành file tải về. */

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { EnvironmentService, TokenService } from '../../../core';
 import { ApiResponse, CommonService } from '../../../shared/services';
+import { fileNameFromDisposition } from '../../minutes/services/minutes.service';
 import {
     AttendanceSummary, ChatMessage, EnterRoomResult, JoinInfo, LobbyRequest, PublicMeeting, RoomParticipant, WhiteboardState,
 } from '../models/room.models';
@@ -99,8 +100,7 @@ export class RoomService {
     exportAttendance(id: string): Observable<{ blob: Blob; fileName: string }> {
         return this.common.downloadFile(`${this.base(id)}/attendance/export`, null, true).pipe(map(res => {
             const disposition = res.headers.get('Content-Disposition') ?? '';
-            const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(disposition);
-            const fileName = decodeURIComponent(match?.[1] ?? match?.[2] ?? 'ThamDu.xlsx');
+            const fileName = fileNameFromDisposition(disposition, 'ThamDu.xlsx');
             return { blob: res.body as Blob, fileName };
         }));
     }

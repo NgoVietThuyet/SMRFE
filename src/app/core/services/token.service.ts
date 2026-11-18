@@ -93,8 +93,9 @@ export class TokenService {
   }
 
   /** Khôi phục phiên (sau F5 hoặc khi access token hết hạn) bằng refresh token. */
-  refreshSession(): Observable<boolean> {
-    if (this.hasValidAccessToken()) {
+  refreshSession(force = false): Observable<boolean> {
+    // force = BE vừa trả 401: token còn hạn ở client nhưng đã bị thu hồi (TokenVersion đổi) → bắt buộc đổi token mới.
+    if (!force && this.hasValidAccessToken()) {
       return of(true);
     }
 
