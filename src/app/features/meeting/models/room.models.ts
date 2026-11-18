@@ -101,3 +101,29 @@ export interface Caption {
     isFinal: boolean;
     timestamp: string;
 }
+
+/** Biểu quyết trong phòng họp (PollResponse). voters = tên người chọn theo từng phương án, null nếu ẩn danh. */
+export interface MeetingPoll {
+    id: string;
+    meetingId: string;
+    question: string;
+    options: string[];
+    anonymous: boolean;
+    closed: boolean;
+    createdBy: string;
+    createdByName: string;
+    createdAt: string;
+    closedAt: string | null;
+    counts: number[];
+    total: number;
+    myVote: number | null;
+    voters: string[][] | null;
+    /** Chỉ số phương án thắng; -1 nếu hòa hoặc chưa ai bỏ phiếu. */
+    winner: number;
+    canClose: boolean;
+}
+
+export interface MeetingPollList {
+    canCreate: boolean;
+    polls: MeetingPoll[];
+}

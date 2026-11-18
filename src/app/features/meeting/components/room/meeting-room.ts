@@ -21,9 +21,10 @@ import { RoomChatPanel } from './chat-panel/chat-panel';
 import { RoomFilesPanel } from './files-panel/files-panel';
 import { RoomTasksPanel } from './tasks-panel/tasks-panel';
 import { RoomWhiteboard } from './whiteboard/whiteboard';
+import { RoomPollsPanel } from './polls-panel/polls-panel';
 
 type Phase = 'loading' | 'prejoin' | 'waiting' | 'connecting' | 'room' | 'closed' | 'left' | 'kicked' | 'error';
-type PanelTab = 'people' | 'chat' | 'files' | 'tasks';
+type PanelTab = 'people' | 'chat' | 'files' | 'tasks' | 'polls';
 
 interface CaptionLine { speaker: string; name: string; text: string; at: number }
 
@@ -35,7 +36,7 @@ interface CaptionLine { speaker: string; name: string; text: string; at: number 
 @Component({
   selector: 'app-meeting-room',
   standalone: true,
-  imports: [SharedModules, RoomPrejoin, RoomPeoplePanel, RoomChatPanel, RoomFilesPanel, RoomTasksPanel, RoomWhiteboard],
+  imports: [SharedModules, RoomPrejoin, RoomPeoplePanel, RoomChatPanel, RoomFilesPanel, RoomTasksPanel, RoomWhiteboard, RoomPollsPanel],
   templateUrl: './meeting-room.html',
   styleUrl: './meeting-room.scss',
 })
@@ -80,6 +81,8 @@ export class MeetingRoom implements OnInit, OnDestroy {
   panelOpen = true;
   panelTab: PanelTab = 'people';
   unreadChat = 0;
+  /** Số biểu quyết đang mở mà mình chưa bỏ phiếu. */
+  pendingPolls = 0;
   lobbyCount = 0;
   onlineCount = 0;
   privateTo: RoomParticipant | null = null;

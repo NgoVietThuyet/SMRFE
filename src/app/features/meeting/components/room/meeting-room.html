@@ -116,6 +116,9 @@
                     Chat @if (unreadChat) { <nz-badge nzStandalone [nzCount]="unreadChat" nzSize="small"></nz-badge> }
                 </button>
                 <button role="tab" [class.active]="panelTab === 'files'" (click)="panelTab = 'files'">Tài liệu</button>
+                <button role="tab" [class.active]="panelTab === 'polls'" (click)="panelTab = 'polls'">
+                    Biểu quyết @if (pendingPolls) { <nz-badge nzStandalone [nzCount]="pendingPolls" nzSize="small"></nz-badge> }
+                </button>
                 @if (!isGuest) {
                 <button role="tab" [class.active]="panelTab === 'tasks'" (click)="panelTab = 'tasks'">Công việc</button>
                 }
@@ -129,6 +132,8 @@
                 <app-room-chat-panel [hidden]="panelTab !== 'chat'" [meetingId]="meetingId" [userName]="userName"
                     [isGuest]="isGuest" [isModerator]="isModerator" [chatEnabled]="settings.chatEnabled"
                     [active]="panelTab === 'chat'" [recipient]="privateTo" (unread)="unreadChat = $event"></app-room-chat-panel>
+                <app-room-polls-panel [hidden]="panelTab !== 'polls'" [meetingId]="meetingId" [isGuest]="isGuest"
+                    (pending)="pendingPolls = $event"></app-room-polls-panel>
                 @if (panelTab === 'files') {
                 <app-room-files-panel [meetingId]="meetingId" [canUpload]="canUploadFiles"></app-room-files-panel>
                 }
@@ -188,6 +193,10 @@
             <button class="ctl small" [class.on]="panelOpen && panelTab === 'chat'" (click)="openPanel('chat')"
                 nz-tooltip nzTooltipTitle="Chat" aria-label="Chat">
                 <nz-badge [nzCount]="unreadChat" nzSize="small"><nz-icon nzType="message" class="w" /></nz-badge>
+            </button>
+            <button class="ctl small" [class.on]="panelOpen && panelTab === 'polls'" (click)="openPanel('polls')"
+                nz-tooltip nzTooltipTitle="Biểu quyết" aria-label="Biểu quyết">
+                <nz-badge [nzCount]="pendingPolls" nzSize="small"><nz-icon nzType="bar-chart" class="w" /></nz-badge>
             </button>
             <button class="ctl small" [class.on]="panelOpen && panelTab === 'files'" (click)="openPanel('files')"
                 nz-tooltip nzTooltipTitle="Tài liệu" aria-label="Tài liệu"><nz-icon nzType="paper-clip" /></button>

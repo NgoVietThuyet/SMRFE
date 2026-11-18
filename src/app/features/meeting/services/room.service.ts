@@ -5,7 +5,8 @@ import { EnvironmentService, TokenService } from '../../../core';
 import { ApiResponse, CommonService } from '../../../shared/services';
 import { fileNameFromDisposition } from '../../minutes/services/minutes.service';
 import {
-    AttendanceSummary, ChatMessage, EnterRoomResult, JoinInfo, LobbyRequest, PublicMeeting, RoomParticipant, WhiteboardState,
+    AttendanceSummary, ChatMessage, EnterRoomResult, JoinInfo, LobbyRequest, MeetingPoll, MeetingPollList, PublicMeeting, RoomParticipant,
+    WhiteboardState,
 } from '../models/room.models';
 
 /** API phòng họp (P10): /api/Meeting/{id}/room/**, join-info, messages, attendance, Auth/GuestSession. */
@@ -63,6 +64,21 @@ export class RoomService {
 
     changeRole(id: string, userName: string, role: number): Observable<ApiResponse> {
         return this.common.put(`${this.base(id)}/room/participants/${encodeURIComponent(userName)}/role`, { role }, false);
+    }
+
+    // ----- Biểu quyết
+    polls(id: string): Observable<MeetingPollList> { return this.common.get<MeetingPollList>(`${this.base(id)}/polls`, null, false) }
+
+    createPoll(id: string, question: string, options: string[], anonymous: boolean): Observable<MeetingPoll> {
+        return this.common.post<ApiResponse<MeetingPoll>>(`${this.base(id)}/polls`, { question, options, anonymous }, false, false).pipe(map(r => r.data));
+    }
+
+    vote(id: string, pollId: string, optionIndex: number): Observable<MeetingPoll> {
+        return this.common.post<ApiResponse<MeetingPoll>>(`${this.base(id)}/polls/${encodeURIComponent(pollId)}/vote`, { optionIndex }, false, false).pipe(map(r => r.data));
+    }
+
+    closePoll(id: string, pollId: string): Observable<MeetingPoll> {
+        return this.common.post<ApiResponse<MeetingPoll>>(`${this.base(id)}/polls/${encodeURIComponent(pollId)}/close`, null, false, false).pipe(map(r => r.data));
     }
 
     // ----- Chat

@@ -2,7 +2,7 @@ import { IconDefinition } from '@ant-design/icons-angular';
 import {
     AimOutline, AlignLeftOutline, ApartmentOutline, AppstoreOutline, ArrowLeftOutline, ArrowRightOutline,
     AudioMutedOutline, AudioOutline, AuditOutline, BarsOutline, BellOutline, BorderOutline, BulbOutline, CalendarOutline,
-    CaretDownOutline, CaretRightOutline, CarryOutOutline, CheckCircleFill, CheckCircleOutline, CheckOutline,
+    BarChartOutline, CaretDownOutline, CaretRightOutline, CarryOutOutline, CheckCircleFill, CheckCircleOutline, CheckOutline,
     CheckSquareOutline, ClearOutline, ClockCircleOutline, CloseCircleOutline, CloseOutline, CloudServerOutline,
     CommentOutline, CopyOutline, CreditCardOutline, CrownOutline, DeleteOutline, DesktopOutline, DownOutline,
     DownloadOutline, EditOutline, EllipsisOutline, EnvironmentOutline, EyeInvisibleOutline, EyeOutline,
@@ -26,7 +26,7 @@ import {
 export const APP_ICONS: IconDefinition[] = [
     AimOutline, AlignLeftOutline, ApartmentOutline, AppstoreOutline, ArrowLeftOutline, ArrowRightOutline,
     AudioMutedOutline, AudioOutline, AuditOutline, BarsOutline, BellOutline, BorderOutline, BulbOutline, CalendarOutline,
-    CaretDownOutline, CaretRightOutline, CarryOutOutline, CheckCircleFill, CheckCircleOutline, CheckOutline,
+    BarChartOutline, CaretDownOutline, CaretRightOutline, CarryOutOutline, CheckCircleFill, CheckCircleOutline, CheckOutline,
     CheckSquareOutline, ClearOutline, ClockCircleOutline, CloseCircleOutline, CloseOutline, CloudServerOutline,
     CommentOutline, CopyOutline, CreditCardOutline, CrownOutline, DeleteOutline, DesktopOutline, DownOutline,
     DownloadOutline, EditOutline, EllipsisOutline, EnvironmentOutline, EyeInvisibleOutline, EyeOutline,
