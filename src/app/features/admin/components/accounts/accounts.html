@@ -120,6 +120,10 @@
                                         } @else {
                                         <li nz-menu-item (click)="openAction('unlock', item)"><nz-icon nzType="unlock" />&nbsp; Mở khóa</li>
                                         }
+                                        <li nz-menu-item nzDanger [nzDisabled]="!canDelete(item)"
+                                            (click)="canDelete(item) && openDelete(item)">
+                                            <nz-icon nzType="delete" />&nbsp; Xóa tài khoản
+                                        </li>
                                     </ul>
                                 </nz-dropdown-menu>
                             </td>
@@ -229,7 +233,35 @@
     </ng-container>
 </nz-modal>
 
-<!-- ===== Bước đăng ký: quét khuôn mặt cho tài khoản vừa tạo ===== -->
+<!-- ===== Modal xóa tài khoản: chuyển chủ trì hoặc xóa cuộc họp ===== -->
+<nz-modal [(nzVisible)]="deleteVisible" nzTitle="XÓA TÀI KHOẢN" nzOkText="Xóa tài khoản" nzCancelText="Huỷ" [nzOkDanger]="true"
+    [nzOkLoading]="isDeleting" [nzWidth]="640" (nzOnOk)="confirmDelete()" (nzOnCancel)="deleteVisible = false">
+    <ng-container *nzModalContent>
+        @if (deleteTarget) {
+        <p>Xóa vĩnh viễn tài khoản <b>{{ deleteTarget.fullName }}</b> ({{ deleteTarget.userName }}) cùng mẫu khuôn mặt.</p>
+        @if (ownedMeetings.length) {
+        <p>Tài khoản này đang là chủ trì của {{ ownedMeetings.length }} cuộc họp chưa kết thúc. Bạn muốn chuyển chủ trì cho ai?</p>
+        @for (m of ownedMeetings; track m.meetingId) {
+        <div class="owned-row">
+            <div class="owned-name">{{ m.name }}</div>
+            <nz-select class="full-width" [(ngModel)]="deleteTransfers[m.meetingId]" aria-label="Người nhận chủ trì">
+                @for (c of m.candidates; track c.userName) {
+                <nz-option [nzValue]="c.userName" [nzLabel]="c.fullName + ' (' + c.userName + ')'"></nz-option>
+                }
+                <nz-option nzValue="" nzLabel="Không chuyển — xóa cuộc họp này"></nz-option>
+            </nz-select>
+        </div>
+        }
+        @if (discardedMeetings.length) {
+        <nz-alert class="mt-3" nzType="error" nzShowIcon
+            [nzMessage]="discardedMeetings.length + ' cuộc họp không chuyển chủ trì sẽ bị xóa vĩnh viễn kèm biên bản và bản ghi hình.'"></nz-alert>
+        }
+        }
+        }
+    </ng-container>
+</nz-modal>
+
+<!-- ===== Bước đăng ký: quét khuôn mặt cho tài khoản vừa tạo =====
 <nz-modal [(nzVisible)]="faceVisible" [nzWidth]="580" nzTitle="QUÉT KHUÔN MẶT CHO TÀI KHOẢN MỚI" [nzClosable]="false" [nzMaskClosable]="false"
     [nzFooter]="null">
     <ng-container *nzModalContent>

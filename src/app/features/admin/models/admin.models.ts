@@ -47,6 +47,15 @@ export class TitleDto {
 // ───────────── P3 Tài khoản ─────────────
 
 /** EmployeeItemResponse / EmployeeDetailResponse. */
+/** Cuộc họp chưa kết thúc mà tài khoản là chủ trì + người có thể nhận chuyển chủ trì. */
+export interface OwnedMeeting {
+    meetingId: string;
+    name: string;
+    status: number;
+    expectedStartTime: string | null;
+    candidates: { userName: string; fullName: string }[];
+}
+
 export interface Employee {
     userName: string;
     fullName: string;

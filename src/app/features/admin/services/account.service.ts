@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { CommonService, PagedResult } from '../../../shared/services';
 import { PaginationResult } from '../../../shared/models';
-import { CreatedEmployee, Employee, EmployeeDto, EmployeeFilter } from '../models/admin.models';
+import { CreatedEmployee, Employee, EmployeeDto, EmployeeFilter, OwnedMeeting } from '../models/admin.models';
 
 /** Tài khoản = nhân sự trong BE-Java (/api/human-resources/employees). */
 @Injectable({
@@ -33,6 +33,11 @@ export class AccountService {
     changeStatus(userName: string, isActive: boolean, reason: string) { return this.common.put(`human-resources/employees/${encodeURIComponent(userName)}/status`, { isActive, reason }) }
 
     resetPassword(userName: string): Observable<{ userName: string; temporaryPassword: string }> { return this.common.post<any>(`human-resources/employees/${encodeURIComponent(userName)}/reset-password`, {}, true, false).pipe(map(res => res.data)) }
+
+    ownedMeetings(userName: string): Observable<OwnedMeeting[]> { return this.common.get<OwnedMeeting[]>(`human-resources/employees/${encodeURIComponent(userName)}/owned-meetings`) }
+
+    /** Xóa tài khoản; cuộc họp chủ trì chưa kết thúc không có trong transfers sẽ bị xóa kèm biên bản, bản ghi. */
+    delete(userName: string, transfers: { meetingId: string; newOwner: string }[]) { return this.common.delete(`human-resources/employees/${encodeURIComponent(userName)}`, { transfers }) }
 
     static isAdmin(e: Pick<Employee, 'roleCodes'>): boolean {
         return (e.roleCodes ?? '').toUpperCase().includes('SUPER_ADMIN');

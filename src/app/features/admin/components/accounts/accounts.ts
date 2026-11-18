@@ -10,7 +10,7 @@ import { PaginationResult } from '../../../../shared/models';
 import { AccountService } from '../../services/account.service';
 import { OrganizationService } from '../../services/organization.service';
 import { TitleService } from '../../services/title.service';
-import { Employee, EmployeeDto, EmployeeFilter, OrganizationNode, Title } from '../../models/admin.models';
+import { Employee, EmployeeDto, EmployeeFilter, OrganizationNode, OwnedMeeting, Title } from '../../models/admin.models';
 
 type ActionKind = 'transfer' | 'title' | 'lock' | 'unlock';
 
@@ -253,6 +253,49 @@ export class Accounts implements OnInit, OnDestroy {
     this.message.success(text);
     this.visible = false;
     this.search();
+  }
+
+  // ───────────────────────── Xóa tài khoản ─────────────────────────
+
+  deleteVisible = false;
+  deleteTarget: Employee | null = null;
+  ownedMeetings: OwnedMeeting[] = [];
+  /** meetingId → userName người nhận chủ trì ('' = không chuyển, xóa cuộc họp). */
+  deleteTransfers: Record<string, string> = {};
+  isDeleting = false;
+
+  canDelete(item: Employee): boolean {
+    return item.userName !== this.currentUser && !AccountService.isAdmin(item);
+  }
+
+  openDelete(item: Employee): void {
+    this.deleteTarget = item;
+    this.service.ownedMeetings(item.userName).pipe(takeUntil(this.destroy$)).subscribe(list => {
+      this.ownedMeetings = list ?? [];
+      this.deleteTransfers = {};
+      this.ownedMeetings.forEach(m => this.deleteTransfers[m.meetingId] = m.candidates[0]?.userName ?? '');
+      this.deleteVisible = true;
+    });
+  }
+
+  get discardedMeetings(): OwnedMeeting[] {
+    return this.ownedMeetings.filter(m => !this.deleteTransfers[m.meetingId]);
+  }
+
+  confirmDelete(): void {
+    const target = this.deleteTarget;
+    if (!target) return;
+    const transfers = this.ownedMeetings
+      .filter(m => this.deleteTransfers[m.meetingId])
+      .map(m => ({ meetingId: m.meetingId, newOwner: this.deleteTransfers[m.meetingId] }));
+    this.isDeleting = true;
+    this.service.delete(target.userName, transfers)
+      .pipe(finalize(() => this.isDeleting = false), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.message.success('Đã xóa tài khoản ' + target.userName);
+        this.deleteVisible = false;
+        this.search();
+      });
   }
 
   // ───────────────────────── Thao tác ─────────────────────────
