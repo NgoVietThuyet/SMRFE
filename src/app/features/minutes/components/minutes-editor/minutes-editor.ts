@@ -343,10 +343,18 @@ export class MinutesEditor implements OnInit, OnDestroy {
     this.dirty = true;
   }
 
+  /** Date đã tạo theo chuỗi ngày: trả về cùng một đối tượng giữa các lần kiểm tra thay đổi, nếu không date-picker bị ghi lại liên tục và treo trang. */
+  private dueDates = new Map<string, Date>();
+
   dueAsDate(a: MinutesActionItem): Date | null {
     if (!a.dueDate) return null;
-    const [y, m, d] = a.dueDate.split('-').map(Number);
-    return new Date(y, m - 1, d);
+    let date = this.dueDates.get(a.dueDate);
+    if (!date) {
+      const [y, m, d] = a.dueDate.split('-').map(Number);
+      date = new Date(y, m - 1, d);
+      this.dueDates.set(a.dueDate, date);
+    }
+    return date;
   }
 
   onDueChange(a: MinutesActionItem, date: Date | null): void {
