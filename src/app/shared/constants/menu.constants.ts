@@ -32,7 +32,6 @@ export const APP_MENU: AppMenuItem[] = [
 
     { id: 'TASK', pId: MENU_PARENT_ROOT, name: 'Công việc', url: '/tasks', icon: 'kanban', orderNumber: 3 },
     { id: 'MINU', pId: MENU_PARENT_ROOT, name: 'Biên bản họp', url: '/minutes', icon: 'file-earmark-text', orderNumber: 4 },
-    { id: 'AI', pId: MENU_PARENT_ROOT, name: 'Trợ lý AI', url: '/ai-assistant', icon: 'robot', orderNumber: 5 },
 
     { id: 'ADM', pId: MENU_PARENT_ROOT, name: 'Quản trị', icon: 'gear', orderNumber: 9 },
     { id: 'ADM_ORG', pId: 'ADM', name: 'Cơ cấu tổ chức', url: '/admin/organizations', orderNumber: 1, right: APP_RIGHTS.ADMIN_ORGANIZATIONS },

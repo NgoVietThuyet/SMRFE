@@ -22,9 +22,10 @@ import {
 import { MeetingForm } from '../meeting-form/meeting-form';
 import { CancelMeetingModal } from '../cancel-meeting-modal/cancel-meeting-modal';
 import { ShareMeetingModal } from '../share-meeting-modal/share-meeting-modal';
+import { MeetingAiChat } from '../meeting-ai-chat/meeting-ai-chat';
 import { MinutesSummary } from '../../../minutes/components/minutes-summary/minutes-summary';
 
-type DetailTab = 'overview' | 'people' | 'files' | 'minutes' | 'tasks' | 'activity';
+type DetailTab = 'overview' | 'people' | 'files' | 'minutes' | 'tasks' | 'activity' | 'ai';
 
 const SETTING_LABELS: { key: keyof MeetingSettings; label: string }[] = [
   { key: 'lobbyEnabled', label: 'Phòng chờ' },
@@ -43,7 +44,7 @@ const TASK_STATUS: Record<number, { label: string; color: string }> = {
 @Component({
   selector: 'app-meeting-detail',
   standalone: true,
-  imports: [SharedModules, NzQRCodeModule, NzTimelineModule, MeetingForm, CancelMeetingModal, ShareMeetingModal, MinutesSummary],
+  imports: [SharedModules, NzQRCodeModule, NzTimelineModule, MeetingForm, CancelMeetingModal, ShareMeetingModal, MinutesSummary, MeetingAiChat],
   templateUrl: './meeting-detail.html',
   styleUrl: './meeting-detail.scss',
 })
@@ -51,7 +52,7 @@ export class MeetingDetailPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   readonly search$ = new Subject<string>();
 
-  readonly tabs: DetailTab[] = ['overview', 'people', 'files', 'minutes', 'tasks', 'activity'];
+  readonly tabs: DetailTab[] = ['overview', 'people', 'files', 'minutes', 'tasks', 'activity', 'ai'];
   readonly statusMeta = MEETING_STATUS_META;
   readonly actions = MeetingActions;
   readonly roleOptions = MEETING_ASSIGNABLE_ROLES;

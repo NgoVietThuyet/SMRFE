@@ -2,61 +2,6 @@
 $primary-color: #1677ff;
 $border-color: #e5e7eb;
 
-.ai-layout {
-    display: flex;
-    height: 100vh;
-}
-
-.meeting-panel {
-    width: 300px;
-    flex-shrink: 0;
-    border-right: 1px solid #f0f0f0;
-    display: flex;
-    flex-direction: column;
-}
-
-.panel-head {
-    height: 50px;
-    padding: 0 16px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #f0f0f0;
-
-    .panel-title {
-        font-weight: 600;
-    }
-}
-
-.panel-search {
-    padding: 10px 12px;
-}
-
-.panel-list {
-    flex: 1;
-    overflow: auto;
-    padding: 0 8px 8px;
-}
-
-.meeting-item {
-    padding: 10px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-bottom: 4px;
-    border: 1px solid transparent;
-
-    &:hover {
-        background: #fafafa;
-    }
-
-    &.active {
-        background: #e6f4ff;
-        border-color: #91caff;
-    }
-
-    .meeting-tags {
-        margin-top: 6px;
-    }
-}
 
 .meeting-name {
     font-weight: 600;
@@ -71,6 +16,11 @@ $border-color: #e5e7eb;
 }
 
 .chat-panel {
+    height: calc(100vh - 250px);
+    min-height: 440px;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
     flex: 1;
     min-width: 0;
     display: flex;
@@ -372,48 +322,10 @@ $border-color: #e5e7eb;
     }
 }
 
-.disclaimer {
-    text-align: center;
-    margin-top: 6px;
-}
 
 @media (max-width: 768px) {
-    .ai-layout {
-        flex-direction: column;
-        height: calc(100vh - 48px);
-        height: calc(100svh - 48px);
-    }
-
-    .meeting-panel {
-        width: 100%;
-        max-height: 185px;
-        border-right: none;
-        border-bottom: 1px solid #f0f0f0;
-
-        .panel-head {
-            height: 40px;
-            padding: 0 12px;
-        }
-
-        .panel-search {
-            padding: 6px 10px;
-        }
-
-        .panel-list {
-            display: flex;
-            flex-direction: row;
-            gap: 8px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding: 0 10px 8px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .meeting-item {
-            flex: 0 0 220px;
-            margin-bottom: 0;
-            padding: 8px 10px;
-        }
+    .chat-panel {
+        height: calc(100svh - 220px);
     }
 
     .chat-head {

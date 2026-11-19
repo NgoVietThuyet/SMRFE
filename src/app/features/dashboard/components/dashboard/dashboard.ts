@@ -268,7 +268,6 @@ export class Dashboard implements OnInit, OnDestroy {
       { label: 'Nhập mã', img: 'img/desktop/contacts.png', tooltip: 'Tham gia bằng mã phòng', action: () => this.joinByCodeVisible = true },
       { label: 'Lịch họp', img: 'img/desktop/calendar.png', tooltip: 'Xem lịch họp', action: () => this.router.navigate(['/calendar']) },
       { label: 'Công việc', img: 'img/desktop/task.png', tooltip: 'Công việc của tôi', action: () => this.router.navigate(['/tasks']) },
-      { label: 'Trợ lý AI', img: 'img/desktop/robot.png', tooltip: 'Hỏi đáp về cuộc họp', action: () => this.router.navigate(['/ai-assistant']) },
     ];
     return items.filter(i => !i.requiredRight || this.canCreateMeeting);
   }

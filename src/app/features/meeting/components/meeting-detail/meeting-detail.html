@@ -255,7 +255,7 @@
                 <ng-template #noTasks><nz-empty nzNotFoundContent="Cuộc họp chưa có công việc"></nz-empty></ng-template>
             </nz-tab>
 
-            <!-- ===== Lịch sử hoạt động — luôn là tab cuối để chỉ số các tab trước không đổi ===== -->
+            <!-- ===== Lịch sử hoạt động ===== -->
             @if (true) {
             <nz-tab nzTitle="Lịch sử hoạt động">
                 @if (meeting.activity.length) {
@@ -274,6 +274,13 @@
                 }
             </nz-tab>
             }
+
+            <!-- ===== Hỏi đáp AI ===== -->
+            <nz-tab nzTitle="Hỏi đáp AI">
+                <ng-template nz-tab>
+                    <app-meeting-ai-chat [meetingId]="meeting.id" [meetingName]="meeting.name"></app-meeting-ai-chat>
+                </ng-template>
+            </nz-tab>
         </nz-tabset>
     </nz-page-header-content>
 </nz-page-header>

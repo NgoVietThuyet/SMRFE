@@ -37,7 +37,7 @@ import { MinutesExportActions } from '../minutes-export-actions/minutes-export-a
         <button nz-button nzType="primary" [routerLink]="['/minutes', d.meetingId]">
           <nz-icon nzType="file-text" /> {{ d.canEdit ? 'Mở trình soạn biên bản' : 'Xem biên bản' }}
         </button>
-        <button nz-button [routerLink]="['/ai-assistant']" [queryParams]="{ meetingId: d.meetingId }">
+        <button nz-button [routerLink]="['/meetings', d.meetingId]" [queryParams]="{ tab: 'ai' }">
           <nz-icon nzType="robot" /> Hỏi Trợ lý AI
         </button>
       </div>

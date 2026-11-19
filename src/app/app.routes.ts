@@ -54,10 +54,6 @@ export const routes: Routes = [
         loadChildren: () => import('./features/minutes/minutes.routes').then(m => m.minutesRoutes),
       },
       {
-        path: 'ai-assistant',
-        loadChildren: () => import('./features/ai-assistant/ai-assistant.routes').then(m => m.aiAssistantRoutes),
-      },
-      {
         path: 'profile',
         loadComponent: () => import('./features/profile/components/profile').then(m => m.Profile),
       },
