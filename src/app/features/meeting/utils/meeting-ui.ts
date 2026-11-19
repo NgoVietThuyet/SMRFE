@@ -100,8 +100,12 @@ export function copyText(text: string): Promise<boolean> {
 /** Mở phòng họp ở tab mới (trang trống, ngoài Shell). Popup bị chặn → vào ngay tab hiện tại. */
 export function openMeetingRoom(router: Router, message: NzMessageService, meetingId: string): void {
     const url = router.serializeUrl(router.createUrlTree(['/meetings', meetingId, 'join']));
-    const win = window.open(url, '_blank', 'noopener');
-    if (!win) {
+    // Không truyền 'noopener' vào window.open: khi có cờ này trình duyệt luôn trả null dù đã mở được tab,
+    // khiến code tưởng bị chặn popup và đưa luôn tab hiện tại vào phòng họp (hai tab cùng hiện màn hình vào phòng).
+    const win = window.open(url, '_blank');
+    if (win) {
+        win.opener = null;
+    } else {
         message.warning('Trình duyệt chặn tab mới, đang vào phòng họp ngay tại trang này');
         void router.navigate(['/meetings', meetingId, 'join']);
     }
