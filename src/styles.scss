@@ -28,7 +28,7 @@ $my-map: (
 
 * {
   scrollbar-width: thin;
-  border-radius: 0px;
+  /* border-radius kế thừa từ theme.less (6px) */
 }
 
 ::-webkit-scrollbar {
@@ -37,11 +37,11 @@ $my-map: (
 }
 
 ::-webkit-scrollbar-thumb {
-  border-radius: 0px;
+  /* border-radius kế thừa từ theme.less (6px) */
 }
 
 ::-webkit-scrollbar-track {
-  border-radius: 0px;
+  /* border-radius kế thừa từ theme.less (6px) */
 }
 
 body {
@@ -622,4 +622,24 @@ $spacing-unit: 0.25rem;
     padding: 8px 6px !important;
     font-size: 12px;
   }
+}
+
+
+/* Đảm bảo tiêu đề trang quản trị không bị cắt dấu "..." ở Desktop 1440px khi có nhiều bộ lọc */
+.ant-page-header-heading {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.ant-page-header-heading-left {
+  flex-shrink: 0;
+}
+
+/* Chống tràn chiều cao drawer vượt quá 100vh */
+.ant-drawer-content-wrapper {
+  max-height: 100vh;
+}
+
+.ant-drawer-body {
+  overflow-y: auto;
 }

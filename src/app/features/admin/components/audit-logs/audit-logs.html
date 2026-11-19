@@ -76,7 +76,7 @@
             <nz-descriptions-item nzTitle="Thời gian">{{ time(detail) | date: 'dd/MM/yyyy HH:mm:ss' }}</nz-descriptions-item>
             <nz-descriptions-item nzTitle="Người thực hiện">{{ detail.actorUserName || '---' }}</nz-descriptions-item>
             <nz-descriptions-item nzTitle="Nhóm">{{ categoryLabel(detail.category) }}</nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Hành động">{{ actionLabel(detail) }} <code class="raw-code">{{ detail.action }}</code></nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Hành động">{{ actionLabel(detail) }}@if (actionLabel(detail) !== detail.action) { <code class="raw-code">{{ detail.action }}</code>}</nz-descriptions-item>
             <nz-descriptions-item nzTitle="Đối tượng">{{ detail.targetType || '---' }} · {{ detail.targetId || '---' }}</nz-descriptions-item>
             <nz-descriptions-item nzTitle="Kết quả">
                 <nz-tag [nzColor]="detail.success ? 'success' : 'error'">{{ detail.success ? 'Thành công' : 'Thất bại' }}</nz-tag>

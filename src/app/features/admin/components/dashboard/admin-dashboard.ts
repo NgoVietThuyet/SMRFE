@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { NzTreeNodeOptions } from 'ng-zorro-antd/tree';
 import {
-  ApexAxisChartSeries, ApexChart, ApexDataLabels, ApexLegend, ApexPlotOptions, ApexXAxis,
+  ApexAxisChartSeries, ApexChart, ApexDataLabels, ApexLegend, ApexPlotOptions, ApexStroke, ApexXAxis,
   ApexYAxis, NgApexchartsModule,
 } from 'ng-apexcharts';
 import { SharedModules } from '../../../../shared/ng-zorro.module';
@@ -42,8 +42,10 @@ export class AdminDashboard implements OnInit, OnDestroy {
   // ── Biểu đồ ──
   weekSeries: ApexAxisChartSeries = [];
   weekXAxis: ApexXAxis = { categories: [] };
-  readonly weekChart: ApexChart = { type: 'bar', height: 280, toolbar: { show: false }, fontFamily: 'inherit' };
+  readonly weekChart: ApexChart = { type: 'line', height: 280, toolbar: { show: false }, fontFamily: 'inherit' };
   readonly weekPlot: ApexPlotOptions = { bar: { columnWidth: '45%', borderRadius: 4 } };
+  readonly weekStroke: ApexStroke = { width: [0, 3], curve: 'smooth' };
+  readonly weekDataLabels: ApexDataLabels = { enabled: false };
   readonly weekYAxis: ApexYAxis[] = [
     { title: { text: 'Cuộc họp' }, labels: { formatter: v => `${Math.round(v)}` } },
     { opposite: true, title: { text: 'Giờ' }, labels: { formatter: v => v.toFixed(1) } },
@@ -55,10 +57,10 @@ export class AdminDashboard implements OnInit, OnDestroy {
   readonly donutLabels: ApexDataLabels = { enabled: true, formatter: (v: number) => `${Math.round(v)}%` };
   meetingStatusSeries: number[] = [];
   readonly meetingStatusLabels = ['Nháp', 'Sắp diễn ra', 'Đang diễn ra', 'Đã kết thúc', 'Đã hủy'];
-  readonly meetingStatusColors = ['#bfbfbf', readCssSystemPrimary(), '#fa8c16', '#52c41a', '#ff4d4f'];
+  readonly meetingStatusColors = ['#64748B', readCssSystemPrimary(), '#fa8c16', '#52c41a', '#ff4d4f'];
   taskSeries: number[] = [];
   readonly taskLabels = ['Chưa bắt đầu', 'Đang làm', 'Hoàn thành'];
-  readonly taskColors = ['#bfbfbf', '#fa8c16', '#52c41a'];
+  readonly taskColors = ['#64748B', '#fa8c16', '#52c41a'];
 
   constructor(
     private global: GlobalService,

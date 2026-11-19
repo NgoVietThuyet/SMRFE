@@ -2,7 +2,7 @@
     [nzExtra]="extra" [nzFooter]="footer" [nzMaskClosable]="!isSaving" (nzOnClose)="close()" nzWrapClassName="meeting-form-drawer">
     <ng-container *nzDrawerContent>
         <nz-spin [nzSpinning]="isLoading">
-            <nz-tabset [(nzSelectedIndex)]="tabIndex" nzSize="small">
+            <nz-tabset [(nzSelectedIndex)]="tabIndex" nzSize="small" [nzAnimated]="{ inkBar: true, tabPane: false }">
                 <!-- ===== Thông tin ===== -->
                 <nz-tab [nzTitle]="infoTitle">
                     <ng-template #infoTitle>
@@ -120,7 +120,7 @@
                                 <td>
                                     @if (p.isMe || p.existing) {
                                     <nz-tag [nzColor]="roleMeta(p.role).color" nz-tooltip
-                                        [nzTooltipTitle]="p.existing && !p.isMe ? 'Đổi vai trò trong phòng họp (P10)' : null">
+                                        [nzTooltipTitle]="p.existing && !p.isMe ? 'Đổi vai trò trong phòng họp' : null">
                                         {{ roleMeta(p.role).label }}
                                     </nz-tag>
                                     } @else {

@@ -36,7 +36,7 @@
                         <label class="text-control" for="retention">Số ngày lưu bản ghi</label>
                         <nz-input-number id="retention" class="space-control full-width"
                             [(ngModel)]="settings.recordingRetentionDays" [nzMin]="1" [nzMax]="3650"></nz-input-number>
-                        <div class="hint">Bản ghi quá hạn sẽ được dọn khi có tác vụ dọn dẹp (làm cùng P10).</div>
+                        <div class="hint">Bản ghi quá hạn sẽ được hệ thống tự động dọn dẹp định kỳ theo số ngày cấu hình.</div>
 
                         <nz-divider></nz-divider>
                         <nz-alert nzType="info" nzShowIcon

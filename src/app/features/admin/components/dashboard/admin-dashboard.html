@@ -83,7 +83,7 @@
                     <nz-card nzTitle="Cuộc họp theo tuần" [nzLoading]="loading" class="chart-card">
                         @if (meeting?.byWeek?.length) {
                         <apx-chart [series]="weekSeries" [chart]="weekChart" [xaxis]="weekXAxis" [yaxis]="weekYAxis"
-                            [plotOptions]="weekPlot" [colors]="weekColors"></apx-chart>
+                            [plotOptions]="weekPlot" [stroke]="weekStroke" [dataLabels]="weekDataLabels" [colors]="weekColors"></apx-chart>
                         } @else {
                         <nz-empty nzNotFoundContent="Không có cuộc họp trong khoảng thời gian này"></nz-empty>
                         }
@@ -128,7 +128,7 @@
                         @for (row of org.data; track row.organizationId; let i = $index) {
                         <tr>
                             <td nzAlign="center">{{ i + 1 }}</td>
-                            <td>{{ row.organizationName }}</td>
+                            <td>{{ row.organizationName === 'ORG_SYS' ? 'Hệ thống' : row.organizationName }}</td>
                             <td nzAlign="right">{{ row.meetingCount }}</td>
                             <td nzAlign="right">{{ row.hours }}</td>
                             <td nzAlign="right">{{ row.participantCount }}</td>

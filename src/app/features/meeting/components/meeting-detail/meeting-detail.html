@@ -62,7 +62,7 @@
             nzMessage="Bản nháp — chưa ai nhận được lời mời. Bấm “Hoàn tất và gửi” để phát hành."></nz-alert>
         }
 
-        <nz-tabset [nzSelectedIndex]="tabIndex" (nzSelectedIndexChange)="onTabChange($event)" nzSize="small">
+        <nz-tabset [nzSelectedIndex]="tabIndex" (nzSelectedIndexChange)="onTabChange($event)" nzSize="small" [nzAnimated]="{ inkBar: true, tabPane: false }">
             <!-- ===== Tổng quan ===== -->
             <nz-tab nzTitle="Tổng quan">
                 <div class="overview">
@@ -165,8 +165,10 @@
                             <td class="break-all">{{ p.email || p.userName }}</td>
                             <td nzAlign="center"><nz-tag [nzColor]="roleMeta(p.role).color">{{ roleMeta(p.role).label }}</nz-tag></td>
                             <td nzAlign="center">
-                                @if (p.isJoined) {
+                                @if (p.isJoined && meeting.status === MeetingStatus.Ongoing) {
                                 <nz-badge nzStatus="success" [nzText]="'Đang trong phòng'"></nz-badge>
+                                } @else if (p.isJoined) {
+                                <span class="muted">Đã tham dự</span>
                                 } @else if (p.joinTime) {
                                 <span class="muted">Đã vào {{ date(p.joinTime) | date: 'HH:mm dd/MM' }}</span>
                                 } @else {

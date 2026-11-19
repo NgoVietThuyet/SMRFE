@@ -1,5 +1,5 @@
 // Theo calendar-home.scss của 2.FrontEnd (bỏ sidebar "lịch của tôi", kéo thả).
-$primary: #189AD6;
+$primary: #0E76A8;
 $border: #e8e8e8;
 $border-radius: 6px;
 $toolbar-height: 56px;
@@ -443,10 +443,6 @@ $text-muted: #8c8c8c;
         .toolbar-title {
             font-size: 14px;
             margin: 0 4px;
-        }
-
-        .toolbar-right label[nz-checkbox] {
-            display: none;
         }
     }
 

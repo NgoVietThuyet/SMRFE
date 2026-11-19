@@ -228,7 +228,10 @@ export class MeetingDetailPage implements OnInit, OnDestroy {
   }
 
   get agendaLines(): string[] {
-    return (this.meeting?.agenda ?? '').split('\n').map(l => l.trim()).filter(Boolean);
+    return (this.meeting?.agenda ?? '')
+      .split('\n')
+      .map(l => l.trim().replace(/^(?:\d+[.)]|[-•*])\s+/, ''))
+      .filter(Boolean);
   }
 
   get enabledSettings(): string[] {

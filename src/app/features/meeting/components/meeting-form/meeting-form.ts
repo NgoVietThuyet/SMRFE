@@ -30,9 +30,9 @@ interface ParticipantRow {
 /** Nhóm công tắc ở tab "Cài đặt phòng". */
 const SETTING_ITEMS: { key: keyof MeetingSettings; label: string; hint: string }[] = [
   { key: 'lobbyEnabled', label: 'Phòng chờ', hint: 'Chủ trì duyệt từng người trước khi vào' },
-  { key: 'allowGuests', label: 'Cho phép khách', hint: 'Người ngoài hệ thống vào bằng link (P10)' },
+  { key: 'allowGuests', label: 'Cho phép khách', hint: 'Người ngoài hệ thống vào bằng đường dẫn mời' },
   { key: 'allowJoinBeforeHost', label: 'Vào trước chủ trì', hint: 'Thành viên vào phòng khi chủ trì chưa vào' },
-  { key: 'aiMinutesEnabled', label: 'Biên bản AI', hint: 'Tự tạo bản nháp biên bản sau họp (P13)' },
+  { key: 'aiMinutesEnabled', label: 'Biên bản AI', hint: 'Tự tạo bản nháp biên bản sau cuộc họp' },
 ];
 
 /** Múi giờ cố định của hệ thống — không cho người dùng chọn. */

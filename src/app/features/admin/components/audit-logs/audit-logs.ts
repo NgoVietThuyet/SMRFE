@@ -15,6 +15,7 @@ export const AUDIT_CATEGORIES: { value: string; label: string; color: string }[]
   { value: 'TITLE', label: 'Chức danh', color: 'orange' },
   { value: 'SETTINGS', label: 'Cấu hình', color: 'gold' },
   { value: 'MEETING', label: 'Cuộc họp', color: 'green' },
+  { value: 'MINUTES', label: 'Biên bản', color: 'magenta' },
 ];
 
 const ACTION_LABELS: Record<string, string> = {
@@ -49,6 +50,15 @@ const ACTION_LABELS: Record<string, string> = {
   'MEETING.ARCHIVE': 'Lưu trữ cuộc họp',
   'MEETING.ADD_PARTICIPANTS': 'Thêm người tham gia',
   'MEETING.REMOVE_PARTICIPANT': 'Xóa người tham gia',
+  'MEETING.START': 'Bắt đầu cuộc họp',
+  'MEETING.END': 'Kết thúc cuộc họp',
+  'MINUTES.GENERATE': 'Sinh biên bản bằng AI',
+  'MINUTES.UPDATE': 'Cập nhật biên bản',
+  'MINUTES.SUBMIT': 'Gửi duyệt biên bản',
+  'MINUTES.APPROVE': 'Duyệt biên bản',
+  'MINUTES.REJECT': 'Từ chối biên bản',
+  'MINUTES.PUBLISH': 'Phát hành biên bản',
+  'MINUTES.EXPORT': 'Xuất biên bản',
 };
 
 /** P6 — Nhật ký hoạt động (mẫu 2.FrontEnd log-system, history-login). Chỉ đọc. */

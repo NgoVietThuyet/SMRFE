@@ -16,8 +16,7 @@ $border-color: #e5e7eb;
 }
 
 .chat-panel {
-    height: calc(100vh - 250px);
-    min-height: 440px;
+    min-height: 420px;
     border: 1px solid #f0f0f0;
     border-radius: 8px;
     overflow: hidden;
@@ -324,10 +323,6 @@ $border-color: #e5e7eb;
 
 
 @media (max-width: 768px) {
-    .chat-panel {
-        height: calc(100svh - 220px);
-    }
-
     .chat-head {
         padding: 6px 10px;
         flex-wrap: wrap;

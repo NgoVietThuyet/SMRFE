@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, finalize, takeUntil } from 'rxjs';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -33,7 +33,8 @@ const SUGGESTIONS = [
   templateUrl: './meeting-ai-chat.html',
   styleUrl: './meeting-ai-chat.scss',
 })
-export class MeetingAiChat implements OnChanges, OnDestroy {
+export class MeetingAiChat implements OnChanges, AfterViewInit, OnDestroy {
+  @ViewChild('panel') private panel?: ElementRef<HTMLElement>;
   @ViewChild('messageContainer') private messageContainer?: ElementRef<HTMLElement>;
   @Input({ required: true }) meetingId = '';
   @Input() meetingName = '';
@@ -69,6 +70,20 @@ export class MeetingAiChat implements OnChanges, OnDestroy {
       next: d => { if (this.meetingId === id) this.minutesDetail = d; },
       error: () => { /* không có biên bản: bỏ qua */ },
     });
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.fitHeight());
+  }
+
+  /** Khung chat lấp đầy phần màn hình còn lại dưới tab (không để khoảng trống phía dưới). */
+  @HostListener('window:resize')
+  fitHeight(): void {
+    const el = this.panel?.nativeElement;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const h = Math.max(420, window.innerHeight - top - 16);
+    el.style.height = `${h}px`;
   }
 
   ngOnDestroy(): void {

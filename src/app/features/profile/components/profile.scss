@@ -1,10 +1,10 @@
 @use 'sass:color';
 
 // ─── Variables ────────────────────────────────────────────────
-$primary:         #189AD6;
-$primary-hover:   #1488bf;
-$primary-light:   rgba(24, 154, 214, 0.08);
-$primary-border:  rgba(24, 154, 214, 0.30);
+$primary:         #0E76A8;
+$primary-hover:   #0B5E86;
+$primary-light:   rgba(14, 118, 168, 0.08);
+$primary-border:  rgba(14, 118, 168, 0.30);
 $radius:          6px;
 $sp:              12px;          // base spacing
 $text-dark:       #262626;
@@ -329,7 +329,14 @@ $bg-page:         #f4f6f8;
     flex-direction: column;
   }
 
-  .profile-sidebar {
+  .profile-sidebar,
+  .profile-content {
     width: 100%;
+    min-width: 0;
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 }

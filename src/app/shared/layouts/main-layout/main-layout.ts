@@ -51,6 +51,10 @@ export class MainLayout implements OnInit, OnDestroy {
   /** Bắt buộc đổi mật khẩu (MustChangePassword) → modal không cho đóng. */
   forceChangePassword = false;
   isChangingPassword = false;
+  showCurrentPass = false;
+  showNewPass = false;
+  showConfirmPass = false;
+  private isMobileViewport = typeof window !== 'undefined' && window.innerWidth <= 768;
   modelChangePass: ChangePasswordModel = { currentPassword: '', newPassword: '', confirmNewPassword: '' };
 
   private lastCheckedToken = 0;
@@ -195,7 +199,20 @@ export class MainLayout implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     this.isCollapsed = !this.isCollapsed;
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, this.isCollapsed ? '1' : '0');
+    if (typeof window === 'undefined' || window.innerWidth > 768) {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, this.isCollapsed ? '1' : '0');
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (typeof window === 'undefined') return;
+    const mobile = window.innerWidth <= 768;
+    if (mobile !== this.isMobileViewport) {
+      this.isMobileViewport = mobile;
+      this.isCollapsed = mobile ? true : localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1';
+      this.closeNotificationPopover();
+    }
   }
 
   get sidebarCollapsed(): boolean {
@@ -211,8 +228,10 @@ export class MainLayout implements OnInit, OnDestroy {
   }
 
   get displaySubtitle(): string {
-    if (this.accountInfo?.isAdmin) return 'Quản trị viên';
-    return this.accountInfo?.titleName || this.accountInfo?.email || '';
+    const sub = this.accountInfo?.isAdmin
+      ? 'Quản trị viên'
+      : (this.accountInfo?.titleName || this.accountInfo?.email || '');
+    return sub.trim().toLowerCase() === this.displayFullName.trim().toLowerCase() ? '' : sub;
   }
 
   get userAvatarText(): string {
@@ -273,6 +292,7 @@ export class MainLayout implements OnInit, OnDestroy {
   }
 
   navigateRoute(route: string): void {
+    this.closeNotificationPopover();
     this.router.navigate([route]);
   }
 
@@ -447,7 +467,11 @@ export class MainLayout implements OnInit, OnDestroy {
   // ───────────────────────── Đổi mật khẩu ─────────────────────────
 
   changePassOpen(): void {
+    this.closeNotificationPopover();
     this.resetModelChangePass();
+    this.showCurrentPass = false;
+    this.showNewPass = false;
+    this.showConfirmPass = false;
     this.isVisibleChangePass = true;
   }
 

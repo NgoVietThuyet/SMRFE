@@ -57,7 +57,7 @@
                         <a class="meeting-name" [routerLink]="['/meetings', m.id]">{{ m.name }}</a>
                         <div class="muted small">
                             <nz-icon nzType="number" /> {{ m.roomCode }}
-                            @if (m.isHost) { · <span class="host-badge">Bạn chủ trì</span> }
+                            @if (m.isHost && !isAll) { · <span class="host-badge">Bạn chủ trì</span> }
                         </div>
                     </td>
                     <td>

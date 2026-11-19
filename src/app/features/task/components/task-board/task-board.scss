@@ -606,13 +606,14 @@
   }
 }
 
-// Tên bảng dài / màn hẹp: một dòng, cắt "…" thay vì ngắt từng chữ.
+// Tên bảng dài / màn hẹp: một dòng, cắt "…" thay vì ngắt từng chữ; tự xuống dòng khi màn hẹp <= 1200px.
 .board-header {
-  gap: 12px;
+  gap: 8px 12px;
+  flex-wrap: wrap;
 
   .board-header-left {
     min-width: 0;
-    flex: 1;
+    flex: 1 1 280px;
   }
 
   .board-header-right {
@@ -623,10 +624,29 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 0;
+    min-width: 140px;
   }
 
   .visibility-tag {
     flex-shrink: 0;
+  }
+
+  .meeting-tag {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .board-header {
+    .board-header-left {
+      flex: 1 1 100%;
+    }
+
+    .board-header-right {
+      width: 100%;
+      justify-content: space-between;
+    }
   }
 }

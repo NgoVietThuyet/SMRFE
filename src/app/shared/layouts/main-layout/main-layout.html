@@ -116,12 +116,12 @@
           class="user-profile-trigger"
           nz-dropdown
           [nzDropdownMenu]="userMenu"
-          nzTrigger="hover"
+          nzTrigger="click"
           [nzPlacement]="userDropdownPlacement"
           nzOverlayClassName="sidebar-user-dropdown"
           nz-popover
           [nzPopoverContent]="notificationPopover"
-          nzPopoverTrigger="click"
+          [nzPopoverTrigger]="null"
           [(nzPopoverVisible)]="isNotificationPopoverVisible"
           (nzPopoverVisibleChange)="onNotificationPopoverVisibleChange($event)"
           nzPopoverPlacement="rightBottom"
@@ -246,7 +246,7 @@
 
 <nz-modal
   [(nzVisible)]="isVisibleChangePass"
-  [nzTitle]="forceChangePassword ? 'ĐỔI MẬT KHẨU LẦN ĐẦU' : 'ĐỔI MẬT KHẨU'"
+  [nzTitle]="forceChangePassword ? 'Đổi mật khẩu lần đầu' : 'Đổi mật khẩu'"
   [nzClosable]="!forceChangePassword"
   [nzMaskClosable]="!forceChangePassword"
   [nzKeyboard]="!forceChangePassword"
@@ -263,41 +263,64 @@
         nzMessage="Tài khoản đang dùng mật khẩu tạm. Vui lòng đổi mật khẩu để tiếp tục."
       ></nz-alert>
       }
-      <input
-        nz-input
-        class="input-change-pass"
-        [(ngModel)]="modelChangePass.currentPassword"
-        placeholder="Mật khẩu hiện tại"
-        aria-label="Mật khẩu hiện tại"
-        type="password"
-        autocomplete="current-password"
-      />
-      <input
-        nz-input
-        class="input-change-pass"
-        [(ngModel)]="modelChangePass.newPassword"
-        placeholder="Mật khẩu mới (ít nhất 8 ký tự)"
-        aria-label="Mật khẩu mới"
-        type="password"
-        autocomplete="new-password"
-      />
-      <input
-        nz-input
-        class="input-change-pass"
-        [(ngModel)]="modelChangePass.confirmNewPassword"
-        placeholder="Xác nhận lại mật khẩu mới"
-        aria-label="Xác nhận mật khẩu mới"
-        type="password"
-        autocomplete="new-password"
-        (keydown.enter)="changePassOk()"
-      />
+      <label class="text-control" for="cp-current">Mật khẩu hiện tại <span class="required-star">*</span></label>
+      <nz-input-group [nzSuffix]="cpCurrentEye" class="input-change-pass">
+        <input
+          id="cp-current"
+          nz-input
+          [(ngModel)]="modelChangePass.currentPassword"
+          placeholder="Nhập mật khẩu hiện tại"
+          [type]="showCurrentPass ? 'text' : 'password'"
+          autocomplete="current-password"
+        />
+      </nz-input-group>
+      <ng-template #cpCurrentEye>
+        <button type="button" class="pwd-eye-btn" [attr.aria-label]="showCurrentPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'" (click)="showCurrentPass = !showCurrentPass">
+          <nz-icon [nzType]="showCurrentPass ? 'eye-invisible' : 'eye'" />
+        </button>
+      </ng-template>
+
+      <label class="text-control" for="cp-new">Mật khẩu mới <span class="required-star">*</span></label>
+      <nz-input-group [nzSuffix]="cpNewEye" class="input-change-pass">
+        <input
+          id="cp-new"
+          nz-input
+          [(ngModel)]="modelChangePass.newPassword"
+          placeholder="Ít nhất 8 ký tự"
+          [type]="showNewPass ? 'text' : 'password'"
+          autocomplete="new-password"
+        />
+      </nz-input-group>
+      <ng-template #cpNewEye>
+        <button type="button" class="pwd-eye-btn" [attr.aria-label]="showNewPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'" (click)="showNewPass = !showNewPass">
+          <nz-icon [nzType]="showNewPass ? 'eye-invisible' : 'eye'" />
+        </button>
+      </ng-template>
+
+      <label class="text-control" for="cp-confirm">Xác nhận mật khẩu mới <span class="required-star">*</span></label>
+      <nz-input-group [nzSuffix]="cpConfirmEye" class="input-change-pass">
+        <input
+          id="cp-confirm"
+          nz-input
+          [(ngModel)]="modelChangePass.confirmNewPassword"
+          placeholder="Nhập lại mật khẩu mới"
+          [type]="showConfirmPass ? 'text' : 'password'"
+          autocomplete="new-password"
+          (keydown.enter)="changePassOk()"
+        />
+      </nz-input-group>
+      <ng-template #cpConfirmEye>
+        <button type="button" class="pwd-eye-btn" [attr.aria-label]="showConfirmPass ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'" (click)="showConfirmPass = !showConfirmPass">
+          <nz-icon [nzType]="showConfirmPass ? 'eye-invisible' : 'eye'" />
+        </button>
+      </ng-template>
     </div>
   </ng-container>
   <ng-template #actionChangePass>
     @if (forceChangePassword) {
     <button nz-button nzType="default" (click)="logOut()">Đăng xuất</button>
     } @else {
-    <button nz-button nzType="default" (click)="changePassCancel()">Huỷ</button>
+    <button nz-button nzType="default" (click)="changePassCancel()">Hủy</button>
     }
     <button nz-button nzType="primary" [nzLoading]="isChangingPassword" (click)="changePassOk()">
       Xác nhận

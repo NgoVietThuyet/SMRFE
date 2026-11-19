@@ -36,7 +36,11 @@ const REASONS: Record<string, string> = {
         } @else if (reason) {
         <nz-result nzStatus="warning" [nzTitle]="reason" [nzSubTitle]="'Mã phòng: ' + roomCode">
           <div nz-result-extra>
+            @if (isLoggedIn) {
+            <button nz-button nzType="primary" routerLink="/dashboard">Về trang chủ</button>
+            } @else {
             <button nz-button nzType="primary" (click)="login()">Đăng nhập</button>
+            }
           </div>
         </nz-result>
         } @else if (info) {
@@ -87,6 +91,7 @@ export class GuestJoin implements OnInit {
   roomCode = '';
   loading = true;
   busy = false;
+  isLoggedIn = false;
   info: PublicMeeting | null = null;
   reason = '';
   name = '';
@@ -115,7 +120,14 @@ export class GuestJoin implements OnInit {
     const loggedIn$ = this.tokens.isGuest ? of(false) : this.tokens.ensureSession().pipe(
       switchMap(ok => ok ? (this.session.accountInfo ? of(true) : this.session.load()) : of(false)),
     );
-    loggedIn$.subscribe(loggedIn => loggedIn ? this.asMember() : this.asGuest());
+    loggedIn$.subscribe(loggedIn => {
+      this.isLoggedIn = loggedIn;
+      if (loggedIn) {
+        this.asMember();
+      } else {
+        this.asGuest();
+      }
+    });
   }
 
   private asMember(): void {
